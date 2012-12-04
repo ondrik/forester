@@ -130,6 +130,7 @@ void SymState::recycle(Recycler<SymState>& recycler)
 
 		assert(state->GetFAE());
 		state->fae_ = nullptr;
+		state->data_.reset();
 
 		for (auto s : state->GetChildren())
 		{

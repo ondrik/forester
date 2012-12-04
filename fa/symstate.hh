@@ -67,6 +67,9 @@ private:  // data members
 	/// the registers
 	std::shared_ptr<DataArray> regs_;
 
+	/// Arbitrary data
+	std::unique_ptr<void> data_;
+
 private:  // methods
 
 	SymState(const SymState&);
@@ -82,7 +85,8 @@ public:   // methods
 	SymState() :
 		instr_{},
 		fae_{},
-		regs_(nullptr)
+		regs_(nullptr),
+		data_(nullptr)
 	{ }
 
 	/**
@@ -151,6 +155,28 @@ public:   // methods
 		fae_ = fae;
 	}
 
+	/**
+	 * @brief  Saves the arbitrary data
+	 */
+	void setData(void* data)
+	{
+		// Preconditions
+		assert(nullptr == data_);
+		assert(nullptr != data);
+
+		data_.reset(data);
+	}
+
+	/**
+	 * @brief  Returns the saved arbitrary data
+	 */
+	const std::unique_ptr<void>& getData() const
+	{
+		// Preconditions
+		assert(nullptr != data_);
+
+		return data_;
+	}
 
 	/**
 	 * @brief  Initializes the symbolic state
