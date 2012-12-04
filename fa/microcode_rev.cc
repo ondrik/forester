@@ -25,6 +25,7 @@
 // Forester headers
 #include "executionmanager.hh"
 #include "microcode.hh"
+#include "splitting.hh"
 #include "streams.hh"
 #include "virtualmachine.hh"
 
@@ -35,10 +36,29 @@ SymState* FI_acc::reverseAndIsect(
 {
 	(void)fwdPred;
 
-	FA_WARN("Skipping reverse operation FI_acc_sel");
-	return execMan.copyState(bwdSucc);
-}
+	const Data& data = bwdSucc.GetReg(dst_);
+	assert(data.isRef());
 
+	SymState* tmpState = execMan.copyState(bwdSucc);
+
+	assert(nullptr != fwdPred.getData());
+
+	const std::vector<size_t>& sepSels =
+		*static_cast<const std::vector<size_t>*>(fwdPred.getData().get());
+
+	std::shared_ptr<FAE> fae = std::shared_ptr<FAE>(
+		Splitting(*tmpState->GetFAE()).merge(
+			/* indexed of the desired TA */ data.d_ref.root,
+			/* selectors to be merged */ sepSels
+		)
+	);
+
+	tmpState->SetFAE(fae);
+
+	FA_WARN("Executing !!VERY!! suspicious reverse operation FI_acc");
+
+	return tmpState;
+}
 
 SymState* FI_pop_greg::reverseAndIsect(
 	ExecutionManager&                      execMan,

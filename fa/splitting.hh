@@ -86,19 +86,22 @@ private:  // methods
 	 * manipulation only on roots. It does not unfold hierarchical boxes: that is
 	 * the task of another @p isolateAtRoot method.
 	 *
-	 * @param[in]  root   Index of the desired tree automaton
-	 * @param[in]  t      The transition to be handled
-	 * @param[in]  f      Functor that returns @p true if a box contains any of the
-	 *                    desired selectors
-	 * @param[out] boxes  Hierarchical boxes that were encountered and need to be
-	 *                    unfolded
+	 * @param[in]   root     Index of the desired tree automaton
+	 * @param[in]   t        The transition to be handled
+	 * @param[in]   f        Functor that returns @p true if a box contains any
+	 *                       of the desired selectors
+	 * @param[out]  boxes    Hierarchical boxes that were encountered and need to
+	 *                       be unfolded
+	 * @param[out]  sepSels  Vector into which newly isolated selectors will be
+	 *                       added
 	 */
 	template <class F>
 	void isolateAtRoot(
 		size_t                             root,
 		const Transition&                  t,
 		F                                  f,
-		std::set<const Box*>&              boxes);
+		std::set<const Box*>&              boxes,
+		std::vector<size_t>&               sepSels);
 
 
 	/**
@@ -110,11 +113,15 @@ private:  // methods
 	 * @param[out]  dst      The vector for storing results of the operation
 	 * @param[in]   root     The index of the desired tree automaton
 	 * @param[in]   offsets  Offsets to be isolated
+	 * @param[out]  sepSels  Vector into which newly isolated selectors will be
+	 *                       added
 	 */
 	void isolateAtRoot(
 		std::vector<FAE*>&                            dst,
 		size_t                                        root,
-		const std::vector<size_t>&                    offsets) const;
+		const std::vector<size_t>&                    offsets,
+		std::vector<size_t>&                          sepSels) const;
+
 
 	// adds redundant root points to allow further manipulation
 	void isolateAtLeaf(
@@ -134,16 +141,19 @@ public:   // methods
 	 * Isolates one selector at given offset directly under the root of a given
 	 * tree automaton.
 	 *
-	 * @param[out]  dst     Vector into which the resulting FAs will be pushed
-	 * @param[in]   target  Index of the desired tree automaton
-	 * @param[in]   offset  Offset of the selector to be isolated
+	 * @param[out]  dst      Vector into which the resulting FAs will be pushed
+	 * @param[in]   target   Index of the desired tree automaton
+	 * @param[in]   offset   Offset of the selector to be isolated
+	 * @param[out]  sepSels  Vector into which newly isolated selectors will be
+	 *                       added
 	 */
 	void isolateOne(
 		std::vector<FAE*>&                     dst,
 		size_t                                 target,
-		size_t                                 offset) const
+		size_t                                 offset,
+		std::vector<size_t>&                   sepSels) const
 	{
-		this->isolateSet(dst, target, 0, { offset });
+		this->isolateSet(dst, target, 0, { offset }, sepSels);
 	}
 
 	/**
@@ -156,13 +166,32 @@ public:   // methods
 	 * @param[in]   target   Index of the desired tree automaton
 	 * @param[in]   base     Base to which the @p offsets relate
 	 * @param[in]   offsets  Offsets of the selectors to be isolated
+	 * @param[out]  sepSels  Vector into which newly isolated selectors will be
+	 *                       added
 	 */
 	void isolateSet(
 		std::vector<FAE*>&                 dst,
 		size_t                             target,
 		int                                base,
-		const std::vector<size_t>&         offsets) const;
+		const std::vector<size_t>&         offsets,
+		std::vector<size_t>&               sepSels) const;
 
+	/**
+	 * @brief  Merges isolated tree automata
+	 *
+	 * Merges isolated tree automata: automata referenced by @p offsets at the
+	 * accepting transition under tree automaton at at index @p target are merged
+	 * into the tree automaton.
+	 *
+	 * @param[in]  target   Index of the top tree automaton (into which the other
+	 *                      are to be merged)
+	 * @param[in]  sels     Indices of selectors to be merged
+	 *
+	 * @returns  Resulting FAE
+	 */
+	FAE* merge(
+		size_t                             target,
+		const std::vector<size_t>&         sels) const;
 
 };
 

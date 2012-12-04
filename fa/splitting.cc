@@ -141,11 +141,13 @@ struct IsolateOneF
 
 	IsolateOneF(size_t offset) : offset(offset) {}
 
-	bool operator()(const StructuralBox* box) const {
+	bool operator()(const StructuralBox* box) const
+	{
 		return box->outputCovers(this->offset);
 	}
 
-	friend std::ostream& operator<<(std::ostream& os, const IsolateOneF& f) {
+	friend std::ostream& operator<<(std::ostream& os, const IsolateOneF& f)
+	{
 		return os << f.offset;
 	}
 };
@@ -157,11 +159,13 @@ struct IsolateBoxF
 
 	IsolateBoxF(const Box* box) : box(box) {}
 
-	bool operator()(const StructuralBox* box) const {
+	bool operator()(const StructuralBox* box) const
+	{
 		return this->box == box;
 	}
 
-	friend std::ostream& operator<<(std::ostream& os, const IsolateBoxF& f) {
+	friend std::ostream& operator<<(std::ostream& os, const IsolateBoxF& f)
+	{
 		return os << *static_cast<const AbstractBox*>(f.box);
 	}
 };
@@ -185,7 +189,7 @@ struct IsolateSetF
 
 	friend std::ostream& operator<<(std::ostream& os, const IsolateSetF& f)
 	{
-		for (auto& x : f.s)
+		for (const size_t& x : f.s)
 			os << x << ' ';
 
 		return os;
@@ -220,9 +224,7 @@ void Splitting::enumerateSelectorsAtRoot(
 	// the boxes of the accepting transition (note that there is exactly one
 	// accepting transition in a normalised FA) are traversed and selectors
 	// (even those inside boxes) are collected
-	fae_.getRoot(target)->begin(
-		*fae_.getRoot(target)->getFinalStates().begin()
-	)->label()->iterate(RootEnumF(target, selectors));
+	fae_.getRoot(target)->accBegin()->label()->iterate(RootEnumF(target, selectors));
 }
 
 
@@ -290,46 +292,60 @@ void Splitting::isolateAtLeaf(
 
 	fae_.unreachableFree(fae_.getRoot(root));
 
-	std::vector<std::pair<const Transition*, const Box*> > v;
+	std::vector<std::pair<const Transition*, const Box*>> v;
 
 	TreeAut ta(*fae_.backend);
 
 	const Box* matched;
-	for (TreeAut::iterator i = fae_.getRoot(root)->begin(); i != fae_.getRoot(root)->end(); ++i) {
-		if (!i->label()->isNode()) {
-			ta.addTransition(*i);
+	for (const Transition& trans : *fae_.getRoot(root))
+	{
+		if (!trans.label()->isNode())
+		{
+			ta.addTransition(trans);
 			continue;
 		}
 		matched = nullptr;
-		i->label()->iterate(LeafScanF(fae_, *i, selector, target, matched));
-		if (matched) {
-			v.push_back(std::make_pair(&*i, matched));
-		} else {
-			ta.addTransition(*i);
+		trans.label()->iterate(LeafScanF(fae_, trans, selector, target, matched));
+		if (matched)
+		{
+			v.push_back(std::make_pair(&trans, matched));
+		}
+		else
+		{
+			ta.addTransition(trans);
 		}
 	}
 
-	assert(v.size());
+	assert(!v.empty());
 
-	for (std::vector<std::pair<const Transition*, const Box*> >::iterator i = v.begin(); i != v.end(); ++i) {
+	for (std::pair<const Transition*, const Box*>& transBox : v)
+	{
 		FAE fae(fae_);
 		Splitting splitting(fae);
 		TreeAut ta2(*fae.backend);
-		if (fae_.getRoot(root)->isFinalState(i->first->rhs()))
+		if (fae_.getRoot(root)->isFinalState(transBox.first->rhs()))
 		{
 			ta.copyTransitions(ta2);
 			size_t state = fae.freshState();
 			ta2.addFinalState(state);
-			const Transition& t = ta2.addTransition(i->first->lhs(), i->first->label(), state)->first;
+			const Transition& t = ta2.addTransition(transBox.first->lhs(), transBox.first->label(), state)->first;
 			fae.setRoot(root, std::shared_ptr<TreeAut>(&ta2.uselessAndUnreachableFree(*fae.allocTA())));
 			fae.connectionGraph.invalidate(root);
 			std::set<const Box*> boxes;
-			splitting.isolateAtRoot(root, t, IsolateBoxF(i->second), boxes);
-			assert(boxes.count(i->second));
-			Unfolding(fae).unfoldBox(root, i->second);
-			splitting.isolateOne(dst, target, selector);
+
+			// FIXME: this is only temporary, what should we do about this?
+			std::vector<size_t> tmp;
+			splitting.isolateAtRoot(root, t, IsolateBoxF(transBox.second), boxes, tmp);
+
+			assert(boxes.count(transBox.second));
+			Unfolding(fae).unfoldBox(root, transBox.second);
+
+			// FIXME: what about this?
+			splitting.isolateOne(dst, target, selector, tmp);
+
 			continue;
 		}
+
 		ta2.addFinalStates(fae_.getRoot(root)->getFinalStates());
 		for (TreeAut::iterator j = ta.begin(); j != ta.end(); ++j)
 		{
@@ -337,11 +353,11 @@ void Splitting::isolateAtLeaf(
 			std::vector<size_t> lhs = j->lhs();
 			for (std::vector<size_t>::iterator k = lhs.begin(); k != lhs.end(); ++k)
 			{
-				if (*k == i->first->rhs())
+				if (*k == transBox.first->rhs())
 				{
 					*k = fae.addData(ta2, Data::createRef(fae.getRootCount()));
 					ta2.addTransition(lhs, j->label(), j->rhs());
-					*k = i->first->rhs();
+					*k = transBox.first->rhs();
 				}
 			}
 		}
@@ -363,7 +379,7 @@ void Splitting::isolateAtLeaf(
 
 		ta2.addFinalState(state);
 
-		const Transition& t = ta2.addTransition(i->first->lhs(), i->first->label(), state)->first;
+		const Transition& t = ta2.addTransition(transBox.first->lhs(), transBox.first->label(), state)->first;
 
 		ta.copyTransitions(ta2);
 
@@ -372,7 +388,7 @@ void Splitting::isolateAtLeaf(
 		fae.connectionGraph.newRoot();
 		fae.connectionGraph.invalidate(root);
 
-		for (auto& f : ta3.getFinalStates())
+		for (const size_t& f : ta3.getFinalStates())
 		{
 			FAE fae2(fae);
 
@@ -388,13 +404,15 @@ void Splitting::isolateAtLeaf(
 
 			std::set<const Box*> boxes;
 
-			splitting2.isolateAtRoot(fae2.getRootCount() - 1, t, IsolateBoxF(i->second), boxes);
+			// FIXME: this is only temporary, what should we do about this?
+			std::vector<size_t> tmp;
+			splitting2.isolateAtRoot(fae2.getRootCount() - 1, t, IsolateBoxF(transBox.second), boxes, tmp);
 
-			assert(boxes.count(i->second));
+			assert(boxes.count(transBox.second));
 
-			Unfolding(fae2).unfoldBox(fae2.getRootCount() - 1, i->second);
+			Unfolding(fae2).unfoldBox(fae2.getRootCount() - 1, transBox.second);
 
-			splitting2.isolateOne(dst, target, selector);
+			splitting2.isolateOne(dst, target, selector, tmp);
 		}
 	}
 }
@@ -405,7 +423,8 @@ void Splitting::isolateAtRoot(
 	size_t                             root,
 	const Transition&                  t,
 	F                                  f,
-	std::set<const Box*>&              boxes)
+	std::set<const Box*>&              boxes,
+	std::vector<size_t>&               sepSels)
 {
 	// Assertions
 	assert(root < fae_.getRootCount());
@@ -453,6 +472,8 @@ void Splitting::isolateAtRoot(
 				continue;
 			}
 
+			sepSels.push_back(lhsOffset);
+
 			// We split a tree automaton into two for a given transition at a given
 			// selector by creating a new tuple of children states where states at
 			// given selectors are substituted for new states that correspond to
@@ -495,7 +516,8 @@ void Splitting::isolateAtRoot(
 void Splitting::isolateAtRoot(
 	std::vector<FAE*>&                            dst,
 	size_t                                        root,
-	const std::vector<size_t>&                    offsets) const
+	const std::vector<size_t>&                    offsets,
+	std::vector<size_t>&                          sepSels) const
 {
 	// Assertions
 	assert(root < fae_.getRootCount());
@@ -509,12 +531,12 @@ void Splitting::isolateAtRoot(
 			FAE fae(fae_);
 			Splitting splitting(fae);
 			std::set<const Box*> boxes;
-			splitting.isolateAtRoot(root, *i, IsolateSetF(offsets), boxes);
+			splitting.isolateAtRoot(root, *i, IsolateSetF(offsets), boxes, sepSels);
 
 			if (!boxes.empty())
 			{	// in case there were some hierarchical boxes, process further
 				Unfolding(fae).unfoldBoxes(root, boxes);
-				splitting.isolateSet(dst, root, 0, offsets);
+				splitting.isolateSet(dst, root, 0, offsets, sepSels);
 			} else
 			{	// in case there were no hierarchical boxes, simply take the result
 				dst.push_back(new FAE(fae));
@@ -528,7 +550,8 @@ void Splitting::isolateSet(
 	std::vector<FAE*>&                 dst,
 	size_t                             target,
 	int                                base,
-	const std::vector<size_t>&         offsets) const
+	const std::vector<size_t>&         offsets,
+	std::vector<size_t>&               sepSels) const
 {
 	// Assertions
 	assert(target < fae_.getRootCount());
@@ -549,7 +572,7 @@ void Splitting::isolateSet(
 
 	if (offsU.empty())
 	{ // in case there is no upward selector for isolation
-		this->isolateAtRoot(dst, target, offsD);
+		this->isolateAtRoot(dst, target, offsD, sepSels);
 		return;
 	}
 
@@ -563,7 +586,8 @@ void Splitting::isolateSet(
 		this->isolateAtRoot(
 			/* the vector for the results */ tmp,
 			/* the root index */ target,
-			/* offsets */ offsD
+			/* offsets */ offsD,
+			/* newly isolated selectors (output) */ sepSels
 		);
 	}
 	else
@@ -624,4 +648,62 @@ void Splitting::isolateSet(
 
 	g.release();
 	f.release();
+}
+
+
+FAE* Splitting::merge(
+	size_t                             target,
+	const std::vector<size_t>&         sels) const
+{
+	// Assertions
+	assert(target < fae_.getRootCount());
+	assert(nullptr != fae_.getRoot(target));
+
+	FAE* fae = new FAE(fae_);
+
+	std::ostringstream os;
+	for (const size_t& sel : sels)
+		os << ", " << sel;
+	FA_NOTE("Merging selectors: " << os.str());
+
+	const TreeAut& ta = *fae_.getRoot(target);
+
+	// there should be a single transition
+	assert(ta.accBegin() != ta.accEnd());
+	assert(++ta.accBegin() == ta.accEnd());
+
+	const Transition& trans = *ta.accBegin();
+	FA_NOTE("Accepting transition: " << trans);
+
+	std::vector<size_t> lhs;
+	size_t selOffset = 0;
+
+	for (size_t i = 0; i < trans.label()->getNode().size(); ++i)
+	{	// traverse all boxes in the label
+		if ((selOffset >= sels.size()) || (i != sels[selOffset]))
+		{	// if we are not merging at the given selector
+			// FIXME: this is perhaps not satisfactory (see isolateAtRoot how to perhaps do it)
+			lhs.push_back(trans.lhs()[i]);
+			continue;
+		}
+
+		assert(i == sels[selOffset]);
+		// try to perform the merge
+
+		FA_NOTE("Merging selector " << sels[selOffset] << " into TA " << target);
+
+		const Data& data = fae_.getData(trans.lhs()[i]);
+
+		FA_NOTE("Got data " << data);
+
+		if (!data.isRef())
+		{	// in case the data is not a reference
+			fae->clear();          // return an empty FA
+			return fae;
+		}
+
+		assert(false);
+	}
+
+	return fae;
 }
