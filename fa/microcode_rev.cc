@@ -28,7 +28,7 @@
 #include "streams.hh"
 #include "virtualmachine.hh"
 
-SymState* FI_acc_sel::reverseAndIsect(
+SymState* FI_acc::reverseAndIsect(
 	ExecutionManager&                      execMan,
 	const SymState&                        fwdPred,
 	const SymState&                        bwdSucc) const
@@ -39,27 +39,6 @@ SymState* FI_acc_sel::reverseAndIsect(
 	return execMan.copyState(bwdSucc);
 }
 
-SymState* FI_acc_set::reverseAndIsect(
-	ExecutionManager&                      execMan,
-	const SymState&                        fwdPred,
-	const SymState&                        bwdSucc) const
-{
-	(void)fwdPred;
-
-	FA_WARN("Skipping reverse operation FI_acc_set");
-	return execMan.copyState(bwdSucc);
-}
-
-SymState* FI_acc_all::reverseAndIsect(
-	ExecutionManager&                      execMan,
-	const SymState&                        fwdPred,
-	const SymState&                        bwdSucc) const
-{
-	(void)fwdPred;
-
-	FA_WARN("Skipping reverse operation FI_acc_all");
-	return execMan.copyState(bwdSucc);
-}
 
 SymState* FI_pop_greg::reverseAndIsect(
 	ExecutionManager&                      execMan,

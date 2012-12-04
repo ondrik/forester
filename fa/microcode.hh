@@ -80,32 +80,48 @@ public:
 	}
 };
 
+/**
+ * @brief  Base class for isolation instructions
+ *
+ * The base class for microinstructions that performa isolation.
+ */
+class FI_acc : public SequentialInstruction
+{
+protected:
+
+	/// register holding the reference to the tree automaton
+	size_t dst_;
+
+public:
+
+	FI_acc(const CodeStorage::Insn* insn, size_t dst) :
+		SequentialInstruction(insn, fi_type_e::fiUnspec),
+		dst_(dst) {}
+
+	virtual SymState* reverseAndIsect(
+		ExecutionManager&                      execMan,
+		const SymState&                        fwdPred,
+		const SymState&                        bwdSucc) const;
+};
+
 
 /**
  * @brief  Isolates a single selector
  *
  * Isolates a single root selector of a tree automaton.
  */
-class FI_acc_sel : public SequentialInstruction
+class FI_acc_sel : public FI_acc
 {
-	/// register holding the reference to the tree automaton
-	size_t dst_;
-
 	/// offset of the selector
 	size_t offset_;
 
 public:
 
-	FI_acc_sel(const CodeStorage::Insn* insn, size_t dst, size_t offset)
-		: SequentialInstruction(insn, fi_type_e::fiUnspec),
-		dst_(dst), offset_(offset) {}
+	FI_acc_sel(const CodeStorage::Insn* insn, size_t dst, size_t offset) :
+		FI_acc(insn, dst),
+		offset_(offset) {}
 
 	virtual void execute(ExecutionManager& execMan, SymState& state);
-
-	virtual SymState* reverseAndIsect(
-		ExecutionManager&                      execMan,
-		const SymState&                        fwdPred,
-		const SymState&                        bwdSucc) const;
 
 	virtual std::ostream& toStream(std::ostream& os) const {
 		return os << "acc   \t[r" << this->dst_ << " + " << this->offset_ << "]";
@@ -118,11 +134,8 @@ public:
  *
  * Isolates a set of root selectors of a tree automaton.
  */
-class FI_acc_set : public SequentialInstruction
+class FI_acc_set : public FI_acc
 {
-	/// register holding the reference to the tree automaton
-	size_t dst_;
-
 	/// base value for the @p offsets_
 	int base_;
 
@@ -133,14 +146,9 @@ public:
 
 	FI_acc_set(const CodeStorage::Insn* insn, size_t dst, int base,
 		const std::vector<size_t>& offsets)
-		: SequentialInstruction(insn), dst_(dst), base_(base), offsets_(offsets) {}
+		: FI_acc(insn, dst), base_(base), offsets_(offsets) {}
 
 	virtual void execute(ExecutionManager& execMan, SymState& state);
-
-	virtual SymState* reverseAndIsect(
-		ExecutionManager&                      execMan,
-		const SymState&                        fwdPred,
-		const SymState&                        bwdSucc) const;
 
 	virtual std::ostream& toStream(std::ostream& os) const {
 		return os << "acc   \t[r" << this->dst_ << " + " << this->base_
@@ -154,22 +162,14 @@ public:
  *
  * Isolates all root selectors of a tree automaton.
  */
-class FI_acc_all : public SequentialInstruction
+class FI_acc_all : public FI_acc
 {
-	/// register holding the reference to the tree automaton
-	size_t dst_;
-
 public:
 
 	FI_acc_all(const CodeStorage::Insn* insn, size_t dst)
-		: SequentialInstruction(insn), dst_(dst) {}
+		: FI_acc(insn, dst) {}
 
 	virtual void execute(ExecutionManager& execMan, SymState& state);
-
-	virtual SymState* reverseAndIsect(
-		ExecutionManager&                      execMan,
-		const SymState&                        fwdPred,
-		const SymState&                        bwdSucc) const;
 
 	virtual std::ostream& toStream(std::ostream& os) const {
 		return os << "acca  \t[r" << this->dst_ << ']';
