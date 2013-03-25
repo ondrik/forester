@@ -852,13 +852,13 @@ public:
 			if (j == cache2.end())
 				continue;
 
-			for (typename std::vector<const Transition*>::const_iterator k = i->second.begin(); k != i->second.end(); ++k)
+			for (const Transition* kTrans : i->second)
 			{
-				for (typename std::vector<const Transition*>::const_iterator l = j->second.begin(); l != j->second.end(); ++l)
+				for (const Transition* lTrans : j->second)
 				{
 					std::pair<std::unordered_map<std::pair<size_t, size_t>, size_t, boost::hash<std::pair<size_t, size_t>>>::iterator, bool> p =
-						product.insert(std::make_pair(std::make_pair((*k)->rhs(), (*l)->rhs()), product.size() + stateOffset));
-					f(*k, *l, std::vector<size_t>(), p.first->second);
+						product.insert(std::make_pair(std::make_pair(kTrans->rhs(), lTrans->rhs()), product.size() + stateOffset));
+					f(kTrans, lTrans, std::vector<size_t>(), p.first->second);
 				}
 			}
 		}
@@ -925,7 +925,10 @@ public:
 			size_t                          rhs)
 		{
 			if (this->src1.isFinalState(t1->rhs()) && this->src2.isFinalState(t2->rhs()))
+			{
 				this->dst.addFinalState(rhs);
+			}
+
 			this->dst.addTransition(lhs, t1->label(), rhs);
 		}
 	};
@@ -961,7 +964,9 @@ public:
 			size_t                          /* rhs */)
 		{
 			if (predicate.isFinalState(t2->rhs()))
+			{
 				this->dst.push_back(t2->rhs());
+			}
 		}
 	};
 
@@ -995,10 +1000,14 @@ public:
 		assert((nullptr != t1) && (nullptr != t2));
 
 		if (!funcMatch(*t1, *t2))
+		{
 			return false;
+		}
 
 		if (t1->lhs().size() != t2->lhs().size())
+		{
 			return false;
+		}
 
 		for (size_t m = 0; m < t1->lhs().size(); ++m)
 		{
@@ -1083,7 +1092,10 @@ public:
 		this->intersectingStates(states, predicate);
 		std::set<size_t> s;
 		for (std::vector<size_t>::iterator i = states.begin(); i != states.end(); ++i)
+		{
 			s.insert(stateIndex[*i]);
+		}
+
 		for (size_t i = 0; i < result.size(); ++i)
 		{
 			if (s.count(i) == 1)
@@ -1135,7 +1147,10 @@ public:
 			std::vector<size_t> lhs;
 			stateIndex.translate(lhs, trans->first.lhs());
 			for (size_t j = 0; j < lhs.size(); ++j)
+			{
 				lhs[j] = headIndex[lhs[j]];
+			}
+
 			dst.addTransition(lhs, trans->first.label(), headIndex[stateIndex[trans->first.rhs()]]);
 			std::ostringstream os;
 			utils::printCont(os, lhs);
@@ -1229,12 +1244,14 @@ public:
 		while (changed)
 		{
 			changed = false;
-			for (typename std::vector<const TransIDPair*>::const_iterator i = v1.begin(); i != v1.end(); ++i)
+			for (const TransIDPair* transID : v1)
 			{
+				assert(nullptr != transID);
+
 				bool matches = true;
-				for (std::vector<size_t>::const_iterator j = (*i)->first.lhs().begin(); j != (*i)->first.lhs().end(); ++j)
+				for (size_t st : transID->first.lhs())
 				{
-					if (!states.count(*j))
+					if (!states.count(st))
 					{
 						matches = false;
 						break;
@@ -1242,42 +1259,47 @@ public:
 				}
 				if (matches)
 				{
-					if (states.insert((*i)->first.rhs()).second)
+					if (states.insert(transID->first.rhs()).second)
 						changed = true;
-					v3.push_back(*i);
+					v3.push_back(transID);
 				} else
 				{
-					v2.push_back(*i);
+					v2.push_back(transID);
 				}
 			}
 			v1.clear();
 			std::swap(v1, v2);
 		}
+
 		for (size_t state : finalStates_)
 		{
 			if (states.count(state))
+			{
 				dst.addFinalState(state);
+			}
 		}
+
 		std::swap(v1, v3);
 		v2.clear();
 		states = std::set<size_t>(dst.finalStates_.begin(), dst.finalStates_.end());
 		changed = true;
+
 		while (changed)
 		{
 			changed = false;
-			for (typename std::vector<const TransIDPair*>::const_iterator i = v1.begin(); i != v1.end(); ++i)
+			for (const TransIDPair* transID : v1)
 			{
-				if (states.count((*i)->first.rhs()))
+				if (states.count(transID->first.rhs()))
 				{
-					dst.addTransition(*i);
-					for (std::vector<size_t>::const_iterator j = (*i)->first.lhs().begin(); j != (*i)->first.lhs().end(); ++j)
+					dst.addTransition(transID);
+					for (size_t st : transID->first.lhs())
 					{
-						if (states.insert(*j).second)
+						if (states.insert(st).second)
 							changed = true;
 					}
 				} else
 				{
-					v2.push_back(*i);
+					v2.push_back(transID);
 				}
 			}
 			v1.clear();
