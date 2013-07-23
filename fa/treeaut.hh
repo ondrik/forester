@@ -919,16 +919,16 @@ public:
 					continue;
 				}
 
-				for (typename std::vector<const Transition*>::const_iterator k = i->second.begin(); k != i->second.end(); ++k)
+				for (const Transition* kTrans : i->second)
 				{
-					for (typename std::vector<const Transition*>::const_iterator l = j->second.begin(); l != j->second.end(); ++l)
+					for (const Transition* lTrans : j->second)
 					{
-						assert((*k)->lhs().size() == (*l)->lhs().size());
+						assert(kTrans->lhs().size() == lTrans->lhs().size());
 						std::vector<size_t> lhs;
-						for (size_t m = 0; m < (*k)->lhs().size(); ++m)
+						for (size_t m = 0; m < kTrans->lhs().size(); ++m)
 						{
 							std::unordered_map<std::pair<size_t, size_t>, size_t, boost::hash<std::pair<size_t, size_t>>>::iterator n = product.find(
-								std::make_pair((*k)->lhs()[m], (*l)->lhs()[m])
+								std::make_pair(kTrans->lhs()[m], lTrans->lhs()[m])
 							);
 
 							if (n == product.end())
@@ -938,14 +938,16 @@ public:
 
 							lhs.push_back(n->second);
 						}
-						if (lhs.size() < (*k)->lhs().size())
+
+						if (lhs.size() < kTrans->lhs().size())
 						{
 							continue;
 						}
 
 						std::pair<std::unordered_map<std::pair<size_t, size_t>, size_t, boost::hash<std::pair<size_t, size_t>>>::iterator, bool> p =
-							product.insert(std::make_pair(std::make_pair((*k)->rhs(), (*l)->rhs()), product.size() + stateOffset));
-						f(*k, *l, lhs, p.first->second);
+							product.insert(std::make_pair(std::make_pair(kTrans->rhs(), lTrans->rhs()), product.size() + stateOffset));
+						f(kTrans, lTrans, lhs, p.first->second);
+
 						if (p.second)
 						{
 							changed = true;
@@ -1192,7 +1194,7 @@ public:
 			*i = invStateIndex[*i];
 		}
 
-		for (const size_t& state : finalStates_)
+		for (size_t state : finalStates_)
 		{
 			dst.addFinalState(headIndex[stateIndex[state]]);
 		}
@@ -1390,17 +1392,18 @@ public:
 		for (typename td_cache_type::iterator i = cache.begin(); i != cache.end(); ++i)
 		{
 			std::list<const Transition*> tmp;
-			for (typename std::vector<const Transition*>::iterator j = i->second.begin(); j != i->second.end(); ++j)
+			for (const Transition* jTrans : i->second)
 			{
 				bool noskip = true;
 				for (typename std::list<const Transition*>::iterator k = tmp.begin(); k != tmp.end(); )
 				{
-					if ((*j)->llhsLessThan(**k, cons, stateIndex))
+					if (jTrans->llhsLessThan(**k, cons, stateIndex))
 					{
 						noskip = false;
 						break;
 					}
-					if ((*k)->llhsLessThan(**j, cons, stateIndex))
+
+					if ((*k)->llhsLessThan(*jTrans, cons, stateIndex))
 					{
 						typename std::list<const Transition*>::iterator l = k++;
 						tmp.erase(l);
@@ -1413,13 +1416,13 @@ public:
 
 				if (noskip)
 				{
-					tmp.push_back(*j);
+					tmp.push_back(jTrans);
 				}
 			}
 
-			for (typename std::list<const Transition*>::iterator j = tmp.begin(); j != tmp.end(); ++j)
+			for (const Transition* jTrans : tmp)
 			{
-				dst.addTransition(**j);
+				dst.addTransition(*jTrans);
 			}
 		}
 
@@ -1743,6 +1746,7 @@ public:
 				dst.addFinalState(j->second);
 			}
 		}
+
 		return dst;
 	}
 
