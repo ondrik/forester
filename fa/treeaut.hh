@@ -26,6 +26,7 @@
 #include <map>
 #include <algorithm>
 #include <cassert>
+#include <stack>
 #include <stdexcept>
 
 // Forester headers
@@ -1749,6 +1750,226 @@ public:
 
 		return dst;
 	}
+
+
+	/**
+	 * @brief  Returns states which may have unbounded occurrences in a run
+	 *
+	 * This method returns states that may have an unbounded number of occurrences
+	 * in a loop in the TA.
+	 *
+	 * @returns  States that may appear an unbounded number of times in a run of
+	 *           the TA
+	 *
+	 * @note  The TA this method is applied on needs to be without useless and
+	 *        unreachable states.
+	 */
+	std::vector<size_t> getStatesWithUnboundedOccurrences() const
+	{
+		/*
+		 * taken from
+		 * http://en.wikipedia.org/wiki/Tarjan%27s_strongly_connected_components_algorithm
+		 *
+		 * algorithm tarjan is
+		 *   input: graph G = (V, E)
+		 *   output: set of strongly connected components (sets of vertices)
+		 * 
+		 *   index := 0
+		 *   S := empty
+		 *   for each v in V do
+		 *     if (v.index is undefined) then
+		 *       strongconnect(v)
+		 *     end if
+		 *   repeat
+		 * 
+		 *   function strongconnect(v)
+		 *     // Set the depth index for v to the smallest unused index
+		 *     v.index := index
+		 *     v.lowlink := index
+		 *     index := index + 1
+		 *     S.push(v)
+		 * 
+		 *     // Consider successors of v
+		 *     for each (v, w) in E do
+		 *       if (w.index is undefined) then
+		 *         // Successor w has not yet been visited; recurse on it
+		 *         strongconnect(w)
+		 *         v.lowlink := min(v.lowlink, w.lowlink)
+		 *       else if (w is in S) then
+		 *         // Successor w is in stack S and hence in the current SCC
+		 *         v.lowlink := min(v.lowlink, w.index)
+		 *       end if
+		 *     repeat
+		 * 
+		 *     // If v is a root node, pop the stack and generate an SCC
+		 *     if (v.lowlink = v.index) then
+		 *       start a new strongly connected component
+		 *       repeat
+		 *         w := S.pop()
+		 *         add w to current strongly connected component
+		 *       until (w = v)
+		 *       output the current strongly connected component
+		 *     end if
+		 *   end function
+		 */
+
+		class Tarjan
+		{
+		private:  // data types
+
+			struct TarjanInfo
+			{
+				size_t index;
+				size_t lowlink;
+			};
+
+		public:   // data types
+
+			/// Used to store a partition
+			typedef std::vector<std::vector<size_t>> TPartition;
+
+		private:  // data members
+
+			/// Information about processed nodes
+			std::unordered_map<size_t, TarjanInfo> tarjanStore_;
+
+			/// The stack used in the algorithm
+			std::vector<size_t> tarjanStack_;
+
+			/// Counter for indexing nodes
+			size_t glIndex_;
+
+			/// The tree automaton
+			const TA& ta_;
+
+			/// The partition
+			TPartition& partition_;
+
+		private:  // methods
+
+			void strongconnect(size_t v)
+			{
+				FA_NOTE("Tarjan processing: " << v);
+
+				TarjanInfo tmpInfo = {
+					/* index */   glIndex_,
+					/* lowlink */ glIndex_
+				};
+				++glIndex_;
+
+				// set the 'index' and 'lowlink' of 'v'
+				auto itBoolPair =	tarjanStore_.insert(std::make_pair(v, tmpInfo));
+				assert(itBoolPair.second);      // make sure there was nothing before
+				TarjanInfo& vInfo = itBoolPair.first->second;  // reference to the info field
+
+				// push into the stack
+				tarjanStack_.push_back(v);
+
+				for (TA<T>::Iterator it = ta_.begin(v); it != ta_.end(v, it); ++it)
+				{
+					const Transition& trans = *it;
+					assert(trans.rhs() == v);
+
+					for (size_t w : trans.lhs())
+					{	// for all successors of 'v'
+
+						if (tarjanStore_.end() == tarjanStore_.find(w))
+						{	// w.index is undefined
+							this->strongconnect(w);
+
+							// TODO: return w.lowlink as the return value of the function
+
+							// find info about 'w'
+							auto it = tarjanStore_.find(w);
+							assert(tarjanStore_.end() != it);
+							const TarjanInfo& wInfo = it->second;
+
+							vInfo.lowlink = std::min(vInfo.lowlink, wInfo.lowlink);
+						}
+						else if (tarjanStack_.end() !=
+							std::find(tarjanStack_.begin(), tarjanStack_.end(), w))
+						{	// w.index is defined and w is in tarjanStack -> end of loop
+
+							// TODO: the previous test might be done using a set containing
+							// accessed states
+							// TODO: try the previous test using the other way (rbegin to rend)
+
+							auto it = tarjanStore_.find(w);
+							assert(tarjanStore_.end() != it);
+							const TarjanInfo& wInfo = it->second;
+
+							vInfo.lowlink = std::min(vInfo.lowlink, wInfo.index);
+						}
+						else
+						{	// otherwise w is a part of a disjoint SCC, then do nothing
+						}
+					}
+				}
+
+				if (vInfo.index == vInfo.lowlink)
+				{	// in the case 'v' is the root of a SCC
+					std::vector<size_t> component;
+
+					size_t w;
+					do
+					{	// until we pop all nodes of the SCC
+						assert(!tarjanStack_.empty());
+
+						w = tarjanStack_.back();
+						tarjanStack_.pop_back();
+
+						component.push_back(w);
+					} while (v != w);
+
+					partition_.push_back(std::move(component));
+				}
+			}
+
+		public:   // methods
+
+			/**
+			 * @brief  The constructor
+			 *
+			 * @param[in]  ta         The tree automaton for which the algorithm will operate
+			 * @param[out] partition  The partition into which the SCCs will be loaded
+			 */
+			Tarjan(
+				const TA&       ta,
+				TPartition&     partition) :
+				tarjanStore_(),
+				tarjanStack_(),
+				glIndex_(0),
+				ta_(ta),
+				partition_(partition)
+			{ }
+
+			void operator()()
+			{
+				this->strongconnect(ta_.getFinalState());
+
+				assert(tarjanStack_.empty());
+			}
+		};
+
+		FA_DEBUG("Running Tarjan");
+
+		typename Tarjan::TPartition partition;
+		Tarjan tarjan(*this, partition);
+		tarjan();
+
+		for (const std::vector<size_t>& component : partition)
+		{
+			FA_NOTE("Component: ");
+			for (size_t state : component)
+			{
+				FA_NOTE("  " << state);
+			}
+		}
+		FA_DEBUG("Tarjan finished");
+
+		return std::vector<size_t>();
+	}
+
 
 	/**
 	 * @brief  Run a visitor on the instance
