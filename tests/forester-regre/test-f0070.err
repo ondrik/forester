@@ -1,0 +1,2 @@
+test-f0070.c:44:8: note: ignoring call to undefined function 'printf'
+test-f0070.c:54:9: note: ignoring call to undefined function 'printf'
