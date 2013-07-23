@@ -320,7 +320,9 @@ public:   // data types
 				{
 					typename td_cache_type::const_iterator j = cache_.find(*i);
 					if (j != cache_.end())
+					{
 						stack_.push_back(std::make_pair(j->second.begin(), j->second.end()));
+					}
 				}
 			}
 		}
@@ -345,7 +347,10 @@ public:   // data types
 			this->insertLhs((*stack_.back().first)->lhs());
 			// if something changed then we have a new "working" item on the top of the stack
 			if (stack_.size() != oldSize)
+			{
 				return true;
+			}
+
 			++stack_.back().first;
 			do
 			{
@@ -355,14 +360,20 @@ public:   // data types
 				// discard processed queue
 				stack_.pop_back();
 			} while (!stack_.empty());
+
 			// nothing else remains
 			return false;
 		}
 
-		const Transition& operator*() const { return **stack_.back().first; }
+		const Transition& operator*() const
+		{
+			return **stack_.back().first;
+		}
 
-		const Transition* operator->() const { return *stack_.back().first; }
-
+		const Transition* operator->() const
+		{
+			return *stack_.back().first;
+		}
 	};
 
 	typedef std::unordered_map<size_t, std::vector<const Transition*>> bu_cache_type;
@@ -457,11 +468,15 @@ public:
 		if (this->transitions.insert(x).second)
 		{
 			if (t.lhs().size() > this->maxRank)
+			{
 				this->maxRank = t.lhs().size();
-		} else
+			}
+		}
+		else
 		{
 			this->transCache().release(x);
 		}
+
 		return x;
 	}
 
@@ -490,6 +505,19 @@ public:
 		return i;
 	}
 
+
+	/**
+	 * @brief  Iterator for transitions under a state
+	 *
+	 * This method returns the iterator that iterates over transitions for which
+	 * @p rhs is the parent state. The end of the sequence is given by
+	 * TA<T>::end(size_t rhs).
+	 *
+	 * @param[in]  rhs  The parent state of the transitions
+	 *
+	 * @returns  The iterator over transitions for which @p root is the parent
+	 *           state
+	 */
 	typename TA<T>::Iterator begin(size_t rhs) const
 	{
 		return Iterator(this->_lookup(rhs));
@@ -621,11 +649,15 @@ public:
 			{
 				s.insert(state);
 			}
+
 			s.insert(trans->first.rhs());
 		}
+
 		s.insert(finalStates_.begin(), finalStates_.end());
 		for (size_t state : s)
+		{
 			index.add(state);
+		}
 	}
 
 	void buildLabelIndex(Index<T>& index) const
@@ -794,7 +826,10 @@ public:
 
 		auto iter = this->accBegin();
 
-		while (++iter != this->accEnd()) ++cnt;
+		while (++iter != this->accEnd())
+		{
+			++cnt;
+		}
 
 		return cnt;
 	}
@@ -846,11 +881,15 @@ public:
 		for (typename lt_cache_type::const_iterator i = cache1.begin(); i != cache1.end(); ++i)
 		{
 			if (!i->second.front()->lhs().empty())
+			{
 				continue;
+			}
 
 			typename lt_cache_type::const_iterator j = cache2.find(i->first);
 			if (j == cache2.end())
+			{
 				continue;
+			}
 
 			for (const Transition* kTrans : i->second)
 			{
@@ -862,6 +901,7 @@ public:
 				}
 			}
 		}
+
 		bool changed = true;
 		while (changed)
 		{
@@ -869,10 +909,16 @@ public:
 			for (typename lt_cache_type::const_iterator i = cache1.begin(); i != cache1.end(); ++i)
 			{
 				if (i->second.front()->lhs().empty())
+				{
 					continue;
+				}
+
 				typename lt_cache_type::const_iterator j = cache2.find(i->first);
 				if (j == cache2.end())
+				{
 					continue;
+				}
+
 				for (typename std::vector<const Transition*>::const_iterator k = i->second.begin(); k != i->second.end(); ++k)
 				{
 					for (typename std::vector<const Transition*>::const_iterator l = j->second.begin(); l != j->second.end(); ++l)
@@ -884,17 +930,26 @@ public:
 							std::unordered_map<std::pair<size_t, size_t>, size_t, boost::hash<std::pair<size_t, size_t>>>::iterator n = product.find(
 								std::make_pair((*k)->lhs()[m], (*l)->lhs()[m])
 							);
+
 							if (n == product.end())
+							{
 								break;
+							}
+
 							lhs.push_back(n->second);
 						}
 						if (lhs.size() < (*k)->lhs().size())
+						{
 							continue;
+						}
+
 						std::pair<std::unordered_map<std::pair<size_t, size_t>, size_t, boost::hash<std::pair<size_t, size_t>>>::iterator, bool> p =
 							product.insert(std::make_pair(std::make_pair((*k)->rhs(), (*l)->rhs()), product.size() + stateOffset));
 						f(*k, *l, lhs, p.first->second);
 						if (p.second)
+						{
 							changed = true;
+						}
 					}
 				}
 			}
@@ -1180,13 +1235,17 @@ public:
 				if (matches)
 				{
 					if (states.insert(trans->first.rhs()).second)
+					{
 						changed = true;
+					}
 					dst.addTransition(trans);
-				} else
+				}
+				else
 				{
 					v2.push_back(trans);
 				}
 			}
+
 			v1.clear();
 			std::swap(v1, v2);
 		}
@@ -1230,9 +1289,11 @@ public:
 					v2.push_back(trans);
 				}
 			}
+
 			v1.clear();
 			std::swap(v1, v2);
 		}
+
 		return dst;
 	}
 
@@ -1240,6 +1301,7 @@ public:
 	{
 		std::vector<const TransIDPair*> v1(this->transitions.begin(), this->transitions.end()), v2, v3;
 		std::set<size_t> states;
+
 		bool changed = true;
 		while (changed)
 		{
@@ -1260,13 +1322,18 @@ public:
 				if (matches)
 				{
 					if (states.insert(transID->first.rhs()).second)
+					{
 						changed = true;
+					}
+
 					v3.push_back(transID);
-				} else
+				}
+				else
 				{
 					v2.push_back(transID);
 				}
 			}
+
 			v1.clear();
 			std::swap(v1, v2);
 		}
@@ -1316,7 +1383,9 @@ public:
 		td_cache_type cache = this->buildTDCache();
 
 		for (size_t state : finalStates_)
+		{
 			dst.addFinalState(state);
+		}
 
 		for (typename td_cache_type::iterator i = cache.begin(); i != cache.end(); ++i)
 		{
@@ -1335,16 +1404,28 @@ public:
 					{
 						typename std::list<const Transition*>::iterator l = k++;
 						tmp.erase(l);
-					} else ++k;
+					}
+					else
+					{
+						++k;
+					}
 				}
+
 				if (noskip)
+				{
 					tmp.push_back(*j);
+				}
 			}
+
 			for (typename std::list<const Transition*>::iterator j = tmp.begin(); j != tmp.end(); ++j)
+			{
 				dst.addTransition(**j);
+			}
 		}
+
 		return dst;
 	}
+
 
 	TA<T>& minimized(
 		TA<T>&                                   dst,
@@ -1358,6 +1439,7 @@ public:
 		TA<T> tmp1(backend), tmp2(backend), tmp3(backend);
 		return this->collapsed(tmp1, dwn, stateIndex).uselessFree(tmp2).downwardSieve(tmp3, dwn, stateIndex).unreachableFree(dst);
 	}
+
 
 	TA<T>& minimizedCombo(TA<T>& dst) const
 	{
@@ -1374,6 +1456,7 @@ public:
 		return this->collapsed(tmp, rel, stateIndex).minimized(dst);
 	}
 
+
 	TA<T>& minimized(TA<T>& dst) const
 	{
 		Index<size_t> stateIndex;
@@ -1381,6 +1464,7 @@ public:
 		std::vector<std::vector<bool> > cons(stateIndex.size(), std::vector<bool>(stateIndex.size(), true));
 		return this->minimized(dst, cons, stateIndex);
 	}
+
 
 	static bool subseteq(const TA<T>& a, const TA<T>& b);
 
@@ -1540,7 +1624,9 @@ public:
 		for (const TransIDPair* trans : this->transitions)
 		{
 			if (f(&trans->first))
+			{
 				dst.addTransition(trans);
+			}
 		}
 		return dst;
 	}
@@ -1629,7 +1715,9 @@ public:
 		{
 			dst.addTransition(trans);
 			if (this->isFinalState(trans->first.rhs()))
+			{
 				dst.addTransition(trans->first.lhs(), trans->first.label(), newState);
+			}
 		}
 
 		return dst;
@@ -1646,9 +1734,14 @@ public:
 			std::unordered_map<size_t, size_t>::const_iterator j = states.find(state);
 			assert(j != states.end());
 			for (typename trans_set_type::const_iterator k = this->_lookup(state); k != this->transitions.end() && (*k)->first.rhs() == state; ++k)
+			{
 				dst.addTransition((*k)->first.lhs(), (*k)->first.label(), j->second);
+			}
+
 			if (registerFinalState)
+			{
 				dst.addFinalState(j->second);
+			}
 		}
 		return dst;
 	}
@@ -1668,12 +1761,6 @@ public:
 		visitor(*this);
 	}
 
-/*
-	TA<T>& unfoldAtLeaf(TA<T>& dst, size_t selector) const {
-		// TODO:
-		return dst;
-	}
-*/
 	class Manager : Cache<TA<T>*>::Listener
 	{
 		typename TA<T>::Backend& backend;
@@ -1728,6 +1815,7 @@ public:
 		{
 			assert(src);
 			assert(src->backend == &this->backend);
+
 			return this->taCache.lookup(new TA<T>(*src, copyFinalStates))->first;
 		}
 
@@ -1735,6 +1823,7 @@ public:
 		{
 			typename Cache<TA<T>*>::value_type* v = this->taCache.find(x);
 			assert(v);
+
 			return this->taCache.addRef(v), x;
 		}
 
@@ -1749,7 +1838,9 @@ public:
 		{
 			this->taCache.clear();
 			for (TA<T>* ta : this->taPool)
+			{
 				delete ta;
+			}
 
 			this->taPool.clear();
 		}
