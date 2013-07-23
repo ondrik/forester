@@ -180,5 +180,11 @@ void Unfolding::unfoldBox(
 
 void Unfolding::unfoldStraightBoxes()
 {
-	
+	for (size_t i = 0; i < fae_.getRootCount(); ++i)
+	{
+		if (nullptr != fae_.getRoot(i))
+		{
+			fae_.getRoot(i)->getStatesWithUnboundedOccurrences();
+		}
+	}
 }

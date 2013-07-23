@@ -480,6 +480,10 @@ void FI_abs::execute(ExecutionManager& execMan, SymState& state)
 
 	fae->updateConnectionGraph();
 
+	// First unfold boxes which are not in a loop
+	Unfolding unfolding(*fae);
+	unfolding.unfoldStraightBoxes();
+
 	std::set<size_t> forbidden;
 #if FA_ALLOW_FOLDING
 	// reorder components into the canonical form (no merging!)
