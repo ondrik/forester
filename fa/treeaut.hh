@@ -1,20 +1,20 @@
 /*
  * Copyright (C) 2010 Jiri Simacek
  *
- * This file is part of predator.
+ * This file is part of forester.
  *
- * predator is free software: you can redistribute it and/or modify
+ * forester is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * any later version.
  *
- * predator is distributed in the hope that it will be useful,
+ * forester is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with predator.  If not, see <http://www.gnu.org/licenses/>.
+ * along with forester.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 #ifndef TREE_AUT_H
@@ -33,6 +33,7 @@
 #include "cache.hh"
 #include "lts.hh"
 #include "streams.hh"
+#include "tarjan.hh"
 #include "utils.hh"
 
 template <class T> class TA;
@@ -1751,13 +1752,47 @@ public:
 		return dst;
 	}
 
+private:  // methods
+
+	/**
+	 * @brief  Collects all states reachable from a given state
+	 *
+	 * Collects all states reachable (downward) from @p state and inserts them
+	 * into @p cont. Skips states already in @p cont
+	 *
+	 * @param[in]      state  The state from which reachable states will be sought
+	 * @param[in,out]  cont   The container into which reachable states will be
+	 *                        inserted
+	 */
+	template <class TContainer>
+	void collectReachable(
+		size_t                 state,
+		TContainer&            cont) const
+	{
+		for (typename TA<T>::Iterator it = this->begin(state);
+			it != this->end(state, it); ++it)
+		{	// traverse the transitions
+			const Transition& trans = *it;
+
+			for (size_t childState : trans.lhs())
+			{
+				if (cont.insert(childState).second)
+				{	// if 'childState' has previously not been in 'cont'
+					collectReachable(childState, cont);
+				}
+			}
+		}
+	}
+
+
+public:   // methods
 
 	/**
 	 * @brief  Returns states which may have unbounded occurrences in a run
 	 *
 	 * This method returns states that may have an unbounded number of occurrences
 	 * in a run of the TA. Note that this differs for tree automata, where
-	 * a state may have an unbounded number of occurences even if there is no loop
+	 * a state may have an unbounded number of occurrences even if there is no loop
 	 * over it (when juxtaposed to finite automata where these states are exactly
 	 * those on some loop in the automaton.)
 	 *
@@ -1767,226 +1802,87 @@ public:
 	 * @note  The TA this method is applied on needs to be without useless and
 	 *        unreachable states.
 	 */
-	std::vector<size_t> getStatesWithUnboundedOccurrences() const
+	std::unordered_set<size_t> getStatesWithUnboundedOccurrences() const
 	{
-		/*
-		 * taken from
-		 * http://en.wikipedia.org/wiki/Tarjan%27s_strongly_connected_components_algorithm
-		 *
-		 * algorithm tarjan is
-		 *   input: graph G = (V, E)
-		 *   output: set of strongly connected components (sets of vertices)
-		 * 
-		 *   index := 0
-		 *   S := empty
-		 *   for each v in V do
-		 *     if (v.index is undefined) then
-		 *       strongconnect(v)
-		 *     end if
-		 *   repeat
-		 * 
-		 *   function strongconnect(v)
-		 *     // Set the depth index for v to the smallest unused index
-		 *     v.index := index
-		 *     v.lowlink := index
-		 *     index := index + 1
-		 *     S.push(v)
-		 * 
-		 *     // Consider successors of v
-		 *     for each (v, w) in E do
-		 *       if (w.index is undefined) then
-		 *         // Successor w has not yet been visited; recurse on it
-		 *         strongconnect(w)
-		 *         v.lowlink := min(v.lowlink, w.lowlink)
-		 *       else if (w is in S) then
-		 *         // Successor w is in stack S and hence in the current SCC
-		 *         v.lowlink := min(v.lowlink, w.index)
-		 *       end if
-		 *     repeat
-		 * 
-		 *     // If v is a root node, pop the stack and generate an SCC
-		 *     if (v.lowlink = v.index) then
-		 *       start a new strongly connected component
-		 *       repeat
-		 *         w := S.pop()
-		 *         add w to current strongly connected component
-		 *       until (w = v)
-		 *       output the current strongly connected component
-		 *     end if
-		 *   end function
-		 */
+		typedef Tarjan<TA<T>> TarjanTA;
 
-		class Tarjan
-		{
-		private:  // data types
-
-			struct TarjanInfo
-			{
-				size_t index;
-				size_t lowlink;
-			};
-
-		public:   // data types
-
-			/// Used to store a partition
-			typedef std::vector<std::vector<size_t>> TPartition;
-
-		private:  // data members
-
-			/// Information about processed nodes
-			std::unordered_map<size_t, TarjanInfo> tarjanStore_;
-
-			/// The stack used in the algorithm
-			std::vector<size_t> tarjanStack_;
-
-			/// Counter for indexing nodes
-			size_t glIndex_;
-
-			/// The tree automaton
-			const TA& ta_;
-
-			/// The partition
-			TPartition& partition_;
-
-		private:  // methods
-
-			void strongconnect(size_t v)
-			{
-				FA_NOTE("Tarjan processing: " << v);
-
-			/**
-			 * @brief  Retrieves non-trivial strongly connected components
-			 *
-			 * Given a tree automaton @p ta_, this method adds all strongly connected
-			 * components reachable from @p v into the @p parititon_ member field.
-			 *
-			 * @param[in]  v  The root of the search tree
-			 *
-			 * @returns  @p v.lowlink
-			 */
-			size_t strongconnect(size_t v)
-			{
-				TarjanInfo tmpInfo = {
-					/* index */   glIndex_,
-					/* lowlink */ glIndex_
-				};
-				++glIndex_;
-
-				// set the 'index' and 'lowlink' of 'v'
-				auto itBoolPair =	tarjanStore_.insert(std::make_pair(v, tmpInfo));
-				assert(itBoolPair.second);      // make sure there was nothing before
-				TarjanInfo& vInfo = itBoolPair.first->second;  // reference to the info field
-
-				// push into the stack
-				tarjanStack_.push_back(v);
-
-				bool isSingleNodeNonTrivialSCC = false;
-
-				for (TA<T>::Iterator it = ta_.begin(v); it != ta_.end(v, it); ++it)
-				{	// traverse transitions going from 'v'
-					const Transition& trans = *it;
-					assert(trans.rhs() == v);
-
-					for (size_t w : trans.lhs())
-					{	// for all successors of 'v'
-						if (v == w)
-						{	// if there is a loop on 'v'
-							isSingleNodeNonTrivialSCC = true;
-						}
-						else if (tarjanStore_.end() == tarjanStore_.find(w))
-						{	// w.index is undefined
-							size_t wLowlink = this->strongconnect(w);
-
-							vInfo.lowlink = std::min(vInfo.lowlink, wLowlink);
-						}
-						else if (tarjanStack_.end() !=
-							std::find(tarjanStack_.begin(), tarjanStack_.end(), w))
-						{	// w.index is defined and w is in tarjanStack -> end of loop
-
-							// TODO: the previous test might be done using a set containing
-							// accessed states
-							// TODO: try the previous test using the other way (rbegin to rend)
-
-							auto it = tarjanStore_.find(w);
-							assert(tarjanStore_.end() != it);
-							const TarjanInfo& wInfo = it->second;
-
-							vInfo.lowlink = std::min(vInfo.lowlink, wInfo.index);
-						}
-						else
-						{	// otherwise w is a part of a disjoint SCC, then do nothing
-						}
-					}
-				}
-
-				if ((vInfo.index == vInfo.lowlink))
-				{	// in the case 'v' is the root of an SCC
-					if ((tarjanStack_.back()) == v && !isSingleNodeNonTrivialSCC)
-					{	// if the SCC is trivial
-						tarjanStack_.pop_back();
-					}
-					else
-					{	// if the SCC is non-trivial, just skip it
-						std::vector<size_t> component;
-
-						size_t w;
-						do
-						{	// until we pop all nodes of the SCC
-							assert(!tarjanStack_.empty());
-
-							w = tarjanStack_.back();
-							tarjanStack_.pop_back();
-
-							component.push_back(w);
-						} while (v != w);
-
-						partition_.push_back(std::move(component));
-					}
-				}
-
-				return vInfo.lowlink;
-			}
-
-		public:   // methods
-
-			/**
-			 * @brief  The constructor
-			 *
-			 * @param[in]  ta         The tree automaton for which the algorithm will operate
-			 * @param[out] partition  The partition into which the SCCs will be loaded
-			 */
-			Tarjan(
-				const TA&       ta,
-				TPartition&     partition) :
-				tarjanStore_(),
-				tarjanStack_(),
-				glIndex_(0),
-				ta_(ta),
-				partition_(partition)
-			{ }
-
-			void operator()()
-			{
-				this->strongconnect(ta_.getFinalState());
-
-				assert(tarjanStack_.empty());
-			}
-		};
-
-		typename Tarjan::TPartition partition;
-		Tarjan tarjan(*this, partition);
+		// first, get the non-trivial SCCs
+		typename TarjanTA::TPartition partition;
+		TarjanTA tarjan(*this, partition);
 		tarjan();
+		// now, partition contains non-trivial SCCs of *this
 
-		for (const std::vector<size_t>& component : partition)
-		{
+		for (const typename TarjanTA::TStronglyCC& component : partition)
+		{	// print the SCCs, just for fun
 			FA_NOTE("SCC: ");
 			for (size_t state : component)
 			{
-				FA_NOTE("  " << state);
+//				FA_NOTE("  " << state);
+				FA_NOTE("  " << (_MSB_TEST(state)? 'r' : 'q') << (_MSB_TEST(state)? _MSB_GET(state) : state));
 			}
 		}
 
-		return std::vector<size_t>();
+		// Now, use the SCCs to get the states with an unbounded number of
+		// occurrences in runs of the tree automaton.
+		//
+		// We do this in the way that we traverse the automaton going from the final
+		// (or, root) state over the transitions and if we enter a non-trivial SCC
+		// (named S) we
+		//
+		//	a) add all states in S to the set of states with an unbounded
+		//	   number of occurrences
+		//
+		//	b) for every transition q -> f(r_1, ..., r_n) where q \in S and at least
+		//	   one of r_1, ..., r_n \in S, we add all r_1, ..., r_n to the set of
+		//	   states with an unbounded number of occurrences
+
+		std::unordered_set<size_t> unboundedOccur;
+		for (const typename TarjanTA::TStronglyCC& component : partition)
+		{	// go through the components
+			unboundedOccur.insert(component.cbegin(), component.cend());
+
+			for (size_t state : component)
+			{
+				for (typename TA<T>::Iterator it = this->begin(state);
+					it != this->end(state, it); ++it)
+				{
+					const Transition& trans = *it;
+
+					bool looping = false;
+					for (size_t childState : trans.lhs())
+					{	// go over all children states of the transition
+						if (component.cend() != component.find(childState))
+						{	// in the case 'childState' is on a loop from 'state'
+							looping = true;
+							break;
+						}
+					}
+
+					if (looping)
+					{	// in the case the transition may appear unboundedly many times in a run
+						for (size_t childState : trans.lhs())
+						{	// insert all states in the transition as unboundedly occurring
+							if (unboundedOccur.insert(childState).second)
+							{	// if 'childState' has not already been marked as occurring
+								// unboundedly many times, collect all descendants
+								collectReachable(childState, unboundedOccur);
+							}
+						}
+					}
+				}
+			}
+		}
+
+		if (!unboundedOccur.empty())
+		{
+			FA_NOTE("States occuring unboundedly many times:");
+			for (size_t state : unboundedOccur)
+			{
+				FA_NOTE("  " << (_MSB_TEST(state)? 'r' : 'q') << (_MSB_TEST(state)? _MSB_GET(state) : state));
+			}
+		}
+
+		return unboundedOccur;
 	}
 
 
