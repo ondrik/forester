@@ -1756,7 +1756,10 @@ public:
 	 * @brief  Returns states which may have unbounded occurrences in a run
 	 *
 	 * This method returns states that may have an unbounded number of occurrences
-	 * in a loop in the TA.
+	 * in a run of the TA. Note that this differs for tree automata, where
+	 * a state may have an unbounded number of occurences even if there is no loop
+	 * over it (when juxtaposed to finite automata where these states are exactly
+	 * those on some loop in the automaton.)
 	 *
 	 * @returns  States that may appear an unbounded number of times in a run of
 	 *           the TA
@@ -1851,6 +1854,18 @@ public:
 			{
 				FA_NOTE("Tarjan processing: " << v);
 
+			/**
+			 * @brief  Retrieves non-trivial strongly connected components
+			 *
+			 * Given a tree automaton @p ta_, this method adds all strongly connected
+			 * components reachable from @p v into the @p parititon_ member field.
+			 *
+			 * @param[in]  v  The root of the search tree
+			 *
+			 * @returns  @p v.lowlink
+			 */
+			size_t strongconnect(size_t v)
+			{
 				TarjanInfo tmpInfo = {
 					/* index */   glIndex_,
 					/* lowlink */ glIndex_
@@ -1865,26 +1880,24 @@ public:
 				// push into the stack
 				tarjanStack_.push_back(v);
 
+				bool isSingleNodeNonTrivialSCC = false;
+
 				for (TA<T>::Iterator it = ta_.begin(v); it != ta_.end(v, it); ++it)
-				{
+				{	// traverse transitions going from 'v'
 					const Transition& trans = *it;
 					assert(trans.rhs() == v);
 
 					for (size_t w : trans.lhs())
 					{	// for all successors of 'v'
-
-						if (tarjanStore_.end() == tarjanStore_.find(w))
+						if (v == w)
+						{	// if there is a loop on 'v'
+							isSingleNodeNonTrivialSCC = true;
+						}
+						else if (tarjanStore_.end() == tarjanStore_.find(w))
 						{	// w.index is undefined
-							this->strongconnect(w);
+							size_t wLowlink = this->strongconnect(w);
 
-							// TODO: return w.lowlink as the return value of the function
-
-							// find info about 'w'
-							auto it = tarjanStore_.find(w);
-							assert(tarjanStore_.end() != it);
-							const TarjanInfo& wInfo = it->second;
-
-							vInfo.lowlink = std::min(vInfo.lowlink, wInfo.lowlink);
+							vInfo.lowlink = std::min(vInfo.lowlink, wLowlink);
 						}
 						else if (tarjanStack_.end() !=
 							std::find(tarjanStack_.begin(), tarjanStack_.end(), w))
@@ -1906,23 +1919,32 @@ public:
 					}
 				}
 
-				if (vInfo.index == vInfo.lowlink)
-				{	// in the case 'v' is the root of a SCC
-					std::vector<size_t> component;
-
-					size_t w;
-					do
-					{	// until we pop all nodes of the SCC
-						assert(!tarjanStack_.empty());
-
-						w = tarjanStack_.back();
+				if ((vInfo.index == vInfo.lowlink))
+				{	// in the case 'v' is the root of an SCC
+					if ((tarjanStack_.back()) == v && !isSingleNodeNonTrivialSCC)
+					{	// if the SCC is trivial
 						tarjanStack_.pop_back();
+					}
+					else
+					{	// if the SCC is non-trivial, just skip it
+						std::vector<size_t> component;
 
-						component.push_back(w);
-					} while (v != w);
+						size_t w;
+						do
+						{	// until we pop all nodes of the SCC
+							assert(!tarjanStack_.empty());
 
-					partition_.push_back(std::move(component));
+							w = tarjanStack_.back();
+							tarjanStack_.pop_back();
+
+							component.push_back(w);
+						} while (v != w);
+
+						partition_.push_back(std::move(component));
+					}
 				}
+
+				return vInfo.lowlink;
 			}
 
 		public:   // methods
@@ -1951,21 +1973,18 @@ public:
 			}
 		};
 
-		FA_DEBUG("Running Tarjan");
-
 		typename Tarjan::TPartition partition;
 		Tarjan tarjan(*this, partition);
 		tarjan();
 
 		for (const std::vector<size_t>& component : partition)
 		{
-			FA_NOTE("Component: ");
+			FA_NOTE("SCC: ");
 			for (size_t state : component)
 			{
 				FA_NOTE("  " << state);
 			}
 		}
-		FA_DEBUG("Tarjan finished");
 
 		return std::vector<size_t>();
 	}
