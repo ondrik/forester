@@ -1755,30 +1755,30 @@ public:
 private:  // methods
 
 	/**
-	 * @brief  Collects all states reachable from a given state
+	 * @brief  Collects all transitions reachable from a given state
 	 *
-	 * Collects all states reachable (downward) from @p state and inserts them
-	 * into @p cont. Skips states already in @p cont
+	 * Collects all transitions reachable (downward) from @p state and inserts
+	 * them into @p cont. Skips transitions already in @p cont.
 	 *
-	 * @param[in]      state  The state from which reachable states will be sought
-	 * @param[in,out]  cont   The container into which reachable states will be
-	 *                        inserted
+	 * @param[in]      state  The root state
+	 * @param[in,out]  cont   The container into which reachable transitions will
+	 *                        be inserted
 	 */
 	template <class TContainer>
-	void collectReachable(
+	void collectReachableTrans(
 		size_t                 state,
 		TContainer&            cont) const
 	{
 		for (typename TA<T>::Iterator it = this->begin(state);
 			it != this->end(state, it); ++it)
-		{	// traverse the transitions
+		{
 			const Transition& trans = *it;
 
-			for (size_t childState : trans.lhs())
-			{
-				if (cont.insert(childState).second)
-				{	// if 'childState' has previously not been in 'cont'
-					collectReachable(childState, cont);
+			if (cont.insert(&trans).second)
+			{	// if 'trans' has previously not been in 'cont'
+				for (size_t childState : trans.lhs())
+				{	// process all children states of the transition
+					collectReachableTrans(childState, cont);
 				}
 			}
 		}
@@ -1787,22 +1787,25 @@ private:  // methods
 
 public:   // methods
 
+	// TODO: remove the following code (getStatesWithUnboundedOccurrences)?
+	// (and collectReachable?)
+
 	/**
-	 * @brief  Returns states which may have unbounded occurrences in a run
+	 * @brief  Returns transitions which have unbounded number of occurrences in a run
 	 *
-	 * This method returns states that may have an unbounded number of occurrences
+	 * This method returns transitions that have an unbounded number of occurrences
 	 * in a run of the TA. Note that this differs for tree automata, where
-	 * a state may have an unbounded number of occurrences even if there is no loop
-	 * over it (when juxtaposed to finite automata where these states are exactly
-	 * those on some loop in the automaton.)
+	 * a transition may not have an unbounded number of occurrences even if it does
+	 * not occur in a loop (when juxtaposed to finite automata where these
+	 * transitions are exactly those on a loop in the automaton)
 	 *
-	 * @returns  States that may appear an unbounded number of times in a run of
+	 * @returns  Transitions that appear an unbounded number of times in a run of
 	 *           the TA
 	 *
 	 * @note  The TA this method is applied on needs to be without useless and
 	 *        unreachable states.
 	 */
-	std::unordered_set<size_t> getStatesWithUnboundedOccurrences() const
+	std::unordered_set<const Transition*> getUnboundedOccurTrans() const
 	{
 		typedef Tarjan<TA<T>> TarjanTA;
 
@@ -1822,25 +1825,18 @@ public:   // methods
 			}
 		}
 
-		// Now, use the SCCs to get the states with an unbounded number of
+		// Now, use the SCCs to get the transitions with an unbounded number of
 		// occurrences in runs of the tree automaton.
 		//
-		// We do this in the way that we traverse the automaton going from the final
-		// (or, root) state over the transitions and if we enter a non-trivial SCC
-		// (named S) we
+		// We do this in the way that for each non-trivial SCC (named S) we
 		//
-		//	a) add all states in S to the set of states with an unbounded
-		//	   number of occurrences
-		//
-		//	b) for every transition q -> f(r_1, ..., r_n) where q \in S and at least
-		//	   one of r_1, ..., r_n \in S, we add all r_1, ..., r_n to the set of
-		//	   states with an unbounded number of occurrences
+		//	*) for every transition t = "q -> f(r_1, ..., r_n)" where q \in S and at
+		//	   least one of r_1, ..., r_n \in S, we add 't' to the set of
+		//	   transitions with an unbounded number of occurrences
 
-		std::unordered_set<size_t> unboundedOccur;
+		std::unordered_set<const Transition*> unboundedOccur;
 		for (const typename TarjanTA::TStronglyCC& component : partition)
 		{	// go through the components
-			unboundedOccur.insert(component.cbegin(), component.cend());
-
 			for (size_t state : component)
 			{
 				for (typename TA<T>::Iterator it = this->begin(state);
@@ -1849,10 +1845,11 @@ public:   // methods
 					const Transition& trans = *it;
 
 					bool looping = false;
-					for (size_t childState : trans.lhs())
+					size_t i;
+					for (i = 0; i < trans.lhs().size(); ++i)
 					{	// go over all children states of the transition
-						if (component.cend() != component.find(childState))
-						{	// in the case 'childState' is on a loop from 'state'
+						if (component.cend() != component.find(trans.lhs()[i]))
+						{	// in the case the i-th child is on a loop from 'state'
 							looping = true;
 							break;
 						}
@@ -1860,12 +1857,16 @@ public:   // methods
 
 					if (looping)
 					{	// in the case the transition may appear unboundedly many times in a run
-						for (size_t childState : trans.lhs())
-						{	// insert all states in the transition as unboundedly occurring
-							if (unboundedOccur.insert(childState).second)
-							{	// if 'childState' has not already been marked as occurring
-								// unboundedly many times, collect all descendants
-								collectReachable(childState, unboundedOccur);
+						if (!unboundedOccur.insert(&trans).second)
+						{	// in the case the transition is already in the set
+							assert(false);           // fail gracefully
+						}
+
+						for (size_t j = 0; j < trans.lhs().size(); ++j)
+						{	// traverse all states that do not participate in the loop
+							if (i != j)
+							{	// if the loop does not go over the j-th child
+								collectReachableTrans(trans.lhs()[j], unboundedOccur);
 							}
 						}
 					}
@@ -1875,10 +1876,10 @@ public:   // methods
 
 		if (!unboundedOccur.empty())
 		{
-			FA_NOTE("States occuring unboundedly many times:");
-			for (size_t state : unboundedOccur)
+			FA_NOTE("Transitions occuring unboundedly many times:");
+			for (const Transition* trans : unboundedOccur)
 			{
-				FA_NOTE("  " << (_MSB_TEST(state)? 'r' : 'q') << (_MSB_TEST(state)? _MSB_GET(state) : state));
+				FA_NOTE("  " << *trans);
 			}
 		}
 

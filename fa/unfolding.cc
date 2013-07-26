@@ -184,7 +184,10 @@ void Unfolding::unfoldStraightBoxes()
 	{
 		if (nullptr != fae_.getRoot(i))
 		{
-			fae_.getRoot(i)->getStatesWithUnboundedOccurrences();
+			const TreeAut& ta = *fae_.getRoot(i);
+
+			std::unordered_set<const typename TreeAut::Transition*> unboundedOccur =
+				ta.getUnboundedOccurTrans();
 		}
 	}
 }
