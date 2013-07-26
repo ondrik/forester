@@ -203,6 +203,7 @@ void Unfolding::unfoldStraightBoxes()
 							if (aBox->isType(box_type_e::bBox))
 							{
 								FA_NOTE("We wish to perform unfolding of " << trans);
+								break;
 							}
 						}
 					}
