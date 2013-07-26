@@ -1859,11 +1859,6 @@ public:   // methods
 
 					if (looping)
 					{	// in the case the transition may appear unboundedly many times in a run
-						if (!unboundedOccur.insert(&trans).second)
-						{	// in the case the transition is already in the set
-							assert(false);           // fail gracefully
-						}
-
 						for (size_t j = 0; j < trans.lhs().size(); ++j)
 						{	// traverse all states that do not participate in the loop
 							if (i != j)
