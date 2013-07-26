@@ -1804,6 +1804,8 @@ public:   // methods
 	 *
 	 * @note  The TA this method is applied on needs to be without useless and
 	 *        unreachable states.
+	 *
+	 * @note  I'm not sure this really works for all obscure cases.
 	 */
 	std::unordered_set<const Transition*> getUnboundedOccurTrans() const
 	{

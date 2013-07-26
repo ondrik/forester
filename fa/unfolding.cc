@@ -180,14 +180,34 @@ void Unfolding::unfoldBox(
 
 void Unfolding::unfoldStraightBoxes()
 {
+	typedef typename TreeAut::Transition Transition;
+
 	for (size_t i = 0; i < fae_.getRootCount(); ++i)
 	{
 		if (nullptr != fae_.getRoot(i))
 		{
 			const TreeAut& ta = *fae_.getRoot(i);
 
-			std::unordered_set<const typename TreeAut::Transition*> unboundedOccur =
+			std::unordered_set<const Transition*> unboundedOccur =
 				ta.getUnboundedOccurTrans();
+
+			for (const Transition& trans : ta)
+			{	// traverse all transitions of 'ta'
+				if (unboundedOccur.cend() == unboundedOccur.find(&trans))
+				{	// if the transition does not appear unboundedly many times
+					if (trans.label()->isNode())
+					{	// if the transition represents a memory node
+						for (const AbstractBox* aBox : trans.label()->getNode())
+						{	// check whether the transition contains a box
+							assert(nullptr != aBox);
+							if (aBox->isType(box_type_e::bBox))
+							{
+								FA_NOTE("We wish to perform unfolding of " << trans);
+							}
+						}
+					}
+				}
+			}
 		}
 	}
 }
