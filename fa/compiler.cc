@@ -165,8 +165,6 @@ std::string translOperandCode(const unsigned code)
 	}
 }
 
-} // namespace
-
 
 /**
  * @brief  A wrapper of CL's operands
@@ -174,8 +172,8 @@ std::string translOperandCode(const unsigned code)
  * A structure that wraps over CL's operands and provides the output stream <<
  * operator.
  */
-struct OpWrapper {
-
+struct OpWrapper
+{
 	const cl_operand* op_;
 
 	/**
@@ -392,10 +390,125 @@ public:
 	 */
 	builtin_e operator[](const std::string& key)
 	{
-		std::unordered_map<std::string, builtin_e>::iterator i = this->_table.find(key);
-		return (i == this->_table.end())?(builtin_e::biNone):(i->second);
+		auto it = this->_table.find(key);
+		return (this->_table.end() == it)? (builtin_e::biNone) : (it->second);
 	}
 }; // class BuiltinTable
+
+} // namespace
+
+
+std::ostream& Compiler::Assembly::printUcode(
+	std::ostream&         os,
+	const CodeList&       code)
+{
+	const AbstractInstruction* prev = nullptr;
+	const CodeStorage::Insn* lastInsn = nullptr;
+	size_t cnt = 0;
+
+	for (const AbstractInstruction* instr : code)
+	{
+		if ((instr->getType() == fi_type_e::fiJump) && prev)
+		{
+			switch (prev->getType())
+			{
+				case fi_type_e::fiBranch:
+				case fi_type_e::fiJump:
+					prev = instr;
+					continue;
+				default:
+					break;
+			}
+		}
+
+		const CodeStorage::Insn* clInsn = instr->insn();
+
+		prev = instr;
+
+		os << std::setw(18);
+		if (instr->isTarget())
+		{
+			std::ostringstream addrStream;
+			addrStream << instr;
+
+			if ((nullptr != clInsn) && (clInsn != lastInsn)
+				&& (clInsn->bb->front() == clInsn))
+			{
+				addrStream << " (" << clInsn->bb->name() << ")";
+			}
+
+			addrStream << ":";
+
+			os << std::left << addrStream.str();
+		}
+		else
+		{
+			os << "";
+		}
+
+		std::ostringstream instrStream;
+		instrStream << *instr;
+
+		os << std::setw(24) << std::left << instrStream.str();
+
+		if ((nullptr != clInsn) && (clInsn != lastInsn))
+		{
+			os << "; " << clInsn->loc << ' ' << *clInsn;
+
+			lastInsn = clInsn;
+		}
+
+		os << std::endl;
+
+		++cnt;
+	}
+
+	return os << std::endl << "; code size: " << cnt << " instructions" << std::endl;
+}
+
+
+std::string Compiler::Assembly::insnToString(
+	const CodeStorage::Insn&             clInsn)
+{
+	std::ostringstream os;
+	os << std::setw(8);
+	if (clInsn.bb->front() == &clInsn)
+	{
+		std::ostringstream addrStream;
+		addrStream << clInsn.bb->name() << ":";
+
+		os << std::left << addrStream.str();
+	}
+	else
+	{
+		os << "";
+	}
+
+	os << clInsn;
+
+	return os.str();
+}
+
+
+std::ostream& Compiler::Assembly::printOrigCode(
+	std::ostream&         os,
+	const CodeList&       ucode)
+{
+	const CodeStorage::Insn* lastInsn = nullptr;
+
+	for (const AbstractInstruction* instr : ucode)
+	{
+		const CodeStorage::Insn* clInsn = instr->insn();
+
+		if (clInsn && (clInsn != lastInsn))
+		{
+			os << insnToString(*clInsn) << "\n";
+			lastInsn = clInsn;
+		}
+	}
+
+	return os << std::endl;
+}
 
 
 /**
