@@ -131,7 +131,8 @@ public:
 		 *
 		 * @returns  The instruction that is the entry point of @p f
 		 */
-		AbstractInstruction* getEntry(const struct CodeStorage::Fnc* f) const
+		AbstractInstruction* getEntry(
+			const CodeStorage::Fnc*          f) const
 		{
 			auto iter = functionIndex_.find(f);
 			// Assertions
@@ -194,7 +195,9 @@ public:
 		 *
 		 * @returns  The modified output stream
 		 */
-		friend std::ostream& operator<<(std::ostream& os, const Assembly& as)
+		friend std::ostream& operator<<(
+			std::ostream&              os,
+			const Assembly&            as)
 		{
 			return printUcode(os, as.code_);
 		}
@@ -217,8 +220,10 @@ public:
 	 * @param[in]  taBackend        The backend for tree automata
 	 * @param[in]  boxMan           The box manager
 	 */
-	Compiler(TreeAut::Backend& fixpointBackend,
-		TreeAut::Backend& taBackend, class BoxMan& boxMan);
+	Compiler(
+		TreeAut::Backend&         fixpointBackend,
+		TreeAut::Backend&         taBackend,
+		class BoxMan&             boxMan);
 
 	/**
 	 * @brief  The destructor
@@ -232,8 +237,11 @@ public:
 	 * @param[in]   stor      The code storage to be compiled
 	 * @param[in]   entry     The entry point of the program
 	 */
-	void compile(Assembly& assembly, const CodeStorage::Storage &stor,
-		const CodeStorage::Fnc& entry);
+	void compile(
+		Assembly&                     assembly,
+		const CodeStorage::Storage&   stor,
+		const CodeStorage::Fnc&       entry);
+
 
 private:
 
