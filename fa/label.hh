@@ -288,11 +288,14 @@ struct label_type
 namespace std
 {
 template <>
-struct hash<label_type> {
-	size_t operator()(const label_type& label) const {
+struct hash<label_type>
+{
+	size_t operator()(const label_type& label) const
+	{
 		return boost::hash_value(label._obj);
 	}
 };
+
 } // namespace
 
 #endif
