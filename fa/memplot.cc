@@ -334,6 +334,7 @@ private:  // methods
 		switch (data.type)
 		{
 			case data_type_e::t_undef:
+			case data_type_e::t_unknw:
 			case data_type_e::t_native_ptr:
 			case data_type_e::t_bool:
 			case data_type_e::t_int:
@@ -341,12 +342,6 @@ private:  // methods
 				std::ostringstream os;
 				os << data;
 				return MemNode::createDataField(transID, os.str());
-			}
-
-			case data_type_e::t_unknw:
-			{
-				assert(false);     // not supported
-			  break;
 			}
 
 			case data_type_e::t_void_ptr:
