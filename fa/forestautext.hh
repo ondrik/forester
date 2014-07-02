@@ -163,7 +163,7 @@ public:
 
 			const size_t& numRoots = trans->lhs().size();
 			if ((fae.getRootCount() != numRoots) ||
-				(fae.GetVariables() != (*trans->label())->getVData()))
+				(fae.GetVariables() != trans->label()->getVData()))
 			{	// in case the number of components or global variables does not match
 				continue;
 			}
@@ -337,7 +337,7 @@ public:
 	{
 		label_type label = this->boxMan->lookupLabel(data);
 		size_t state = _MSB_ADD(label->getDataId());
-		dst.addTransition(std::vector<size_t>(), &label, state);
+		dst.addTransition(std::vector<size_t>(), label, state);
 		return state;
 	}
 
@@ -466,9 +466,9 @@ public:
 		assert(nullptr != this->getRoot(target));
 		assert(!this->getRoot(target)->getFinalStates().empty());
 
-        label_type label = *(this->getRoot(target)->begin(
+        label_type label = this->getRoot(target)->begin(
 			*this->getRoot(target)->getFinalStates().begin()
-		)->label());
+		)->label();
         size_t offset = static_cast<size_t>(-1);
         const AbstractBox* abstractBox = label->getBoxFromNode(offset);
 

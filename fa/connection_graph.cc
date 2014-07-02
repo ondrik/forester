@@ -100,7 +100,7 @@ void ConnectionGraph::computeSignatures(
 		for (auto i = transitions.begin(); i != transitions.end(); )
 		{
 			const Transition& t = **i;
-			assert(t.label()->isNode());
+			assert((*t.label())->isNode());
 
 			v.clear();
 			if (!processNode(v, t.lhs(), t.label(), stateMap))
@@ -214,7 +214,7 @@ void ConnectionGraph::fixSignatures(
 		{
 			const Transition& trans = *t;
 
-			assert(trans.label()->isNode());
+			assert((*trans.label())->isNode());
 
 			ChoiceType choice;
 
