@@ -161,13 +161,20 @@ public:   // methods
 		return i->second.aBox;
 	}
 
-	const NodeItem& boxLookup(size_t offset) const
+	const NodeItem& nodeLookup(size_t offset) const
 	{
 		assert(node_type::n_node == type_);
 		auto i = this->node.m->find(offset);
 		assert(i != this->node.m->end());
 		return i->second;
 	}
+
+    const AbstractBox* getBoxFromNode(size_t offset) const
+    {
+        const NodeItem& node = nodeLookup(offset);
+
+        return node.aBox;
+    }
 
 	node_type GetType() const
 	{
