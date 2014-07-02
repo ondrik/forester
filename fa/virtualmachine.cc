@@ -31,7 +31,7 @@ void VirtualMachine::transitionLookup(
 	// for every offset, add an item
 	for (size_t off : offsets)
 	{
-		const NodeLabel::NodeItem& ni = transition.label()->boxLookup(off + base);
+		const NodeLabel::NodeItem& ni = transition.label()->nodeLookup(off + base);
 		// Assertions
 		assert(VirtualMachine::isSelectorWithOffset(ni.aBox, off + base));
 
@@ -53,7 +53,7 @@ void VirtualMachine::transitionLookup(
 	Data&                       data) const
 {
 	// retrieve the item at given offset
-	const NodeLabel::NodeItem& ni = transition.label()->boxLookup(offset);
+	const NodeLabel::NodeItem& ni = transition.label()->nodeLookup(offset);
 	// Assertions
 	assert(VirtualMachine::isSelectorWithOffset(ni.aBox, offset));
 
@@ -83,7 +83,7 @@ void VirtualMachine::transitionModify(
 
 	// Retrieve the item with given offset from the transition
 	std::vector<const AbstractBox*> label = transition.label()->getNode();
-	const NodeLabel::NodeItem& ni = transition.label()->boxLookup(offset);
+	const NodeLabel::NodeItem& ni = transition.label()->nodeLookup(offset);
 	// Assertions
 	assert(VirtualMachine::isSelectorWithOffset(ni.aBox, offset));
 
@@ -125,7 +125,7 @@ void VirtualMachine::transitionModify(
 	for (const std::pair<size_t, Data>& sel : in)
 	{
 		// Retrieve the item with the given offset
-		const NodeLabel::NodeItem& ni = transition.label()->boxLookup(sel.first + base);
+		const NodeLabel::NodeItem& ni = transition.label()->nodeLookup(sel.first + base);
 		// Assertions
 		assert(VirtualMachine::isSelectorWithOffset(ni.aBox, sel.first + base));
 
