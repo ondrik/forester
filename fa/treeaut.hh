@@ -34,6 +34,9 @@
 #include "streams.hh"
 #include "utils.hh"
 
+// VATA headers
+#include "libvata/include/vata/explicit_tree_aut.hh"
+
 template <class T> class TA;
 
 template <class T>
@@ -376,6 +379,7 @@ private:  // data members
 
 	size_t nextState_;
 	std::set<size_t> finalStates_;
+    VATA::ExplicitTreeAut vataAut_;
 
 public:   // data members
 
@@ -391,6 +395,7 @@ public:
 		Backend&             backend) :
 		nextState_(0),
 		finalStates_{},
+        vataAut_(),
 		backend(&backend),
 		maxRank(0),
 		transitions{}
@@ -401,6 +406,7 @@ public:
 		bool                 copyFinalStates = true) :
 		nextState_(ta.nextState_),
 		finalStates_{},
+        vataAut_(),
 		backend(ta.backend),
 		maxRank(ta.maxRank),
 		transitions(ta.transitions)
@@ -697,6 +703,7 @@ public:
 		const T&                            label,
 		size_t                              rhs)
 	{
+        vataAut_.AddTransition(lhs, 3, rhs); // VATA
 		return this->internalAdd(Transition(lhs, label, rhs, this->lhsCache()));
 	}
 

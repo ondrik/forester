@@ -84,7 +84,12 @@ set_target_properties(fa PROPERTIES LINK_FLAGS -lrt)
 
 # link with code_listener
 find_library(CL_LIB cl ../cl_build)
-target_link_libraries(fa ${CL_LIB})
+# link with vata
+find_library(VATA_LIB vata libvata/build/src)
+target_link_libraries(fa ${CL_LIB} ${VATA_LIB})
+
+# add vata include directories
+include_directories (libvata/include)
 
 # get the full path of libfa.so
 get_property(GCC_PLUG TARGET fa PROPERTY LOCATION)
