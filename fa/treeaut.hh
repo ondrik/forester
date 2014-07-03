@@ -459,17 +459,40 @@ public:
 
 	TransIDPair* internalAdd(const Transition& t)
 	{
-		TransIDPair* x = this->transCache().lookup(t);
-		if (this->transitions.insert(x).second)
+        TransIDPair* x = this->transCache().lookup(t);
+        bool isTransitionNew = insertToTransitions(x);
+            
+		if (isTransitionNew)
 		{
-			if (t.lhs().size() > this->maxRank)
-				this->maxRank = t.lhs().size();
+            updateMaxRank(t.lhs().size());
 		} else
-		{
-			this->transCache().release(x);
-		}
-		return x;
+        { // if a transition is not a new one it is already cached
+          // so the new cache entry is removed
+            this->transCache().release(x);
+        }
+        
+        return x;
 	}
+
+    /**
+     * Insert given pair to the internal structure
+     * for transitions.
+     * @param x Transition pair to be inserted
+     * @return True If the new transition has been inserted
+     * @return False If the transition has been already presented
+     */
+    bool insertToTransitions(TransIDPair* x)
+    {
+        std::pair<typename std::set<TransIDPair*, CmpF>::iterator, bool> insertRes =
+            this->transitions.insert(x);
+        return insertRes.second;
+    }
+
+    void updateMaxRank(unsigned int rank)
+    {
+        if (rank > this->maxRank)
+		    this->maxRank = rank;
+    }
 
 	~TA()
 	{
@@ -703,7 +726,7 @@ public:
 		const T&                            label,
 		size_t                              rhs)
 	{
-        vataAut_.AddTransition(lhs, 3, rhs); // VATA
+        vataAut_.AddTransition(lhs, reinterpret_cast<uintptr_t> (&label), rhs);
 		return this->internalAdd(Transition(lhs, label, rhs, this->lhsCache()));
 	}
 
