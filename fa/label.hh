@@ -254,40 +254,40 @@ public:   // methods
 
 struct label_type
 {
-	const NodeLabel* _obj;
+	const NodeLabel* obj_;
 
-	label_type() : _obj(nullptr) {}
-	label_type(const label_type& label) : _obj(label._obj) {}
-	label_type(const NodeLabel* obj) : _obj(obj) {}
+	label_type() : obj_(nullptr) {}
+	label_type(const label_type& label) : obj_(label.obj_) {}
+	label_type(const NodeLabel* obj) : obj_(obj) {}
 
 	const NodeLabel& operator*() const {
-		assert(this->_obj);
-		return *this->_obj;
+		assert(this->obj_);
+		return *this->obj_;
 	}
 
 	const NodeLabel* operator->() const {
-		assert(this->_obj);
-		return this->_obj;
+		assert(this->obj_);
+		return this->obj_;
 	}
 
 	bool operator<(const label_type& rhs) const {
-		return this->_obj < rhs._obj;
+		return this->obj_ < rhs.obj_;
 	}
 
 	bool operator==(const label_type& rhs) const {
-		return this->_obj == rhs._obj;
+		return this->obj_ == rhs.obj_;
 	}
 
 	bool operator!=(const label_type& rhs) const {
-		return this->_obj != rhs._obj;
+		return this->obj_ != rhs.obj_;
 	}
 
 	friend size_t hash_value(const label_type& label) {
-		return boost::hash_value(label._obj);
+		return boost::hash_value(label.obj_);
 	}
 
 	friend std::ostream& operator<<(std::ostream& os, const label_type& label) {
-		return os << *label._obj;
+		return os << *label.obj_;
 	}
 };
 
@@ -299,7 +299,7 @@ struct hash<label_type>
 {
 	size_t operator()(const label_type& label) const
 	{
-		return boost::hash_value(label._obj);
+		return boost::hash_value(label.obj_);
 	}
 };
 
