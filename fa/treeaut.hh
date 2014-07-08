@@ -467,7 +467,7 @@ public:
             updateMaxRank(t.lhs().size());
 		} else
         { // if a transition is not a new one it is already cached
-          // so the new cache entry is removed
+          // so the actually created cache entry is removed
             this->transCache().release(x);
         }
         
@@ -512,8 +512,10 @@ public:
 	typename trans_set_type::const_iterator _lookup(size_t rhs) const
 	{
 		char buffer[sizeof(std::pair<const Transition, size_t>)];
-		std::pair<const Transition, size_t>* tPtr = reinterpret_cast<std::pair<const Transition, size_t>*>(buffer);
-		new (reinterpret_cast<TTBase<T>*>(const_cast<Transition*>(&tPtr->first))) TTBase<T>(nullptr, T(), rhs);
+		std::pair<const Transition, size_t>* tPtr = 
+            reinterpret_cast<std::pair<const Transition, size_t>*>(buffer);
+		new (reinterpret_cast<TTBase<T>*>(const_cast<Transition*>(&tPtr->first)))
+            TTBase<T>(nullptr, T(), rhs);
 		typename trans_set_type::const_iterator i = this->transitions.lower_bound(tPtr);
 		(reinterpret_cast<TTBase<T>*>(const_cast<Transition*>(&tPtr->first)))->~TTBase();
 		return i;
@@ -555,7 +557,8 @@ public:
 
 	typename TA<T>::TDIterator tdStart(const td_cache_type& cache) const
 	{
-		return typename TA<T>::TDIterator(cache, std::vector<size_t>(finalStates_.begin(), finalStates_.end()));
+		return typename TA<T>::TDIterator(cache, std::vector<size_t>(
+                    finalStates_.begin(), finalStates_.end()));
 	}
 
 	typename TA<T>::TDIterator tdStart(
@@ -707,7 +710,9 @@ public:
 			{
 				if (s.insert(state).second)
 				{
-					cache.insert(std::make_pair(state, std::vector<const Transition*>())).first->second.push_back(&trans->first);
+					cache.insert(std::make_pair(
+                                state, std::vector<const Transition*>())).
+                                    first->second.push_back(&trans->first);
 				}
 			}
 		}
