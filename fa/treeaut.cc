@@ -401,6 +401,13 @@ bool TA<T>::subseteq(const TA<T>& a, const TA<T>& b)
 	return AntichainExt<T>::subseteq(a, b);
 }
 
+template <class TC>
+TA<TC> TA<TC>::createTAWithSameTransitions(
+		const TA<TC>&         ta)
+{
+        return TA<TC>(*ta.backend);
+}
+
 // this is really sad :-(
 #include "forestaut.hh"
 template class TA<label_type>;

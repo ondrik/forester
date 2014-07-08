@@ -291,7 +291,7 @@ bool testInclusion(
 	TreeAut&                       fwdConf,
 	UFAE&                          fwdConfWrapper)
 {
-	TreeAut ta(*fwdConf.backend);
+	TreeAut ta = TreeAut::createTAWithSameTransitions(fwdConf);
 
 	Index<size_t> index;
 

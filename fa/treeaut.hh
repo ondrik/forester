@@ -380,10 +380,10 @@ private:  // data members
 	size_t nextState_;
 	std::set<size_t> finalStates_;
     VATA::ExplicitTreeAut vataAut_;
+	Backend* backend;
+
 
 public:   // data members
-
-	Backend* backend;
 
 	size_t maxRank;
 
@@ -400,6 +400,9 @@ public:
 		maxRank(0),
 		transitions{}
 	{ }
+
+    static TA<T> createTAWithSameTransitions(
+		const TA<T>&         ta);
 
 	TA(
 		const TA<T>&         ta,
