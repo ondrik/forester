@@ -129,7 +129,8 @@ public:
 	TAMultiReader(TA<std::string>::Backend& backend, 
             std::istream& input = std::cin,
             const std::string& name = "")
-		: TimbukReader(input, name), backend(backend), automata{}, names{} {}
+		: TimbukReader(input, name), backend(backend), automata{}, names{} 
+    {}
 
 	void clear() {
 		this->automata.clear();
