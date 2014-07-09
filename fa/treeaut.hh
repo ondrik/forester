@@ -382,7 +382,7 @@ private:  // data members
 	size_t nextState_;
 	std::set<size_t> finalStates_;
     VATA::ExplicitTreeAut vataAut_;
-	Backend* backend;
+	Backend* backend_;
 
 
 public:   // data members
@@ -393,11 +393,11 @@ public:   // data members
 
 private: // private constructor
 	TA(
-		Backend&             backend) :
+		Backend&             backend_) :
 		nextState_(0),
 		finalStates_{},
         vataAut_(),
-		backend(&backend),
+		backend_(&backend_),
 		maxRank(0),
 		transitions{}
 	{ }
@@ -407,11 +407,11 @@ public:
 		nextState_(0),
 		finalStates_{},
         vataAut_(),
-		backend(),
+		backend_(),
 		maxRank(0),
 		transitions{}
     {
-        backend = new Backend();
+        backend_ = new Backend();
     }
 
     static TA<T> createTAWithSameTransitions(
@@ -426,7 +426,7 @@ public:
 		nextState_(ta.nextState_),
 		finalStates_{},
         vataAut_(),
-		backend(ta.backend),
+		backend_(ta.backend_),
 		maxRank(ta.maxRank),
 		transitions(ta.transitions)
 	{
@@ -448,7 +448,7 @@ public:
 		bool                 copyFinalStates = true) :
 		nextState_(ta.nextState_),
 		finalStates_(),
-		backend(ta.backend),
+		backend_(ta.backend_),
 		maxRank(ta.maxRank),
 		transitions()
 	{
@@ -468,12 +468,12 @@ public:
 
 	typename Transition::lhs_cache_type& lhsCache() const
 	{
-		return this->backend->lhsCache;
+		return this->backend_->lhsCache;
 	}
 
 	trans_cache_type& transCache() const
 	{
-		return this->backend->transCache;
+		return this->backend_->transCache;
 	}
 
 	TransIDPair* internalAdd(const Transition& t)
@@ -595,7 +595,7 @@ public:
 		this->clear();
 		nextState_ = rhs.nextState_;
 		this->maxRank = rhs.maxRank;
-		this->backend = rhs.backend;
+		this->backend_ = rhs.backend_;
 		this->transitions = rhs.transitions;
 		finalStates_ = rhs.finalStates_;
 
@@ -1283,11 +1283,11 @@ public:
 		const std::vector<std::vector<bool>>&    cons,
 		const Index<size_t>&                     stateIndex) const
 	{
-		typename TA<T>::Backend backend;
+		typename TA<T>::Backend backend_;
 		std::vector<std::vector<bool>> dwn;
 		this->downwardSimulation(dwn, stateIndex);
 		utils::relAnd(dwn, cons, dwn);
-		TA<T> tmp1(backend), tmp2(backend), tmp3(backend);
+		TA<T> tmp1(backend_), tmp2(backend_), tmp3(backend_);
 		return this->collapsed(tmp1, dwn, stateIndex).uselessFree(tmp2).downwardSieve(tmp3, dwn, stateIndex).unreachableFree(dst);
 	}
 
@@ -1295,14 +1295,14 @@ public:
 	{
 		Index<size_t> stateIndex;
 		this->buildSortedStateIndex(stateIndex);
-		typename TA<T>::Backend backend;
+		typename TA<T>::Backend backend_;
 		std::vector<std::vector<bool> > dwn;
 		this->downwardSimulation(dwn, stateIndex);
 		std::vector<std::vector<bool> > up;
 		this->upwardSimulation(up, stateIndex, dwn);
 		std::vector<std::vector<bool> > rel;
 		TA<T>::combinedSimulation(rel, dwn, up);
-		TA<T> tmp(backend);
+		TA<T> tmp(backend_);
 		return this->collapsed(tmp, rel, stateIndex).minimized(dst);
 	}
 
@@ -1608,7 +1608,7 @@ public:
 */
 	class Manager : Cache<TA<T>*>::Listener
 	{
-		typename TA<T>::Backend& backend;
+		typename TA<T>::Backend& backend_;
 
 		Cache<TA<T>*> taCache;
 		std::vector<TA<T>*> taPool;
@@ -1623,8 +1623,8 @@ public:
 
 	public:
 
-		Manager(typename TA<T>::Backend& backend) :
-			backend(backend),
+		Manager(typename TA<T>::Backend& backend_) :
+			backend_(backend_),
 			taCache{},
 			taPool{}
 		{
@@ -1651,7 +1651,7 @@ public:
 				this->taPool.pop_back();
 			} else
 			{
-				dst = new TA<T>(this->backend);
+				dst = new TA<T>(this->backend_);
 			}
 			return this->taCache.lookup(dst)->first;
 		}
@@ -1659,7 +1659,7 @@ public:
 		TA<T>* clone(TA<T>* src, bool copyFinalStates = true)
 		{
 			assert(src);
-			assert(src->backend == &this->backend);
+			assert(src->backend_ == &this->backend_);
 			return this->taCache.lookup(new TA<T>(*src, copyFinalStates))->first;
 		}
 
@@ -1693,7 +1693,7 @@ public:
 
 		typename TA<T>::Backend& getBackend()
 		{
-			return this->backend;
+			return this->backend_;
 		}
 	};
 };

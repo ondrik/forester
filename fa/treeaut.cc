@@ -543,14 +543,14 @@ template <class T>
 TA<T> TA<T>::createTAWithSameTransitions(
 		const TA<T>&         ta)
 {
-        return TA<T>(*ta.backend);
+        return TA<T>(*ta.backend_);
 }
 
 template <class T>
 TA<T>* TA<T>::allocateTAWithSameTransitions(
 		const TA<T>&         ta)
 {
-        return new TA<T>(*ta.backend);
+        return new TA<T>(*ta.backend_);
 }
 
 // this is really sad :-(
