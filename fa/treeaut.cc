@@ -401,18 +401,57 @@ bool TA<T>::subseteq(const TA<T>& a, const TA<T>& b)
 	return AntichainExt<T>::subseteq(a, b);
 }
 
-template <class TC>
-TA<TC> TA<TC>::createTAWithSameTransitions(
-		const TA<TC>&         ta)
+template <class T>
+const typename TA<T>::TransIDPair* TA<T>::addTransition(
+		const std::vector<size_t>&          lhs,
+		const T&                            label,
+		size_t                              rhs)
 {
-        return TA<TC>(*ta.backend);
+    //vataAut_.AddTransition(lhs, reinterpret_cast<uintptr_t> (&label), rhs);
+	return this->internalAdd(Transition(lhs, label, rhs, this->lhsCache()));
 }
 
-template <class TC>
-TA<TC>* TA<TC>::allocateTAWithSameTransitions(
-		const TA<TC>&         ta)
+template <class T>
+const typename TA<T>::TransIDPair* TA<T>::addTransition(
+		const TransIDPair*       transition)
 {
-        return new TA<TC>(*ta.backend);
+    return this->internalAdd(Transition(transition->first, this->lhsCache()));
+}
+
+template <class T>
+const typename TA<T>::TransIDPair* TA<T>::addTransition(
+    const TransIDPair*               transition,
+    const std::vector<size_t>&       index)
+{
+    return this->internalAdd(Transition(transition->first, index, this->lhsCache()));
+}
+
+template <class T>
+const typename TA<T>::TransIDPair* TA<T>::addTransition(const Transition& transition)
+{
+    return this->internalAdd(Transition(transition, this->lhsCache()));
+}
+
+template <class T>
+const typename TA<T>::TransIDPair* TA<T>::addTransition(
+    const Transition&                 transition,
+    const std::vector<size_t>&        index)
+{
+    return this->internalAdd(Transition(transition, index, this->lhsCache()));
+}
+
+template <class T>
+TA<T> TA<T>::createTAWithSameTransitions(
+		const TA<T>&         ta)
+{
+        return TA<T>(*ta.backend);
+}
+
+template <class T>
+TA<T>* TA<T>::allocateTAWithSameTransitions(
+		const TA<T>&         ta)
+{
+        return new TA<T>(*ta.backend);
 }
 
 // this is really sad :-(

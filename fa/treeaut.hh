@@ -748,45 +748,26 @@ public:
 	const TransIDPair* addTransition(
 		const std::vector<size_t>&          lhs,
 		const T&                            label,
-		size_t                              rhs)
-	{
-        vataAut_.AddTransition(lhs, reinterpret_cast<uintptr_t> (&label), rhs);
-		return this->internalAdd(Transition(lhs, label, rhs, this->lhsCache()));
-	}
+		size_t                              rhs);
 
 	const TransIDPair* addTransition(
 		const std::vector<size_t>&          lhs,
 		const T&                            label,
 		size_t                              rhs,
-		const std::vector<size_t>&          index)
-	{
-		return this->internalAdd(Transition(lhs, label, rhs, index, this->lhsCache()));
-	}
+		const std::vector<size_t>&          index);
 
 	const TransIDPair* addTransition(
-		const TransIDPair*       transition)
-	{
-		return this->internalAdd(Transition(transition->first, this->lhsCache()));
-	}
+		const TransIDPair*       transition);
 
 	const TransIDPair* addTransition(
 		const TransIDPair*               transition,
-		const std::vector<size_t>&       index)
-	{
-		return this->internalAdd(Transition(transition->first, index, this->lhsCache()));
-	}
+		const std::vector<size_t>&       index);
 
-	const TransIDPair* addTransition(const Transition& transition)
-	{
-		return this->internalAdd(Transition(transition, this->lhsCache()));
-	}
+	const TransIDPair* addTransition(const Transition& transition);
 
 	const TransIDPair* addTransition(
 		const Transition&                 transition,
-		const std::vector<size_t>&        index)
-	{
-		return this->internalAdd(Transition(transition, index, this->lhsCache()));
-	}
+		const std::vector<size_t>&        index);
 
 	void addFinalState(size_t state)
 	{
