@@ -391,13 +391,13 @@ public:   // data members
 
 private: // private constructor
 	TA(Backend&             backend_);
+    template <class F>
+	TA(const TA<T>&         ta,
+	    F                    f);
 
 public:
 	TA();
     TA(const TA<T>&         ta);
-    template <class F>
-	TA(const TA<T>&         ta,
-	    F                    f);
 
     static TA<T> createTAWithSameTransitions(
 		const TA<T>&         ta);
