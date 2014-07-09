@@ -35,7 +35,7 @@
 #include "utils.hh"
 
 // VATA headers
-#include "libvata/include/vata/explicit_tree_aut.hh"
+//#include "libvata/include/vata/explicit_tree_aut.hh"
 
 template <class T> class TA;
 
@@ -381,7 +381,7 @@ private:  // data members
 
 	size_t nextState_;
 	std::set<size_t> finalStates_;
-    VATA::ExplicitTreeAut vataAut_;
+    //VATA::ExplicitTreeAut vataAut_;
 	Backend* backend_;
 	size_t maxRank_;
 
@@ -394,17 +394,18 @@ private: // private constructor
 		Backend&             backend_) :
 		nextState_(0),
 		finalStates_{},
-        vataAut_(),
+        //vataAut_(),
 		backend_(&backend_),
 		maxRank_(0),
 		transitions{}
 	{ }
 
+
 public:
 	TA() :
 		nextState_(0),
 		finalStates_{},
-        vataAut_(),
+        //vataAut_(),
 		backend_(),
 		maxRank_(0),
 		transitions{}
@@ -418,51 +419,19 @@ public:
     static TA<T>* allocateTAWithSameTransitions(
 		const TA<T>&         ta);
     
-	TA(
+    static TA<T> createTAWithSameFinalStates(
 		const TA<T>&         ta,
-		bool                 copyFinalStates = true) :
-		nextState_(ta.nextState_),
-		finalStates_{},
-        vataAut_(),
-		backend_(ta.backend_),
-		maxRank_(ta.maxRank_),
-		transitions(ta.transitions)
-	{
-		if (copyFinalStates)
-		{	// copy final states (if desired)
-			finalStates_ = ta.finalStates_;
-		}
+        bool                 copyFinalStates=true);
 
-		for (TransIDPair* trans : this->transitions)
-		{	// copy transitions
-			this->transCache().addRef(trans);
-		}
-	}
-
-	template <class F>
-	TA(
+    static TA<T>* allocateTAWithSameFinalStates(
 		const TA<T>&         ta,
-		F                    f,
-		bool                 copyFinalStates = true) :
-		nextState_(ta.nextState_),
-		finalStates_(),
-		backend_(ta.backend_),
-		maxRank_(ta.maxRank_),
-		transitions()
-	{
-		if (copyFinalStates)
-		{	// copy final states (if desired)
-			finalStates_ = ta.finalStates_;
-		}
-
-		for (TransIDPair* trans : ta.transitions)
-		{	// copy transitions (only those requested)
-			if (f(&trans->first))
-			{
-				this->addTransition(trans);
-			}
-		}
-	}
+        bool                 copyFinalStates=true);
+    
+	TA( const TA<T>&         ta);
+	
+    template <class F>
+	TA( const TA<T>&         ta,
+		F                    f);
 
 	typename Transition::lhs_cache_type& lhsCache() const
 	{
@@ -1658,7 +1627,9 @@ public:
 		{
 			assert(src);
 			assert(src->backend_ == &this->backend_);
-			return this->taCache.lookup(new TA<T>(*src, copyFinalStates))->first;
+			//return this->taCache.lookup(new TA<T>(*src, copyFinalStates))->first;
+			return this->taCache.lookup(allocateTAWithSameFinalStates(
+                        *src, copyFinalStates))->first;
 		}
 
 		TA<T>* addRef(TA<T>* x)

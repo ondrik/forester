@@ -506,7 +506,7 @@ const typename TA<T>::TransIDPair* TA<T>::addTransition(
 		const T&                            label,
 		size_t                              rhs)
 {
-    vataAut_.AddTransition(lhs, reinterpret_cast<uintptr_t> (&label), rhs);
+    //vataAut_.AddTransition(lhs, reinterpret_cast<uintptr_t> (&label), rhs);
 	return this->internalAdd(Transition(lhs, label, rhs, this->lhsCache()));
 }
 
@@ -552,6 +552,71 @@ TA<T>* TA<T>::allocateTAWithSameTransitions(
 {
         return new TA<T>(*ta.backend_);
 }
+
+
+template <class T>
+TA<T> TA<T>::createTAWithSameFinalStates(
+        const TA<T>&         ta,
+        bool                 copyFinalStates)
+{
+    TA<T> taNew(ta);
+    if (copyFinalStates)
+    {
+        taNew.finalStates_ = ta.finalStates_;
+    }
+    return taNew;
+}
+
+template <class T>
+TA<T>* TA<T>::allocateTAWithSameFinalStates(
+        const TA<T>&         ta,
+        bool                 copyFinalStates)
+{
+    TA<T>* taNew = new TA<T>(ta);
+    if (copyFinalStates)
+    {
+        taNew->finalStates_ = ta.finalStates_;
+    }
+    return taNew;
+}
+
+template <class T>
+TA<T>::TA(
+    const TA<T>&         ta) :
+    nextState_(ta.nextState_),
+    finalStates_(),
+    //vataAut_(),
+    backend_(ta.backend_),
+    maxRank_(ta.maxRank_),
+    transitions(ta.transitions)
+{
+    for (TransIDPair* trans : this->transitions)
+    {	// copy transitions
+        this->transCache().addRef(trans);
+    }
+}
+
+template <class T>
+template <class F>
+TA<T>::TA(
+    const TA<T>&         ta,
+    F                    f) :
+    nextState_(ta.nextState_),
+    finalStates_(),
+    //vataAut_(),
+    backend_(ta.backend_),
+    maxRank_(ta.maxRank_),
+    transitions()
+{
+    for (TransIDPair* trans : ta.transitions)
+    {	// copy transitions (only those requested)
+        if (f(&trans->first))
+        {
+            this->addTransition(trans);
+        }
+    }
+}
+
 
 // this is really sad :-(
 #include "forestaut.hh"

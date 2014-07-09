@@ -470,7 +470,7 @@ void Splitting::isolateAtRoot(
 
 	size_t newState = fae_.freshState();
 
-	TreeAut ta(
+	TreeAut ta = TreeAut::createTAWithSameFinalStates(
 		/* original TA */ *fae_.getRoot(root),
 		/* copy final states? */ false
 	);
@@ -521,7 +521,7 @@ void Splitting::isolateAtRoot(
 			// update new left-hand side - add reference to the new TA
 			lhs.push_back(fae_.addData(ta, Data::createRef(fae_.getRootCount())));
 			// prepare new root
-			TreeAut tmp(*fae_.getRoot(root), false);
+			TreeAut tmp = TreeAut::createTAWithSameFinalStates(*fae_.getRoot(root), false);
 			tmp.addFinalState(t.lhs()[lhsOffset]);
 			TreeAut* tmp2 = fae_.allocTA();
 			tmp.unreachableFree(*tmp2);
