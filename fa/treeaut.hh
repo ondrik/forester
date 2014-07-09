@@ -646,55 +646,10 @@ public:
 	 *
 	 * @param[out]  index  The index that will be built
 	 */
-	void buildStateIndex(Index<size_t>& index) const
-	{
-		for (const TransIDPair* trans : this->transitions)
-		{
-			for (size_t state : trans->first.lhs())
-			{
-				index.add(state);
-			}
-			index.add(trans->first.rhs());
-		}
-
-		for (size_t state : finalStates_)
-		{
-			index.add(state);
-		}
-	}
-
-	void buildSortedStateIndex(Index<size_t>& index) const
-	{
-		std::set<size_t> s;
-		for (const TransIDPair* trans : this->transitions)
-		{
-			for (size_t state : trans->first.lhs())
-			{
-				s.insert(state);
-			}
-			s.insert(trans->first.rhs());
-		}
-		s.insert(finalStates_.begin(), finalStates_.end());
-		for (size_t state : s)
-			index.add(state);
-	}
-
-	void buildLabelIndex(Index<T>& index) const
-	{
-		for (const TransIDPair* trans : this->transitions)
-		{
-			index.add(trans->first.label());
-		}
-	}
-
-	void buildLhsIndex(Index<const std::vector<size_t>*>& index) const
-	{
-		for (const TransIDPair* trans : this->transitions)
-		{
-			index.add(&trans->first.lhs());
-		}
-	}
-
+	void buildStateIndex(Index<size_t>& index) const;
+	void buildSortedStateIndex(Index<size_t>& index) const;
+	void buildLabelIndex(Index<T>& index) const;
+	void buildLhsIndex(Index<const std::vector<size_t>*>& index) const;
 
 	/**
 	 * @brief  Creates a top-down cache for transitions of the TA
@@ -705,45 +660,9 @@ public:
 	 *
 	 * @returns  Top-down cache of transitions of the TA
 	 */
-	td_cache_type buildTDCache() const
-	{
-		td_cache_type cache;
-		for (const TransIDPair* trans : this->transitions)
-		{	// insert all transitions
-			std::vector<const Transition*>& vec = cache.insert(std::make_pair(
-				trans->first.rhs(),
-				std::vector<const Transition*>())).first->second;
-			vec.push_back(&trans->first);
-		}
-
-		return cache;
-	}
-
-	void buildBUCache(bu_cache_type& cache) const
-	{
-		std::unordered_set<size_t> s;
-		for (const TransIDPair* trans : this->transitions)
-		{
-			s.clear();
-			for (size_t state : trans->first.lhs())
-			{
-				if (s.insert(state).second)
-				{
-					cache.insert(std::make_pair(
-                                state, std::vector<const Transition*>())).
-                                    first->second.push_back(&trans->first);
-				}
-			}
-		}
-	}
-
-	void buildLTCache(lt_cache_type& cache) const
-	{
-		for (const TransIDPair* trans : this->transitions)
-		{
-			cache.insert(std::make_pair(trans->first.label(), std::vector<const Transition*>())).first->second.push_back(&trans->first);
-		}
-	}
+	td_cache_type buildTDCache() const;
+	void buildBUCache(bu_cache_type& cache) const;
+	void buildLTCache(lt_cache_type& cache) const;
 
 	const TransIDPair* addTransition(
 		const std::vector<size_t>&          lhs,
