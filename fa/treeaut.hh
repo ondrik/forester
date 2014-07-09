@@ -390,28 +390,14 @@ public:   // data members
 	trans_set_type transitions;
 
 private: // private constructor
-	TA(
-		Backend&             backend_) :
-		nextState_(0),
-		finalStates_{},
-        //vataAut_(),
-		backend_(&backend_),
-		maxRank_(0),
-		transitions{}
-	{ }
-
+	TA(Backend&             backend_);
 
 public:
-	TA() :
-		nextState_(0),
-		finalStates_{},
-        //vataAut_(),
-		backend_(),
-		maxRank_(0),
-		transitions{}
-    {
-        backend_ = new Backend();
-    }
+	TA();
+    TA(const TA<T>&         ta);
+    template <class F>
+	TA(const TA<T>&         ta,
+	    F                    f);
 
     static TA<T> createTAWithSameTransitions(
 		const TA<T>&         ta);
@@ -426,12 +412,6 @@ public:
     static TA<T>* allocateTAWithSameFinalStates(
 		const TA<T>&         ta,
         bool                 copyFinalStates=true);
-    
-	TA( const TA<T>&         ta);
-	
-    template <class F>
-	TA( const TA<T>&         ta,
-		F                    f);
 
 	typename Transition::lhs_cache_type& lhsCache() const
 	{

@@ -582,6 +582,29 @@ TA<T>* TA<T>::allocateTAWithSameFinalStates(
 
 template <class T>
 TA<T>::TA(
+    Backend&             backend_) :
+    nextState_(0),
+    finalStates_{},
+    //vataAut_(),
+    backend_(&backend_),
+    maxRank_(0),
+    transitions{}
+{ }
+
+template <class T>
+TA<T>::TA() :
+		nextState_(0),
+		finalStates_{},
+        //vataAut_(),
+		backend_(),
+		maxRank_(0),
+		transitions{}
+{
+    backend_ = new Backend();
+}
+
+template <class T>
+TA<T>::TA(
     const TA<T>&         ta) :
     nextState_(ta.nextState_),
     finalStates_(),
