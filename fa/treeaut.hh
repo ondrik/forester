@@ -383,11 +383,9 @@ private:  // data members
 	std::set<size_t> finalStates_;
     VATA::ExplicitTreeAut vataAut_;
 	Backend* backend_;
-
+	size_t maxRank_;
 
 public:   // data members
-
-	size_t maxRank;
 
 	trans_set_type transitions;
 
@@ -398,7 +396,7 @@ private: // private constructor
 		finalStates_{},
         vataAut_(),
 		backend_(&backend_),
-		maxRank(0),
+		maxRank_(0),
 		transitions{}
 	{ }
 
@@ -408,7 +406,7 @@ public:
 		finalStates_{},
         vataAut_(),
 		backend_(),
-		maxRank(0),
+		maxRank_(0),
 		transitions{}
     {
         backend_ = new Backend();
@@ -427,7 +425,7 @@ public:
 		finalStates_{},
         vataAut_(),
 		backend_(ta.backend_),
-		maxRank(ta.maxRank),
+		maxRank_(ta.maxRank_),
 		transitions(ta.transitions)
 	{
 		if (copyFinalStates)
@@ -449,7 +447,7 @@ public:
 		nextState_(ta.nextState_),
 		finalStates_(),
 		backend_(ta.backend_),
-		maxRank(ta.maxRank),
+		maxRank_(ta.maxRank_),
 		transitions()
 	{
 		if (copyFinalStates)
@@ -509,8 +507,8 @@ public:
 
     void updateMaxRank(unsigned int rank)
     {
-        if (rank > this->maxRank)
-		    this->maxRank = rank;
+        if (rank > this->maxRank_)
+		    this->maxRank_ = rank;
     }
 
 	~TA()
@@ -594,7 +592,7 @@ public:
 
 		this->clear();
 		nextState_ = rhs.nextState_;
-		this->maxRank = rhs.maxRank;
+		this->maxRank_ = rhs.maxRank_;
 		this->backend_ = rhs.backend_;
 		this->transitions = rhs.transitions;
 		finalStates_ = rhs.finalStates_;
@@ -609,7 +607,7 @@ public:
 
 	void clear()
 	{
-		this->maxRank = 0;
+		this->maxRank_ = 0;
 		nextState_ = 0;
 		for (TransIDPair* trans : this->transitions)
 		{

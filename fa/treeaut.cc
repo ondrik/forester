@@ -209,7 +209,7 @@ void TA<T>::downwardTranslation(
 	// build an index of non-translated left-hand sides
 	Index<const std::vector<size_t>*> lhs;
 	this->buildLhsIndex(lhs);
-	lts = LTS(labelIndex.size() + this->maxRank, stateIndex.size() + lhs.size());
+	lts = LTS(labelIndex.size() + this->maxRank_, stateIndex.size() + lhs.size());
 	for (Index<const std::vector<size_t>*>::iterator i = lhs.begin();
 		i != lhs.end(); ++i)
 	{
