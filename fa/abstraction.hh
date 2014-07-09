@@ -81,7 +81,7 @@ public:   // methods
 			}
 		}
 
-		TreeAut ta(*fae_.backend);
+		TreeAut ta = TreeAut::createTAWithSameTransitions(fae_.ta);
 		fae_.getRoot(root)->collapsed(ta, rel, stateIndex);
 		fae_.setRoot(root, std::shared_ptr<TreeAut>(fae_.allocTA()));
 		ta.uselessAndUnreachableFree(*fae_.getRoot(root));
@@ -222,7 +222,7 @@ public:   // methods
 
 		for (size_t i = 0; i < fae_.getRootCount(); ++i)
 		{
-			TreeAut ta(*fae_.backend);
+			TreeAut ta = TreeAut::createTAWithSameTransitions(fae_.ta);
 			fae_.getRoot(i)->collapsed(ta, rel, faeStateIndex);
 			fae_.setRoot(i, std::shared_ptr<TreeAut>(fae_.allocTA()));
 			ta.uselessAndUnreachableFree(*fae_.getRoot(i));

@@ -426,7 +426,7 @@ void FI_abs::abstract(
 		FAE::loadCompatibleFAs(
 			/* the result */ tmp,
 			fwdConf_,
-			taBackend_,
+			ta_,
 			boxMan_,
 			fae,
 			0,
@@ -509,7 +509,7 @@ void FI_abs::execute(ExecutionManager& execMan, SymState& state)
 
 	if (boxMan_.boxDatabase().size())
 	{
-		FAE old(*fae->backend, boxMan_);
+		FAE old(fae->ta, boxMan_);
 
 		do
 		{

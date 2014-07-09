@@ -183,8 +183,7 @@ public:
 
 	static bool subseteq(const TA<T>& a, const TA<T>& b)
 	{
-		typename TA<T>::Backend backend;
-		TA<T> c(backend);
+		TA<T> c;
 		size_t countB;
 		TA<T>::renamedUnion(c, b, a, countB);
 		Index<size_t> stateIndex;

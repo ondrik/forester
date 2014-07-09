@@ -134,7 +134,7 @@ public:
 	 *
 	 * @param[out]  dst          The result vector where the FA will be filled
 	 * @param[in]   src          The wrapping TA which contains the FA
-	 * @param[in]   backend      The TA backend
+	 * @param[in]   ta           The TA sharing its backend
 	 * @param[in]   boxMan       The used box manager
 	 * @param[in]   fae          The FA with which the loaded FA are supposed to
 	 *                           be compatible
@@ -146,7 +146,7 @@ public:
 	static void loadCompatibleFAs(
 		std::vector<FAE*>&              dst,
 		const TreeAut&                  src,
-		TreeAut::Backend&               backend,
+		TreeAut&                        tap,
 		BoxMan&                         boxMan,
 		const FAE&                      fae,
 		size_t                          stateOffset,
@@ -174,7 +174,7 @@ public:
 			{	// for all TA in the FA
 				assert(roots.size() == j);
 
-				TreeAut* ta = new TreeAut(backend);
+				TreeAut* ta = TreeAut::allocateTAWithSameTransitions(tap);
 				roots.push_back(std::shared_ptr<TreeAut>(ta));
 
 				const size_t& rootState = trans->lhs()[j];
@@ -220,7 +220,7 @@ public:
 			}
 
 			// build the FA
-			FAE* tmp = new FAE(backend, boxMan);
+			FAE* tmp = new FAE(tap, boxMan);
 			dst.push_back(tmp);
 			tmp->loadVars(fae.GetVariables());
 			tmp->roots_ = roots;
@@ -496,8 +496,8 @@ public:
 public:
 
 	// state 0 should never be allocated by FAE (?)
-	FAE(TreeAut::Backend& backend, BoxMan& boxMan) :
-		FA(backend),
+	FAE(TreeAut& ta, BoxMan& boxMan) :
+		FA(ta),
 		boxMan(&boxMan),
 		stateOffset(1),
 		savedStateOffset()

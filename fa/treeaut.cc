@@ -408,6 +408,13 @@ TA<TC> TA<TC>::createTAWithSameTransitions(
         return TA<TC>(*ta.backend);
 }
 
+template <class TC>
+TA<TC>* TA<TC>::allocateTAWithSameTransitions(
+		const TA<TC>&         ta)
+{
+        return new TA<TC>(*ta.backend);
+}
+
 // this is really sad :-(
 #include "forestaut.hh"
 template class TA<label_type>;

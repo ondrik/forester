@@ -325,7 +325,7 @@ void Splitting::isolateAtLeaf(
 	std::vector<std::pair<const Transition*, const Box*>> v;
 
 	// create a new blank automaton
-	TreeAut ta(*fae_.backend);
+	TreeAut ta = TreeAut::createTAWithSameTransitions(fae_.ta);
 
 	for (const Transition& trans : *fae_.getRoot(root))
 	{	// traverse accepting transitions
@@ -355,7 +355,7 @@ void Splitting::isolateAtLeaf(
 		Splitting splitting(fae);
 
 		// create an empty automaton
-		TreeAut ta2(*fae.backend);
+		TreeAut ta2 = TreeAut::createTAWithSameTransitions(fae.ta);
 		if (fae_.getRoot(root)->isFinalState(transBox.first->rhs()))
 		{	// in case the parent state is a root
 			ta.copyTransitions(ta2);
@@ -394,7 +394,7 @@ void Splitting::isolateAtLeaf(
 		}
 
 		// create another empty automaton
-		TreeAut ta3(*fae.backend);
+		TreeAut ta3 = TreeAut::createTAWithSameTransitions(fae.ta);
 
 		// ha! we can get inconsistent signatures here
 		size_t offset = fae.nextState();

@@ -49,7 +49,7 @@ public:   // data types
 
 public:   // data members
 
-	TreeAut::Backend* backend;
+	TreeAut& ta;
 
 protected:// data members
 
@@ -87,7 +87,7 @@ public:   // methods
 	 */
 	TreeAut* allocTA()
 	{
-		return new TreeAut(*this->backend);
+		return TreeAut::allocateTAWithSameTransitions(this->ta);
 	}
 
 
@@ -105,15 +105,15 @@ public:   // methods
 		return _MSB_TEST(state);
 	}
 
-	FA(TreeAut::Backend& backend) :
-		backend(&backend),
+	FA(TreeAut& ta) :
+		ta(ta),
 		variables_{},
 		roots_{},
 		connectionGraph{}
 	{ }
 
 	FA(const FA& src) :
-		backend(src.backend),
+		ta(src.ta),
 		variables_(src.variables_),
 		roots_(src.roots_),
 		connectionGraph(src.connectionGraph)
@@ -126,7 +126,7 @@ public:   // methods
 	{
 		if (this != &src)
 		{
-			backend = src.backend;
+			ta = src.ta;
 			variables_ = src.variables_;
 			roots_ = src.roots_;
 			connectionGraph = src.connectionGraph;

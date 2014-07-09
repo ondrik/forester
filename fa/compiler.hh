@@ -206,9 +206,9 @@ public:
 private:  // methods
 
 	Compiler(const Compiler&);
-	Compiler& operator=(const Compiler&);
 
 public:
+	Compiler& operator=(const Compiler&);
 
 	/**
 	 * @brief  The constructor
@@ -216,13 +216,13 @@ public:
 	 * Constructs the compiler object with given backends for fixpoints, tree
 	 * automata, and given box manager.
 	 *
-	 * @param[in]  fixpointBackend  The backend for fixpoints
-	 * @param[in]  taBackend        The backend for tree automata
+	 * @param[in]  fixpoint         The backend for fixpoints
+	 * @param[in]  ta               The backend for tree automata
 	 * @param[in]  boxMan           The box manager
 	 */
 	Compiler(
-		TreeAut::Backend&         fixpointBackend,
-		TreeAut::Backend&         taBackend,
+		TreeAut&         fixpoint,
+		TreeAut&         ta,
 		class BoxMan&             boxMan);
 
 	/**

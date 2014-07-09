@@ -44,7 +44,7 @@ protected:
 		const Box*                     box,
 		const std::vector<size_t>&     rootIndex)
 	{
-		TreeAut tmp(*this->fae.backend), tmp2(*this->fae.backend);
+		TreeAut tmp(this->fae.ta), tmp2(this->fae.ta);
 //		this->fae.boxMan->adjustLeaves(tmp2, boxRoot);
 		this->fae.relabelReferences(tmp, boxRoot, rootIndex);
 		this->fae.unique(tmp2, tmp);
@@ -153,7 +153,7 @@ public:
 		assert(aux != static_cast<size_t>(-1));
 		assert(aux < this->fae.getRootCount());
 
-		TreeAut tmp(*this->fae.backend);
+		TreeAut tmp(this->fae.ta);
 
 		this->fae.getRoot(aux)->unfoldAtRoot(tmp, this->fae.freshState());
 		this->fae.setRoot(aux, std::shared_ptr<TreeAut>(this->fae.allocTA()));

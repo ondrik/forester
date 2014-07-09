@@ -250,6 +250,7 @@ public:   // data types
 		std::is_same<typename trans_cache_type::value_type, TransIDPair>::value,
 		"Incompatible types!");
 
+private:
 	// this is the place where transitions are stored
 	struct Backend
 	{
@@ -262,6 +263,7 @@ public:   // data types
 		{ }
 	};
 
+public:
 	struct CmpF
 	{
 		bool operator()(
@@ -389,8 +391,7 @@ public:   // data members
 
 	trans_set_type transitions;
 
-public:
-
+private: // private constructor
 	TA(
 		Backend&             backend) :
 		nextState_(0),
@@ -401,9 +402,24 @@ public:
 		transitions{}
 	{ }
 
+public:
+	TA() :
+		nextState_(0),
+		finalStates_{},
+        vataAut_(),
+		backend(),
+		maxRank(0),
+		transitions{}
+    {
+        backend = new Backend();
+    }
+
     static TA<T> createTAWithSameTransitions(
 		const TA<T>&         ta);
 
+    static TA<T>* allocateTAWithSameTransitions(
+		const TA<T>&         ta);
+    
 	TA(
 		const TA<T>&         ta,
 		bool                 copyFinalStates = true) :

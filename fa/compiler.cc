@@ -533,10 +533,10 @@ private:
 	/// @todo:
 	const SymCtx* curCtx_;
 
-	/// The backend for fixpoints
-	TreeAut::Backend& fixpointBackend_;
-	/// The backend for tree automata
-	TreeAut::Backend& taBackend_;
+	/// The fixpoints
+	TreeAut& fixpoint_;
+	/// The tree automata
+	TreeAut& ta_;
 	/// The box manager
 	BoxMan& boxMan_;
 
@@ -625,7 +625,7 @@ protected:
 	 */
 	void cAbstraction(const CodeStorage::Insn* insn = nullptr)
 	{
-		append(new FI_abs(insn, fixpointBackend_, taBackend_, boxMan_));
+		append(new FI_abs(insn, fixpoint_, ta_, boxMan_));
 	}
 
 
@@ -638,7 +638,7 @@ protected:
 	 */
 	void cFixpoint(const CodeStorage::Insn& insn)
 	{
-		append(new FI_fix(&insn, fixpointBackend_, taBackend_, boxMan_));
+		append(new FI_fix(&insn, fixpoint_, ta_, boxMan_));
 	}
 
 
@@ -2446,21 +2446,21 @@ public:
 	/**
 	 * @brief  The constructor
 	 *
-	 * The constructor sets the fixpoint backend, the tree automata backend, and
+	 * The constructor sets the fixpoint, the tree automata, and
 	 * the box manager.
 	 *
-	 * @param[in,out]  fixpointBackend  The fixpoint backend
-	 * @param[in,out]  taBackend        Tree automata backend
+	 * @param[in,out]  fixpoint         The fixpoint
+	 * @param[in,out]  ta               Tree automata
 	 * @param[in,out]  boxMan           The box manager
 	 */
-	Core(TreeAut::Backend& fixpointBackend,
-		TreeAut::Backend& taBackend, BoxMan& boxMan) :
+	Core(TreeAut& fixpoint,
+		TreeAut& ta, BoxMan& boxMan) :
 		assembly_{},
 		codeIndex_{},
 		fncIndex_{},
 		curCtx_{},
-		fixpointBackend_(fixpointBackend),
-		taBackend_(taBackend),
+		fixpoint_(fixpoint),
+		ta_(ta),
 		boxMan_(boxMan),
 		builtinTable_{},
 		loopAnalyser_{}
@@ -2544,9 +2544,9 @@ public:
 };
 
 
-Compiler::Compiler(TreeAut::Backend& fixpointBackend,
-	TreeAut::Backend& taBackend, BoxMan& boxMan)
-	: core_(new Core(fixpointBackend, taBackend, boxMan))
+Compiler::Compiler(TreeAut& fixpoint,
+	TreeAut& ta, BoxMan& boxMan)
+	: core_(new Core(fixpoint, ta, boxMan))
 { }
 
 
