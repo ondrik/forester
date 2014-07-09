@@ -540,47 +540,6 @@ const typename TA<T>::TransIDPair* TA<T>::addTransition(
 }
 
 template <class T>
-TA<T> TA<T>::createTAWithSameTransitions(
-		const TA<T>&         ta)
-{
-        return TA<T>(*ta.backend_);
-}
-
-template <class T>
-TA<T>* TA<T>::allocateTAWithSameTransitions(
-		const TA<T>&         ta)
-{
-        return new TA<T>(*ta.backend_);
-}
-
-
-template <class T>
-TA<T> TA<T>::createTAWithSameFinalStates(
-        const TA<T>&         ta,
-        bool                 copyFinalStates)
-{
-    TA<T> taNew(ta);
-    if (copyFinalStates)
-    {
-        taNew.finalStates_ = ta.finalStates_;
-    }
-    return taNew;
-}
-
-template <class T>
-TA<T>* TA<T>::allocateTAWithSameFinalStates(
-        const TA<T>&         ta,
-        bool                 copyFinalStates)
-{
-    TA<T>* taNew = new TA<T>(ta);
-    if (copyFinalStates)
-    {
-        taNew->finalStates_ = ta.finalStates_;
-    }
-    return taNew;
-}
-
-template <class T>
 TA<T>::TA(
     Backend&             backend_) :
     nextState_(0),
@@ -640,6 +599,46 @@ TA<T>::TA(
     }
 }
 
+template <class T>
+TA<T> TA<T>::createTAWithSameTransitions(
+		const TA<T>&         ta)
+{
+        return TA<T>(*ta.backend_);
+}
+
+template <class T>
+TA<T>* TA<T>::allocateTAWithSameTransitions(
+		const TA<T>&         ta)
+{
+        return new TA<T>(*ta.backend_);
+}
+
+
+template <class T>
+TA<T> TA<T>::createTAWithSameFinalStates(
+        const TA<T>&         ta,
+        bool                 copyFinalStates)
+{
+    TA<T> taNew(ta);
+    if (copyFinalStates)
+    {
+        taNew.finalStates_ = ta.finalStates_;
+    }
+    return taNew;
+}
+
+template <class T>
+TA<T>* TA<T>::allocateTAWithSameFinalStates(
+        const TA<T>&         ta,
+        bool                 copyFinalStates)
+{
+    TA<T>* taNew = new TA<T>(ta);
+    if (copyFinalStates)
+    {
+        taNew->finalStates_ = ta.finalStates_;
+    }
+    return taNew;
+}
 
 // this is really sad :-(
 #include "forestaut.hh"
