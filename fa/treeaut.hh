@@ -372,8 +372,8 @@ private:
 	};
 
 	typedef std::unordered_map<size_t, std::vector<const Transition*>> bu_cache_type;
-public:
 
+public:
 	typedef std::unordered_map<T, std::vector<const Transition*>> lt_cache_type;
 
 	typedef Iterator iterator;
@@ -424,44 +424,7 @@ public:
 		return this->backend_->transCache;
 	}
 
-	TransIDPair* internalAdd(const Transition& t)
-	{
-        TransIDPair* x = this->transCache().lookup(t);
-        bool isTransitionNew = insertToTransitions(x);
-            
-		if (isTransitionNew)
-		{
-            updateMaxRank(t.lhs().size());
-		} else
-        { // if a transition is not a new one it is already cached
-          // so the actually created cache entry is removed
-            this->transCache().release(x);
-        }
-        
-        return x;
-	}
-
-    /**
-     * Insert given pair to the internal structure
-     * for transitions_.
-     * @param x Transition pair to be inserted
-     * @return True If the new transition has been inserted
-     * @return False If the transition has been already presented
-     */
-    bool insertToTransitions(TransIDPair* x)
-    {
-        std::pair<typename std::set<TransIDPair*, CmpF>::iterator, bool> insertRes =
-            this->transitions_.insert(x);
-        return insertRes.second;
-    }
-
-    void updateMaxRank(unsigned int rank)
-    {
-        if (rank > this->maxRank_)
-		    this->maxRank_ = rank;
-    }
-
-	~TA()
+    ~TA()
 	{
 		this->clear();
 	}
@@ -567,26 +530,6 @@ public:
 		finalStates_.clear();
 	}
 
-	size_t newState()
-	{
-		return nextState_++;
-	}
-
-	void updateStateCounter()
-	{
-		nextState_ = 0;
-		for (const TransIDPair* trans : this->transitions_)
-		{
-			nextState_ = std::max(
-				nextState_,
-				1 + std::max(
-					trans->first.rhs(),
-					*std::max_element(
-						trans->first.lhs().begin(),
-						trans->first.lhs().end())));
-		}
-	}
-
 	/**
 	 * @brief  Build an index of states occuring in the automaton
 	 *
@@ -652,16 +595,6 @@ public:
 		finalStates_.insert(states.begin(), states.end());
 	}
 
-	void removeFinalState(size_t state)
-	{
-		finalStates_.erase(state);
-	}
-
-	void clearFinalStates()
-	{
-		finalStates_.clear();
-	}
-
 	bool isFinalState(size_t state) const
 	{
 		return (finalStates_.find(state) != finalStates_.end());
@@ -683,26 +616,7 @@ public:
 		return this->transitions_;
 	}
 
-/*
-	TA<T>::RhsIterator getAcceptingTransitions() const {
-		return this->getRhsIterator(this->getFinalState());
-	}
-*/
-	size_t getAcceptingTransitionCount() const
-	{
-		// Assertions
-		assert(this->accBegin() != this->accEnd());
-
-		size_t cnt = 1;
-
-		auto iter = this->accBegin();
-
-		while (++iter != this->accEnd()) ++cnt;
-
-		return cnt;
-	}
-
-	const Transition& getAcceptingTransition() const
+    const Transition& getAcceptingTransition() const
 	{
 		// Assertions
 		assert(this->accBegin() != this->accEnd());
@@ -710,6 +624,12 @@ public:
 
 		return *(this->accBegin());
 	}
+
+/*
+	TA<T>::RhsIterator getAcceptingTransitions() const {
+		return this->getRhsIterator(this->getFinalState());
+	}
+*/
 
 	void downwardTranslation(
 		LTS&                                      lts,
@@ -845,76 +765,6 @@ public:
 		return TA<T>::buProduct(cache1, cache2, TA<T>::IntersectF(dst, src1, src2), stateOffset);
 	}
 
-	struct PredicateF
-	{
-		std::vector<size_t>& dst;
-		const TA<T>& predicate;
-
-		PredicateF(
-			std::vector<size_t>&          dst,
-			const TA<T>&                  predicate) :
-			dst(dst),
-			predicate(predicate)
-		{ }
-
-		void operator()(
-			const Transition*               /* t1 */,
-			const Transition*                  t2,
-			const std::vector<size_t>&      /* lhs */,
-			size_t                          /* rhs */)
-		{
-			if (predicate.isFinalState(t2->rhs()))
-				this->dst.push_back(t2->rhs());
-		}
-	};
-
-	void intersectingStates(
-		std::vector<size_t>&                 dst,
-		const TA<T>&                         predicate) const
-	{
-		lt_cache_type cache1, cache2;
-		this->buildLTCache(cache1);
-		predicate.buildLTCache(cache2);
-		TA<T>::buProduct(cache1, cache2, TA<T>::PredicateF(dst, predicate));
-	}
-
-
-	/**
-	 * @brief  Determines whether two transitions_ match
-	 *
-	 * This function determines whether two transitions_ match (and can therefore
-	 * e.g. be merged during abstraction). First, the @p funcMatch functor is used
-	 * to determine whether the transitions_ are to be checked at all.
-	 */
-	template <class F>
-	static bool transMatch(
-		const Transition*                         t1,
-		const Transition*                         t2,
-		F                                         funcMatch,
-		const std::vector<std::vector<bool>>&     mat,
-		const Index<size_t>&                      stateIndex)
-	{
-		// Preconditions
-		assert((nullptr != t1) && (nullptr != t2));
-
-		if (!funcMatch(*t1, *t2))
-			return false;
-
-		if (t1->lhs().size() != t2->lhs().size())
-			return false;
-
-		for (size_t m = 0; m < t1->lhs().size(); ++m)
-		{
-			if (!mat[stateIndex[t1->lhs()[m]]][stateIndex[t2->lhs()[m]]])
-			{
-				return false;
-			}
-		}
-
-		return true;
-	}
-
-
 	// currently erases '1' from the relation
 	template <class F>
 	void heightAbstraction(
@@ -1045,49 +895,7 @@ public:
 		}
 		return dst;
 	}
-
-	TA<T>& uselessFree(TA<T>& dst) const
-	{
-		std::vector<const TransIDPair*> v1(this->transitions_.begin(), this->transitions_.end()), v2;
-		std::set<size_t> states;
-		bool changed = true;
-		while (changed)
-		{
-			changed = false;
-			for (const TransIDPair* trans : v1)
-			{
-				bool matches = true;
-				for (const size_t state : trans->first.lhs())
-				{
-					if (!states.count(state))
-					{
-						matches = false;
-						break;
-					}
-				}
-				if (matches)
-				{
-					if (states.insert(trans->first.rhs()).second)
-						changed = true;
-					dst.addTransition(trans);
-				} else
-				{
-					v2.push_back(trans);
-				}
-			}
-			v1.clear();
-			std::swap(v1, v2);
-		}
-
-		for (const size_t& state : finalStates_)
-		{
-			if (states.count(state))
-				dst.addFinalState(state);
-		}
-
-		return dst;
-	}
-
+	
 	TA<T>& unreachableFree(TA<T>& dst) const
 	{
 		std::vector<const TransIDPair*> v1(
@@ -1382,22 +1190,12 @@ public:
 		return dst;
 	}
 
-public:
-
-	struct AcceptingF
-	{
-		const TA<T>& ta;
-		AcceptingF(const TA<T>& ta) : ta(ta) {}
-		bool operator()(const Transition* t) { return ta.isFinalState(t->rhs()); }
-	};
-
 	struct NonAcceptingF
 	{
 		const TA<T>& ta;
 		NonAcceptingF(const TA<T>& ta) : ta(ta) {}
 		bool operator()(const Transition* t) { return !ta.isFinalState(t->rhs()); }
 	};
-
 
 	/**
 	 * @brief  Copy transitions_ into a destination tree automaton
@@ -1424,14 +1222,6 @@ public:
 				dst.addTransition(trans);
 		}
 		return dst;
-	}
-
-	// makes state numbers contiguous
-	TA& reduced(
-		TA<T>&                      dst,
-		Index<size_t>&              index) const
-	{
-		return TA<T>::reduce(dst, *this, index);
 	}
 
 	static TA<T>& disjointUnion(
@@ -1468,33 +1258,6 @@ public:
 		for (const TransIDPair* trans : src.transitions_)
 			dst.addTransition(trans);
 
-		return dst;
-	}
-
-	static TA<T>& renamedUnion(
-		TA<T>&                     dst,
-		const TA<T>&               a,
-		const TA<T>&               b,
-		size_t&                    aSize,
-		size_t                     offset = 0)
-	{
-		Index<size_t> index;
-		reduce(dst, a, index, offset);
-		aSize = index.size();
-		index.clear();
-		reduce(dst, b, index, aSize, offset);
-		return dst;
-	}
-
-	static TA<T>& renamedUnion(
-		TA<T>&                    dst,
-		const TA<T>&              src,
-		size_t                    offset,
-		size_t&                   srcSize)
-	{
-		Index<size_t> index;
-		reduce(dst, src, index, offset);
-		srcSize = index.size();
 		return dst;
 	}
 
@@ -1555,6 +1318,8 @@ public:
 		return dst;
 	}
 */
+
+private:
 	class Manager : Cache<TA<T>*>::Listener
 	{
 		typename TA<T>::Backend& backend_;
@@ -1647,6 +1412,239 @@ public:
 			return this->backend_;
 		}
 	};
+
+	TransIDPair* internalAdd(const Transition& t)
+	{
+        TransIDPair* x = this->transCache().lookup(t);
+        bool isTransitionNew = insertToTransitions(x);
+            
+		if (isTransitionNew)
+		{
+            updateMaxRank(t.lhs().size());
+		} else
+        { // if a transition is not a new one it is already cached
+          // so the actually created cache entry is removed
+            this->transCache().release(x);
+        }
+        
+        return x;
+	}
+
+    /**
+     * Insert given pair to the internal structure
+     * for transitions_.
+     * @param x Transition pair to be inserted
+     * @return True If the new transition has been inserted
+     * @return False If the transition has been already presented
+     */
+    bool insertToTransitions(TransIDPair* x)
+    {
+        std::pair<typename std::set<TransIDPair*, CmpF>::iterator, bool> insertRes =
+            this->transitions_.insert(x);
+        return insertRes.second;
+    }
+
+    void updateMaxRank(unsigned int rank)
+    {
+        if (rank > this->maxRank_)
+		    this->maxRank_ = rank;
+    }
+    
+    size_t newState()
+	{
+		return nextState_++;
+	}
+
+	void updateStateCounter()
+	{
+		nextState_ = 0;
+		for (const TransIDPair* trans : this->transitions_)
+		{
+			nextState_ = std::max(
+				nextState_,
+				1 + std::max(
+					trans->first.rhs(),
+					*std::max_element(
+						trans->first.lhs().begin(),
+						trans->first.lhs().end())));
+		}
+	}
+
+    void removeFinalState(size_t state)
+	{
+		finalStates_.erase(state);
+	}
+
+	void clearFinalStates()
+	{
+		finalStates_.clear();
+	}
+
+	size_t getAcceptingTransitionCount() const
+	{
+		// Assertions
+		assert(this->accBegin() != this->accEnd());
+
+		size_t cnt = 1;
+
+		auto iter = this->accBegin();
+
+		while (++iter != this->accEnd()) ++cnt;
+
+		return cnt;
+	}
+
+    struct PredicateF
+	{
+		std::vector<size_t>& dst;
+		const TA<T>& predicate;
+
+		PredicateF(
+			std::vector<size_t>&          dst,
+			const TA<T>&                  predicate) :
+			dst(dst),
+			predicate(predicate)
+		{ }
+
+		void operator()(
+			const Transition*               /* t1 */,
+			const Transition*                  t2,
+			const std::vector<size_t>&      /* lhs */,
+			size_t                          /* rhs */)
+		{
+			if (predicate.isFinalState(t2->rhs()))
+				this->dst.push_back(t2->rhs());
+		}
+	};
+
+    void intersectingStates(
+		std::vector<size_t>&                 dst,
+		const TA<T>&                         predicate) const
+	{
+		lt_cache_type cache1, cache2;
+		this->buildLTCache(cache1);
+		predicate.buildLTCache(cache2);
+		TA<T>::buProduct(cache1, cache2, TA<T>::PredicateF(dst, predicate));
+	}
+
+	/**
+	 * @brief  Determines whether two transitions_ match
+	 *
+	 * This function determines whether two transitions_ match (and can therefore
+	 * e.g. be merged during abstraction). First, the @p funcMatch functor is used
+	 * to determine whether the transitions_ are to be checked at all.
+	 */
+	template <class F>
+	static bool transMatch(
+		const Transition*                         t1,
+		const Transition*                         t2,
+		F                                         funcMatch,
+		const std::vector<std::vector<bool>>&     mat,
+		const Index<size_t>&                      stateIndex)
+	{
+		// Preconditions
+		assert((nullptr != t1) && (nullptr != t2));
+
+		if (!funcMatch(*t1, *t2))
+			return false;
+
+		if (t1->lhs().size() != t2->lhs().size())
+			return false;
+
+		for (size_t m = 0; m < t1->lhs().size(); ++m)
+		{
+			if (!mat[stateIndex[t1->lhs()[m]]][stateIndex[t2->lhs()[m]]])
+			{
+				return false;
+			}
+		}
+
+		return true;
+	}
+
+    TA<T>& uselessFree(TA<T>& dst) const
+	{
+		std::vector<const TransIDPair*> v1(this->transitions_.begin(), this->transitions_.end()), v2;
+		std::set<size_t> states;
+		bool changed = true;
+		while (changed)
+		{
+			changed = false;
+			for (const TransIDPair* trans : v1)
+			{
+				bool matches = true;
+				for (const size_t state : trans->first.lhs())
+				{
+					if (!states.count(state))
+					{
+						matches = false;
+						break;
+					}
+				}
+				if (matches)
+				{
+					if (states.insert(trans->first.rhs()).second)
+						changed = true;
+					dst.addTransition(trans);
+				} else
+				{
+					v2.push_back(trans);
+				}
+			}
+			v1.clear();
+			std::swap(v1, v2);
+		}
+
+		for (const size_t& state : finalStates_)
+		{
+			if (states.count(state))
+				dst.addFinalState(state);
+		}
+
+		return dst;
+	}
+
+    struct AcceptingF
+	{
+		const TA<T>& ta;
+		AcceptingF(const TA<T>& ta) : ta(ta) {}
+		bool operator()(const Transition* t) { return ta.isFinalState(t->rhs()); }
+	};
+
+    // makes state numbers contiguous
+	TA& reduced(
+		TA<T>&                      dst,
+		Index<size_t>&              index) const
+	{
+		return TA<T>::reduce(dst, *this, index);
+	}
+
+	static TA<T>& renamedUnion(
+		TA<T>&                     dst,
+		const TA<T>&               a,
+		const TA<T>&               b,
+		size_t&                    aSize,
+		size_t                     offset = 0)
+	{
+		Index<size_t> index;
+		reduce(dst, a, index, offset);
+		aSize = index.size();
+		index.clear();
+		reduce(dst, b, index, aSize, offset);
+		return dst;
+	}
+
+	static TA<T>& renamedUnion(
+		TA<T>&                    dst,
+		const TA<T>&              src,
+		size_t                    offset,
+		size_t&                   srcSize)
+	{
+		Index<size_t> index;
+		reduce(dst, src, index, offset);
+		srcSize = index.size();
+		return dst;
+	}
 };
 
 #endif
