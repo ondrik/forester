@@ -386,8 +386,6 @@ private:  // data members
 	size_t maxRank_;
 	trans_set_type transitions_;
 
-public:   // data members
-
 private: // private constructor
 	TA(Backend&             backend_);
     /*
