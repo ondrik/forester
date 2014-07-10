@@ -168,7 +168,7 @@ Box::Box(
 
 bool Box::LeafEnumF::getRef(size_t state, size_t& ref) const
 {
-	TreeAut::Iterator i = this->ta.begin(state);
+	TreeAut::iterator i = this->ta.begin(state);
 
 	assert(i != this->ta.end(state));
 

@@ -274,7 +274,6 @@ private:
 
 	typedef std::set<TransIDPair*, CmpF> trans_set_type;
 
-public:
 	/**
 	 * @brief  Iterator over transitions_
 	 */
@@ -301,6 +300,7 @@ public:
 		bool operator!=(const Iterator& rhs) const { return this->_i != rhs._i; }
 	};
 
+public:
 	typedef typename std::unordered_map<size_t, std::vector<const Transition*>> td_cache_type;
 
 	class TDIterator
