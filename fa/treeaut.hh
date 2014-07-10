@@ -371,8 +371,8 @@ private:
 
 	};
 
-public:
 	typedef std::unordered_map<size_t, std::vector<const Transition*>> bu_cache_type;
+public:
 
 	typedef std::unordered_map<T, std::vector<const Transition*>> lt_cache_type;
 
