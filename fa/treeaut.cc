@@ -578,6 +578,7 @@ TA<T>::TA(
     }
 }
 
+/*
 template <class T>
 template <class F>
 TA<T>::TA(
@@ -598,6 +599,7 @@ TA<T>::TA(
         }
     }
 }
+*/
 
 template <class T>
 TA<T> TA<T>::createTAWithSameTransitions(
@@ -612,7 +614,6 @@ TA<T>* TA<T>::allocateTAWithSameTransitions(
 {
         return new TA<T>(*ta.backend_);
 }
-
 
 template <class T>
 TA<T> TA<T>::createTAWithSameFinalStates(
