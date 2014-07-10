@@ -301,8 +301,10 @@ private:
 	};
 
 public:
-	typedef typename std::unordered_map<size_t, std::vector<const Transition*>> td_cache_type;
+	typedef typename std::unordered_map<size_t,
+            std::vector<const Transition*>> td_cache_type;
 
+private:
 	class TDIterator
 	{
 	private:  // data members
@@ -369,6 +371,7 @@ public:
 
 	};
 
+public:
 	typedef std::unordered_map<size_t, std::vector<const Transition*>> bu_cache_type;
 
 	typedef std::unordered_map<T, std::vector<const Transition*>> lt_cache_type;
@@ -608,6 +611,7 @@ public:
 	td_cache_type buildTDCache() const;
 	void buildBUCache(bu_cache_type& cache) const;
 	void buildLTCache(lt_cache_type& cache) const;
+
 
 	const TransIDPair* addTransition(
 		const std::vector<size_t>&          lhs,
