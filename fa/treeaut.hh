@@ -234,10 +234,12 @@ public:   // methods
 template <class T>
 class TA
 {
+	template<class TAC> friend class AntichainExt;
 public:   // data types
 	///	the type of a tree automaton transition
 	typedef TT<T> Transition;
 
+protected: // protected data types
 	/// the value type of the cache: a pair of a transition and its ID
 	typedef std::pair<const Transition, size_t> TransIDPair;
 
