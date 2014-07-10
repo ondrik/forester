@@ -235,22 +235,20 @@ template <class T>
 class TA
 {
 public:   // data types
-
 	///	the type of a tree automaton transition
 	typedef TT<T> Transition;
-
-	/// cache of transitions_
-	typedef Cache<Transition> trans_cache_type;
 
 	/// the value type of the cache: a pair of a transition and its ID
 	typedef std::pair<const Transition, size_t> TransIDPair;
 
-	// check that the types _really_ match
+private:
+	/// cache of transitions_
+	typedef Cache<Transition> trans_cache_type;
+    // check that the types _really_ match
 	static_assert(
 		std::is_same<typename trans_cache_type::value_type, TransIDPair>::value,
 		"Incompatible types!");
 
-private:
 	// this is the place where transitions_ are stored
 	struct Backend
 	{
