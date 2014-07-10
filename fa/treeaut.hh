@@ -239,11 +239,10 @@ public:   // data types
 	///	the type of a tree automaton transition
 	typedef TT<T> Transition;
 
-protected: // protected data types
+private:
 	/// the value type of the cache: a pair of a transition and its ID
 	typedef std::pair<const Transition, size_t> TransIDPair;
 
-private:
 	/// cache of transitions_
 	typedef Cache<Transition> trans_cache_type;
     // check that the types _really_ match
@@ -263,7 +262,6 @@ private:
 		{ }
 	};
 
-public:
 	struct CmpF
 	{
 		bool operator()(
@@ -276,6 +274,7 @@ public:
 
 	typedef std::set<TransIDPair*, CmpF> trans_set_type;
 
+public:
 	/**
 	 * @brief  Iterator over transitions_
 	 */
