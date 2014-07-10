@@ -239,7 +239,7 @@ public:   // data types
 	///	the type of a tree automaton transition
 	typedef TT<T> Transition;
 
-	/// cache of transitions
+	/// cache of transitions_
 	typedef Cache<Transition> trans_cache_type;
 
 	/// the value type of the cache: a pair of a transition and its ID
@@ -251,7 +251,7 @@ public:   // data types
 		"Incompatible types!");
 
 private:
-	// this is the place where transitions are stored
+	// this is the place where transitions_ are stored
 	struct Backend
 	{
 		typename TTBase<T>::lhs_cache_type lhsCache;
@@ -277,7 +277,7 @@ public:
 	typedef std::set<TransIDPair*, CmpF> trans_set_type;
 
 	/**
-	 * @brief  Iterator over transitions
+	 * @brief  Iterator over transitions_
 	 */
 	class Iterator
 	{
@@ -384,10 +384,9 @@ private:  // data members
     //VATA::ExplicitTreeAut vataAut_;
 	Backend* backend_;
 	size_t maxRank_;
+	trans_set_type transitions_;
 
 public:   // data members
-
-	trans_set_type transitions;
 
 private: // private constructor
 	TA(Backend&             backend_);
@@ -442,7 +441,7 @@ public:
 
     /**
      * Insert given pair to the internal structure
-     * for transitions.
+     * for transitions_.
      * @param x Transition pair to be inserted
      * @return True If the new transition has been inserted
      * @return False If the transition has been already presented
@@ -450,7 +449,7 @@ public:
     bool insertToTransitions(TransIDPair* x)
     {
         std::pair<typename std::set<TransIDPair*, CmpF>::iterator, bool> insertRes =
-            this->transitions.insert(x);
+            this->transitions_.insert(x);
         return insertRes.second;
     }
 
@@ -467,12 +466,12 @@ public:
 
 	typename TA<T>::Iterator begin() const
 	{
-		return typename TA<T>::Iterator(this->transitions.begin());
+		return typename TA<T>::Iterator(this->transitions_.begin());
 	}
 
 	typename TA<T>::Iterator end() const
 	{
-		return typename TA<T>::Iterator(this->transitions.end());
+		return typename TA<T>::Iterator(this->transitions_.end());
 	}
 
 	typename trans_set_type::const_iterator _lookup(size_t rhs) const
@@ -482,7 +481,7 @@ public:
             reinterpret_cast<std::pair<const Transition, size_t>*>(buffer);
 		new (reinterpret_cast<TTBase<T>*>(const_cast<Transition*>(&tPtr->first)))
             TTBase<T>(nullptr, T(), rhs);
-		typename trans_set_type::const_iterator i = this->transitions.lower_bound(tPtr);
+		typename trans_set_type::const_iterator i = this->transitions_.lower_bound(tPtr);
 		(reinterpret_cast<TTBase<T>*>(const_cast<Transition*>(&tPtr->first)))->~TTBase();
 		return i;
 	}
@@ -543,11 +542,11 @@ public:
 		nextState_ = rhs.nextState_;
 		this->maxRank_ = rhs.maxRank_;
 		this->backend_ = rhs.backend_;
-		this->transitions = rhs.transitions;
+		this->transitions_ = rhs.transitions_;
 		finalStates_ = rhs.finalStates_;
 
-		for (TransIDPair* trans : this->transitions)
-		{	// copy transitions
+		for (TransIDPair* trans : this->transitions_)
+		{	// copy transitions_
 			this->transCache().addRef(trans);
 		}
 
@@ -558,11 +557,11 @@ public:
 	{
 		this->maxRank_ = 0;
 		nextState_ = 0;
-		for (TransIDPair* trans : this->transitions)
+		for (TransIDPair* trans : this->transitions_)
 		{
 			this->transCache().release(trans);
 		}
-		this->transitions.clear();
+		this->transitions_.clear();
 		finalStates_.clear();
 	}
 
@@ -574,7 +573,7 @@ public:
 	void updateStateCounter()
 	{
 		nextState_ = 0;
-		for (const TransIDPair* trans : this->transitions)
+		for (const TransIDPair* trans : this->transitions_)
 		{
 			nextState_ = std::max(
 				nextState_,
@@ -599,13 +598,13 @@ public:
 	void buildLhsIndex(Index<const std::vector<size_t>*>& index) const;
 
 	/**
-	 * @brief  Creates a top-down cache for transitions of the TA
+	 * @brief  Creates a top-down cache for transitions_ of the TA
 	 *
-	 * This method creates a top-down cache of transitions of the TA, i.e.
-	 * a mapping where for each state @e q there is a list of transitions such
+	 * This method creates a top-down cache of transitions_ of the TA, i.e.
+	 * a mapping where for each state @e q there is a list of transitions_ such
 	 * that @e q is the parent state of the transition.
 	 *
-	 * @returns  Top-down cache of transitions of the TA
+	 * @returns  Top-down cache of transitions_ of the TA
 	 */
 	td_cache_type buildTDCache() const;
 	void buildBUCache(bu_cache_type& cache) const;
@@ -678,7 +677,7 @@ public:
 
 	const trans_set_type& getTransitions() const
 	{
-		return this->transitions;
+		return this->transitions_;
 	}
 
 /*
@@ -878,11 +877,11 @@ public:
 
 
 	/**
-	 * @brief  Determines whether two transitions match
+	 * @brief  Determines whether two transitions_ match
 	 *
-	 * This function determines whether two transitions match (and can therefore
+	 * This function determines whether two transitions_ match (and can therefore
 	 * e.g. be merged during abstraction). First, the @p funcMatch functor is used
-	 * to determine whether the transitions are to be checked at all.
+	 * to determine whether the transitions_ are to be checked at all.
 	 */
 	template <class F>
 	static bool transMatch(
@@ -1031,7 +1030,7 @@ public:
 			dst.addFinalState(headIndex[stateIndex[state]]);
 		}
 
-		for (const TransIDPair* trans : this->transitions)
+		for (const TransIDPair* trans : this->transitions_)
 		{
 			std::vector<size_t> lhs;
 			stateIndex.translate(lhs, trans->first.lhs());
@@ -1046,7 +1045,7 @@ public:
 
 	TA<T>& uselessFree(TA<T>& dst) const
 	{
-		std::vector<const TransIDPair*> v1(this->transitions.begin(), this->transitions.end()), v2;
+		std::vector<const TransIDPair*> v1(this->transitions_.begin(), this->transitions_.end()), v2;
 		std::set<size_t> states;
 		bool changed = true;
 		while (changed)
@@ -1089,7 +1088,7 @@ public:
 	TA<T>& unreachableFree(TA<T>& dst) const
 	{
 		std::vector<const TransIDPair*> v1(
-			transitions.begin(), this->transitions.end()), v2;
+			transitions_.begin(), this->transitions_.end()), v2;
 		std::set<size_t> states(finalStates_.begin(), finalStates_.end());
 		for (size_t finState : finalStates_)
 		{
@@ -1124,7 +1123,7 @@ public:
 
 	TA<T>& uselessAndUnreachableFree(TA<T>& dst) const
 	{
-		std::vector<const TransIDPair*> v1(this->transitions.begin(), this->transitions.end()), v2, v3;
+		std::vector<const TransIDPair*> v1(this->transitions_.begin(), this->transitions_.end()), v2, v3;
 		std::set<size_t> states;
 		bool changed = true;
 		while (changed)
@@ -1267,10 +1266,10 @@ public:
 	/**
 	 * @brief  Creates a new TA with renamed states
 	 *
-	 * This method takes the TA @p src and copies its states and transitions
+	 * This method takes the TA @p src and copies its states and transitions_
 	 * (while renaming them on the way) into the TA @p dst, which may or may not
 	 * be empty. The renaming is given by the @p funcRename functor and the
-	 * transitions to be copied are given by the @p funcCopyTrans functor. In
+	 * transitions_ to be copied are given by the @p funcCopyTrans functor. In
 	 * case * @p addFinalStates is @p true, the final states of @p src will also
 	 * be set as final in @p dst.
 	 *
@@ -1278,7 +1277,7 @@ public:
 	 * @param[in]      src             The input TA
 	 * @param[in,out]  funcRename      The functor that performs the renaming
 	 * @param[in,out]  funcCopyTrans   The functor serving as the predicate
-	 *                                 determining which transitions are to be
+	 *                                 determining which transitions_ are to be
 	 *                                 copied
 	 * @param[in]      addFinalStates  Should the copied states which are final
 	 *                                 in @p src be final also in @p dst?
@@ -1300,7 +1299,7 @@ public:
 				dst.addFinalState(funcRename(state));
 		}
 
-		for (const TransIDPair* transID : src.transitions)
+		for (const TransIDPair* transID : src.transitions_)
 		{
 			assert(nullptr != transID);
 			const Transition& trans = transID->first;
@@ -1324,7 +1323,7 @@ public:
 	/**
 	 * @brief  Creates a new TA with renamed states
 	 *
-	 * This method takes the TA @p src and copies its states and transitions
+	 * This method takes the TA @p src and copies its states and transitions_
 	 * (while renaming them on the way) into the TA @p dst, which may or may not
 	 * be empty. The renaming is given by the @p funcRename functor. In case @p
 	 * addFinalStates is @p true, the final states of @p src will also be set as
@@ -1349,7 +1348,7 @@ public:
 			dst,
 			src,
 			funcRename,
-			/* predicate over transitions to be copied */
+			/* predicate over transitions_ to be copied */
 			[](const Transition&){ return true; },
 			addFinalStates);
 	}
@@ -1371,7 +1370,7 @@ public:
 			}
 		}
 
-		for (const TransIDPair* trans : src.transitions)
+		for (const TransIDPair* trans : src.transitions_)
 		{
 			lhs.clear();
 			index.translateOTF(lhs, trans->first.lhs(), offset);
@@ -1398,9 +1397,9 @@ public:
 
 
 	/**
-	 * @brief  Copy transitions into a destination tree automaton
+	 * @brief  Copy transitions_ into a destination tree automaton
 	 *
-	 * Copies all transitions into the @p dst tree automaton.
+	 * Copies all transitions_ into the @p dst tree automaton.
 	 *
 	 * @param[in,out]  dst  Destination tree automaton
 	 *
@@ -1408,7 +1407,7 @@ public:
 	 */
 	TA& copyTransitions(TA<T>& dst) const
 	{
-		for (const TransIDPair* trans : this->transitions)
+		for (const TransIDPair* trans : this->transitions_)
 			dst.addTransition(trans);
 		return dst;
 	}
@@ -1416,7 +1415,7 @@ public:
 	template <class F>
 	TA& copyTransitions(TA<T>& dst, F f) const
 	{
-		for (const TransIDPair* trans : this->transitions)
+		for (const TransIDPair* trans : this->transitions_)
 		{
 			if (f(&trans->first))
 				dst.addTransition(trans);
@@ -1443,10 +1442,10 @@ public:
 		for (size_t state : b.finalStates_)
 			dst.addFinalState(state);
 
-		for (const TransIDPair* trans : a.transitions)
+		for (const TransIDPair* trans : a.transitions_)
 			dst.addTransition(trans);
 
-		for (const TransIDPair* trans : b.transitions)
+		for (const TransIDPair* trans : b.transitions_)
 			dst.addTransition(trans);
 
 		return dst;
@@ -1463,7 +1462,7 @@ public:
 				dst.addFinalState(state);
 		}
 
-		for (const TransIDPair* trans : src.transitions)
+		for (const TransIDPair* trans : src.transitions_)
 			dst.addTransition(trans);
 
 		return dst;
@@ -1504,7 +1503,7 @@ public:
 		if (registerFinalState)
 			dst.addFinalState(newState);
 
-		for (const TransIDPair* trans : this->transitions)
+		for (const TransIDPair* trans : this->transitions_)
 		{
 			dst.addTransition(trans);
 			if (this->isFinalState(trans->first.rhs()))
@@ -1524,7 +1523,7 @@ public:
 		{
 			std::unordered_map<size_t, size_t>::const_iterator j = states.find(state);
 			assert(j != states.end());
-			for (typename trans_set_type::const_iterator k = this->_lookup(state); k != this->transitions.end() && (*k)->first.rhs() == state; ++k)
+			for (typename trans_set_type::const_iterator k = this->_lookup(state); k != this->transitions_.end() && (*k)->first.rhs() == state; ++k)
 				dst.addTransition((*k)->first.lhs(), (*k)->first.label(), j->second);
 			if (registerFinalState)
 				dst.addFinalState(j->second);

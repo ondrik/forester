@@ -220,7 +220,7 @@ void TA<T>::downwardTranslation(
 		}
 	}
 
-	for (const TransIDPair* ptrTransIDPair : this->transitions)
+	for (const TransIDPair* ptrTransIDPair : this->transitions_)
 	{
 		lts.addTransition(
 			stateIndex[ptrTransIDPair->first.rhs()],
@@ -258,7 +258,7 @@ void TA<T>::upwardTranslation(
 	std::map<Env, size_t> envMap;
 	std::vector<const Env*> head;
 	part.clear();
-	for (const TransIDPair* ptrTransIDPair : this->transitions)
+	for (const TransIDPair* ptrTransIDPair : this->transitions_)
 	{
 		std::vector<size_t> lhs;
 		stateIndex.translate(lhs, ptrTransIDPair->first.lhs());
@@ -294,7 +294,7 @@ void TA<T>::upwardTranslation(
 	}
 
 	lts = LTS(labelIndex.size() + 1, stateIndex.size() + envMap.size());
-	for (const TransIDPair* ptrTransIDPair : this->transitions)
+	for (const TransIDPair* ptrTransIDPair : this->transitions_)
 	{
 		std::vector<size_t> lhs;
 		stateIndex.translate(lhs, ptrTransIDPair->first.lhs());
@@ -405,7 +405,7 @@ bool TA<T>::subseteq(const TA<T>& a, const TA<T>& b)
 template <class T>
 void TA<T>::buildStateIndex(Index<size_t>& index) const
 {
-    for (const TransIDPair* trans : this->transitions)
+    for (const TransIDPair* trans : this->transitions_)
     {
         for (size_t state : trans->first.lhs())
         {
@@ -424,7 +424,7 @@ template <class T>
 void TA<T>::buildSortedStateIndex(Index<size_t>& index) const
 {
     std::set<size_t> s;
-    for (const TransIDPair* trans : this->transitions)
+    for (const TransIDPair* trans : this->transitions_)
     {
         for (size_t state : trans->first.lhs())
         {
@@ -440,7 +440,7 @@ void TA<T>::buildSortedStateIndex(Index<size_t>& index) const
 template <class T>
 void TA<T>::buildLabelIndex(Index<T>& index) const
 {
-    for (const TransIDPair* trans : this->transitions)
+    for (const TransIDPair* trans : this->transitions_)
     {
         index.add(trans->first.label());
     }
@@ -449,7 +449,7 @@ void TA<T>::buildLabelIndex(Index<T>& index) const
 template <class T>
 void TA<T>::buildLhsIndex(Index<const std::vector<size_t>*>& index) const
 {
-    for (const TransIDPair* trans : this->transitions)
+    for (const TransIDPair* trans : this->transitions_)
     {
         index.add(&trans->first.lhs());
     }
@@ -459,8 +459,8 @@ template <class T>
 typename TA<T>::td_cache_type TA<T>::buildTDCache() const
 {
     td_cache_type cache;
-    for (const TransIDPair* trans : this->transitions)
-    {	// insert all transitions
+    for (const TransIDPair* trans : this->transitions_)
+    {	// insert all transitions_
         std::vector<const Transition*>& vec = cache.insert(std::make_pair(
             trans->first.rhs(),
             std::vector<const Transition*>())).first->second;
@@ -474,7 +474,7 @@ template <class T>
 void TA<T>::buildBUCache(bu_cache_type& cache) const
 {
     std::unordered_set<size_t> s;
-    for (const TransIDPair* trans : this->transitions)
+    for (const TransIDPair* trans : this->transitions_)
     {
         s.clear();
         for (size_t state : trans->first.lhs())
@@ -492,7 +492,7 @@ void TA<T>::buildBUCache(bu_cache_type& cache) const
 template <class T>
 void TA<T>::buildLTCache(lt_cache_type& cache) const
 {
-    for (const TransIDPair* trans : this->transitions)
+    for (const TransIDPair* trans : this->transitions_)
     {
         cache.insert(std::make_pair(trans->first.label(),
                     std::vector<const Transition*>())).
@@ -547,7 +547,7 @@ TA<T>::TA(
     //vataAut_(),
     backend_(&backend_),
     maxRank_(0),
-    transitions{}
+    transitions_{}
 { }
 
 template <class T>
@@ -557,7 +557,7 @@ TA<T>::TA() :
         //vataAut_(),
 		backend_(),
 		maxRank_(0),
-		transitions{}
+		transitions_{}
 {
     backend_ = new Backend();
 }
@@ -570,10 +570,10 @@ TA<T>::TA(
     //vataAut_(),
     backend_(ta.backend_),
     maxRank_(ta.maxRank_),
-    transitions(ta.transitions)
+    transitions_(ta.transitions_)
 {
-    for (TransIDPair* trans : this->transitions)
-    {	// copy transitions
+    for (TransIDPair* trans : this->transitions_)
+    {	// copy transitions_
         this->transCache().addRef(trans);
     }
 }
@@ -588,10 +588,10 @@ TA<T>::TA(
     //vataAut_(),
     backend_(ta.backend_),
     maxRank_(ta.maxRank_),
-    transitions()
+    transitions_()
 {
-    for (TransIDPair* trans : ta.transitions)
-    {	// copy transitions (only those requested)
+    for (TransIDPair* trans : ta.transitions_)
+    {	// copy transitions_ (only those requested)
         if (f(&trans->first))
         {
             this->addTransition(trans);

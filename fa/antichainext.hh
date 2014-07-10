@@ -207,7 +207,7 @@ public:
 		antichain.initIndex(cSize - countB, countB);
 		trans_list_type aLeaves;
 		std::unordered_map<T, trans_list_type> bTrans, bLeaves;
-		for (typename TA<T>::trans_set_type::const_iterator i = c.transitions.begin(); i != c.transitions.end(); ++i)
+		for (typename TA<T>::trans_set_type::const_iterator i = c.getTransitions().begin(); i != c.getTransitions().end(); ++i)
 		{
 			size_t arity = (*i)->first.lhs().size();
 			if ((*i)->first.rhs() >= countB)
