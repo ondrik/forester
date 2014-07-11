@@ -33,6 +33,7 @@
 #include "lts.hh"
 #include "streams.hh"
 #include "utils.hh"
+#include "label.hh"
 
 // VATA headers
 //#include "libvata/include/vata/explicit_tree_aut.hh"
@@ -300,11 +301,11 @@ private:
 		bool operator!=(const Iterator& rhs) const { return this->_i != rhs._i; }
 	};
 
-public:
 	typedef typename std::unordered_map<size_t,
             std::vector<const Transition*>> td_cache_type;
 
 private:
+
 	class TDIterator
 	{
 	private:  // data members
@@ -372,12 +373,14 @@ private:
 	};
 
 	typedef std::unordered_map<size_t, std::vector<const Transition*>> bu_cache_type;
-
-public:
 	typedef std::unordered_map<T, std::vector<const Transition*>> lt_cache_type;
 
+public:
 	typedef Iterator iterator;
 	typedef TDIterator td_iterator;
+
+private: // private constants
+    const int cEmptyRootTransIndex = 0;
 
 private:  // data members
 
@@ -413,6 +416,16 @@ public:
     static TA<T>* allocateTAWithSameFinalStates(
 		const TA<T>&         ta,
         bool                 copyFinalStates=true);
+
+    std::vector<const Transition*> getEmptyRootTransitions() const;
+
+    void copyReachableTransitionsFromRoot(
+            const TA<T>&     src,
+            const size_t&    rootState);
+    void copyReachableTransitionsFromRoot(
+            const TA<T>&     src,
+            td_cache_type    cache,
+            const size_t&    rootState);
 
 	typename Transition::lhs_cache_type& lhsCache() const
 	{
@@ -552,8 +565,13 @@ public:
 	 * @returns  Top-down cache of transitions_ of the TA
 	 */
 	td_cache_type buildTDCache() const;
+	td_cache_type buildTDCacheWithEmptyRoot() const;
 	void buildBUCache(bu_cache_type& cache) const;
 	void buildLTCache(lt_cache_type& cache) const;
+    static void buildLTCacheExt(
+            const TA<T>&                 ta,
+	        TA<T>::lt_cache_type&        cache,
+            label_type                   lUndef);
 
 
 	const TransIDPair* addTransition(
@@ -657,6 +675,22 @@ public:
 		std::vector<std::vector<bool>>&           dst,
 		const std::vector<std::vector<bool>>&     dwn,
 		const std::vector<std::vector<bool>>&     up);
+
+    template <class F>
+	static size_t buProduct(
+		const TA<T>&                              ta1,
+		const TA<T>&                              ta2,
+        label_type                                lUndef,
+		F                                         f,
+		size_t                                    stateOffset = 0)
+	{
+		TA<T>::lt_cache_type cache1, cache2;
+        TA<T>::buildLTCacheExt(ta1, cache1, lUndef);
+		TA<T>::buildLTCacheExt(ta2, cache2, lUndef);
+
+        return TA<T>::buProduct(ta1, ta2, f, stateOffset);
+    }
+
 
 	template <class F>
 	static size_t buProduct(

@@ -152,12 +152,7 @@ public:
 		size_t                          stateOffset,
 		F                               funcCompat)
 	{
-		// build TD cache and insert empty set of root transitions (if not present)
-		TreeAut::td_cache_type cache = src.buildTDCache();
-		std::vector<const Transition*>& v = cache.insert(
-			std::make_pair(0, std::vector<const Transition*>())).first->second;
-
-		for (const Transition* trans : v)
+		for (const Transition* trans : src.getEmptyRootTransitions())
 		{ // iterate over all "synthetic" transitions and constuct new FAE for each
 			assert(nullptr != trans);
 
@@ -179,13 +174,9 @@ public:
 
 				const size_t& rootState = trans->lhs()[j];
 
-				for (TreeAut::td_iterator k = src.tdStart(cache, {rootState});
-					k.isValid();
-					k.next())
-				{ // copy reachable transitions
-					ta->addTransition(*k);
-				}
-
+                // TODO PERF: If you want this faster provide your td_cache build
+                // out of the inner cycle
+				ta->copyReachableTransitionsFromRoot(src, rootState);
 				ta->addFinalState(rootState);
 
 				// compute signatures
@@ -455,9 +446,15 @@ public:
 
 public:
 
+    /*
 	void buildLTCacheExt(
 		const TreeAut&               ta,
 		TreeAut::lt_cache_type&      cache);
+    */
+    label_type getUndefLabel()
+    {
+	    return this->boxMan->lookupLabel(Data::createUndef());
+    }
 
 	const TypeBox* getType(size_t target) const
 	{

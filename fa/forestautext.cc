@@ -107,7 +107,7 @@ TreeAut& FAE::invalidateReference(
 	return dst;
 }
 
-
+/*
 void FAE::buildLTCacheExt(
 	const TreeAut&               ta,
 	TreeAut::lt_cache_type&      cache)
@@ -127,7 +127,7 @@ void FAE::buildLTCacheExt(
 		}
 	}
 }
-
+*/
 
 void FAE::freePosition(size_t root)
 {

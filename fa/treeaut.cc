@@ -471,6 +471,24 @@ typename TA<T>::td_cache_type TA<T>::buildTDCache() const
 }
 
 template <class T>
+typename TA<T>::td_cache_type TA<T>::buildTDCacheWithEmptyRoot() const
+{
+    td_cache_type cache = buildTDCache();
+    cache.insert(
+        std::make_pair(cEmptyRootTransIndex, std::vector<const Transition*>()));
+
+    return cache;
+}
+
+template<class T>
+std::vector<const typename TA<T>::Transition*> TA<T>::getEmptyRootTransitions() const
+{
+    TA<T>::td_cache_type cache = buildTDCacheWithEmptyRoot();
+    
+    return cache.at(cEmptyRootTransIndex);
+}
+
+template <class T>
 void TA<T>::buildBUCache(bu_cache_type& cache) const
 {
     std::unordered_set<size_t> s;
@@ -498,6 +516,27 @@ void TA<T>::buildLTCache(lt_cache_type& cache) const
                     std::vector<const Transition*>())).
             first->second.push_back(&trans->first);
     }
+}
+
+template<class T>
+void TA<T>::buildLTCacheExt(
+	const TA<T>&                 ta,
+	TA<T>::lt_cache_type&        cache,
+    label_type                   lUndef)
+{
+	for (TA<T>::iterator i = ta.begin(); i != ta.end(); ++i)
+	{
+		if (i->label()->isData())
+		{
+			cache.insert(
+				make_pair(lUndef, std::vector<const TT<label_type>*>())
+			).first->second.push_back(&*i);
+		} else {
+			cache.insert(
+				make_pair(i->label(), std::vector<const TT<label_type>*>())
+			).first->second.push_back(&*i);
+		}
+	}
 }
 
 template <class T>
@@ -537,6 +576,26 @@ const typename TA<T>::TransIDPair* TA<T>::addTransition(
     const std::vector<size_t>&        index)
 {
     return this->internalAdd(Transition(transition, index, this->lhsCache()));
+}
+
+template <class T>
+void TA<T>::copyReachableTransitionsFromRoot(const TA<T>& src,
+        const size_t& rootState)
+{
+    td_cache_type cache = src.buildTDCacheWithEmptyRoot();
+    copyReachableTransitionsFromRoot(src, cache, rootState);
+}
+
+template <class T>
+void TA<T>::copyReachableTransitionsFromRoot(const TA<T>& src,
+        td_cache_type cache, const size_t& rootState)
+{
+    for (td_iterator k = src.tdStart(cache, {rootState});
+        k.isValid();
+        k.next())
+    { // copy reachable transitions
+        addTransition(*k);
+    }
 }
 
 template <class T>
