@@ -522,18 +522,18 @@ template<class T>
 void TA<T>::buildLTCacheExt(
 	const TA<T>&                 ta,
 	TA<T>::lt_cache_type&        cache,
-    label_type                   lUndef)
+    T                            lUndef)
 {
 	for (TA<T>::iterator i = ta.begin(); i != ta.end(); ++i)
 	{
 		if (i->label()->isData())
 		{
 			cache.insert(
-				make_pair(lUndef, std::vector<const TT<label_type>*>())
+				make_pair(lUndef, std::vector<const TT<T>*>())
 			).first->second.push_back(&*i);
 		} else {
 			cache.insert(
-				make_pair(i->label(), std::vector<const TT<label_type>*>())
+				make_pair(i->label(), std::vector<const TT<T>*>())
 			).first->second.push_back(&*i);
 		}
 	}

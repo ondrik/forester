@@ -48,8 +48,8 @@ protected:
 //		this->fae.boxMan->adjustLeaves(tmp2, boxRoot);
 		this->fae.relabelReferences(tmp, boxRoot, rootIndex);
 		this->fae.unique(tmp2, tmp);
-		src.copyTransitions(dst, TreeAut::NonAcceptingF(src));
-		tmp2.copyTransitions(dst, TreeAut::NonAcceptingF(tmp2));
+		src.copyNotAcceptingTransitions(dst, src);
+		tmp2.copyNotAcceptingTransitions(dst, tmp2);
 		dst.addFinalStates(tmp2.getFinalStates());
 
 		for (size_t state : src.getFinalStates())

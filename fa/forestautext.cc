@@ -107,28 +107,6 @@ TreeAut& FAE::invalidateReference(
 	return dst;
 }
 
-/*
-void FAE::buildLTCacheExt(
-	const TreeAut&               ta,
-	TreeAut::lt_cache_type&      cache)
-{
-	label_type lUndef = this->boxMan->lookupLabel(Data::createUndef());
-	for (TreeAut::iterator i = ta.begin(); i != ta.end(); ++i)
-	{
-		if (i->label()->isData())
-		{
-			cache.insert(
-				make_pair(lUndef, std::vector<const TT<label_type>*>())
-			).first->second.push_back(&*i);
-		} else {
-			cache.insert(
-				make_pair(i->label(), std::vector<const TT<label_type>*>())
-			).first->second.push_back(&*i);
-		}
-	}
-}
-*/
-
 void FAE::freePosition(size_t root)
 {
 	// Preconditions

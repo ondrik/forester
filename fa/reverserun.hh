@@ -103,9 +103,6 @@ public:
 				this->fae.roots[i] = fae.roots[i];
 				continue;
 			}
-			//TreeAut::lt_cache_type cache1, cache2;
-			//tmp.buildLTCacheExt(*tmp.roots[i], cache1);
-			//tmp.buildLTCacheExt(*fae.roots[i], cache2);
 
 			this->fae.roots[i] = std::shared_ptr<TreeAut>(this->fae.allocTA());
 

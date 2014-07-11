@@ -445,12 +445,6 @@ public:
 
 
 public:
-
-    /*
-	void buildLTCacheExt(
-		const TreeAut&               ta,
-		TreeAut::lt_cache_type&      cache);
-    */
     label_type getUndefLabel()
     {
 	    return this->boxMan->lookupLabel(Data::createUndef());
