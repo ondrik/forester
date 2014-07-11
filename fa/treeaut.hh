@@ -304,8 +304,6 @@ private:
 	typedef typename std::unordered_map<size_t,
             std::vector<const Transition*>> td_cache_type;
 
-private:
-
 	class TDIterator
 	{
 	private:  // data members
