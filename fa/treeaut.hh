@@ -425,11 +425,7 @@ public:
     void copyReachableTransitionsFromRoot(
             const TA<T>&     src,
             const size_t&    rootState);
-    void copyReachableTransitionsFromRoot(
-            const TA<T>&     src,
-            td_cache_type    cache,
-            const size_t&    rootState);
-
+    
 	typename TA<T>::Iterator begin() const
 	{
 		return typename TA<T>::Iterator(this->transitions_.begin());
@@ -515,10 +511,14 @@ public:
 	 */
 	void buildStateIndex(Index<size_t>& index) const;
 	
-	const TransIDPair* addTransition(const Transition& transition);
-
-    const TransIDPair* addTransition(
+	void addTransition(const Transition& transition);
+    void addTransition(
 		const std::vector<size_t>&          lhs,
+		const T&                            label,
+		size_t                              rhs);
+
+    const Transition& getTransition(
+        const std::vector<size_t>&          lhs,
 		const T&                            label,
 		size_t                              rhs);
 
@@ -589,75 +589,6 @@ public:
 
         return TA<T>::buProduct(ta1, ta2, f, stateOffset);
     }
-
-
-	template <class F>
-	static size_t buProduct(
-		const lt_cache_type&                      cache1,
-		const lt_cache_type&                      cache2,
-		F                                         f,
-		size_t                                    stateOffset = 0)
-	{
-		std::unordered_map<std::pair<size_t, size_t>, size_t, boost::hash<std::pair<size_t, size_t>>> product;
-		for (typename lt_cache_type::const_iterator i = cache1.begin(); i != cache1.end(); ++i)
-		{
-			if (!i->second.front()->lhs().empty())
-				continue;
-
-			typename lt_cache_type::const_iterator j = cache2.find(i->first);
-			if (j == cache2.end())
-				continue;
-
-			for (typename std::vector<const Transition*>::const_iterator k = i->second.begin(); k != i->second.end(); ++k)
-			{
-				for (typename std::vector<const Transition*>::const_iterator l = j->second.begin(); l != j->second.end(); ++l)
-				{
-					std::pair<std::unordered_map<std::pair<size_t, size_t>, size_t, boost::hash<std::pair<size_t, size_t>>>::iterator, bool> p =
-						product.insert(std::make_pair(std::make_pair((*k)->rhs(), (*l)->rhs()), product.size() + stateOffset));
-					f(*k, *l, std::vector<size_t>(), p.first->second);
-				}
-			}
-		}
-		bool changed = true;
-		while (changed)
-		{
-			changed = false;
-			for (typename lt_cache_type::const_iterator i = cache1.begin(); i != cache1.end(); ++i)
-			{
-				if (i->second.front()->lhs().empty())
-					continue;
-				typename lt_cache_type::const_iterator j = cache2.find(i->first);
-				if (j == cache2.end())
-					continue;
-				for (typename std::vector<const Transition*>::const_iterator k = i->second.begin(); k != i->second.end(); ++k)
-				{
-					for (typename std::vector<const Transition*>::const_iterator l = j->second.begin(); l != j->second.end(); ++l)
-					{
-						assert((*k)->lhs().size() == (*l)->lhs().size());
-						std::vector<size_t> lhs;
-						for (size_t m = 0; m < (*k)->lhs().size(); ++m)
-						{
-							std::unordered_map<std::pair<size_t, size_t>, size_t, boost::hash<std::pair<size_t, size_t>>>::iterator n = product.find(
-								std::make_pair((*k)->lhs()[m], (*l)->lhs()[m])
-							);
-							if (n == product.end())
-								break;
-							lhs.push_back(n->second);
-						}
-						if (lhs.size() < (*k)->lhs().size())
-							continue;
-						std::pair<std::unordered_map<std::pair<size_t, size_t>, size_t, boost::hash<std::pair<size_t, size_t>>>::iterator, bool> p =
-							product.insert(std::make_pair(std::make_pair((*k)->rhs(), (*l)->rhs()), product.size() + stateOffset));
-						f(*k, *l, lhs, p.first->second);
-						if (p.second)
-							changed = true;
-					}
-				}
-			}
-		}
-
-		return product.size();
-	}
 
 	// currently erases '1' from the relation
 	template <class F>
@@ -1053,6 +984,11 @@ public:
 */
 
 private:
+    void copyReachableTransitionsFromRoot(
+            const TA<T>&     src,
+            td_cache_type    cache,
+            const size_t&    rootState);
+
     const TransIDPair* addTransition(
 		const std::vector<size_t>&          lhs,
 		const T&                            label,
@@ -1354,6 +1290,74 @@ private:
 		return dst;
 	}
 
+    template <class F>
+	static size_t buProduct(
+		const lt_cache_type&                      cache1,
+		const lt_cache_type&                      cache2,
+		F                                         f,
+		size_t                                    stateOffset = 0)
+	{
+		std::unordered_map<std::pair<size_t, size_t>, size_t, boost::hash<std::pair<size_t, size_t>>> product;
+		for (typename lt_cache_type::const_iterator i = cache1.begin(); i != cache1.end(); ++i)
+		{
+			if (!i->second.front()->lhs().empty())
+				continue;
+
+			typename lt_cache_type::const_iterator j = cache2.find(i->first);
+			if (j == cache2.end())
+				continue;
+
+			for (typename std::vector<const Transition*>::const_iterator k = i->second.begin(); k != i->second.end(); ++k)
+			{
+				for (typename std::vector<const Transition*>::const_iterator l = j->second.begin(); l != j->second.end(); ++l)
+				{
+					std::pair<std::unordered_map<std::pair<size_t, size_t>, size_t, boost::hash<std::pair<size_t, size_t>>>::iterator, bool> p =
+						product.insert(std::make_pair(std::make_pair((*k)->rhs(), (*l)->rhs()), product.size() + stateOffset));
+					f(*k, *l, std::vector<size_t>(), p.first->second);
+				}
+			}
+		}
+		bool changed = true;
+		while (changed)
+		{
+			changed = false;
+			for (typename lt_cache_type::const_iterator i = cache1.begin(); i != cache1.end(); ++i)
+			{
+				if (i->second.front()->lhs().empty())
+					continue;
+				typename lt_cache_type::const_iterator j = cache2.find(i->first);
+				if (j == cache2.end())
+					continue;
+				for (typename std::vector<const Transition*>::const_iterator k = i->second.begin(); k != i->second.end(); ++k)
+				{
+					for (typename std::vector<const Transition*>::const_iterator l = j->second.begin(); l != j->second.end(); ++l)
+					{
+						assert((*k)->lhs().size() == (*l)->lhs().size());
+						std::vector<size_t> lhs;
+						for (size_t m = 0; m < (*k)->lhs().size(); ++m)
+						{
+							std::unordered_map<std::pair<size_t, size_t>, size_t, boost::hash<std::pair<size_t, size_t>>>::iterator n = product.find(
+								std::make_pair((*k)->lhs()[m], (*l)->lhs()[m])
+							);
+							if (n == product.end())
+								break;
+							lhs.push_back(n->second);
+						}
+						if (lhs.size() < (*k)->lhs().size())
+							continue;
+						std::pair<std::unordered_map<std::pair<size_t, size_t>, size_t, boost::hash<std::pair<size_t, size_t>>>::iterator, bool> p =
+							product.insert(std::make_pair(std::make_pair((*k)->rhs(), (*l)->rhs()), product.size() + stateOffset));
+						f(*k, *l, lhs, p.first->second);
+						if (p.second)
+							changed = true;
+					}
+				}
+			}
+		}
+
+		return product.size();
+	}
+
 	class Manager : Cache<TA<T>*>::Listener
 	{
 		typename TA<T>::Backend& backend_;
@@ -1446,6 +1450,11 @@ private:
 			return this->backend_;
 		}
 	};
+
+    const Transition& getTransitionFromPair(TransIDPair* pair)
+    {
+        return pair->first;
+    }
 
 	TransIDPair* internalAdd(const Transition& t)
 	{

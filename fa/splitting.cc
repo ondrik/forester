@@ -361,7 +361,8 @@ void Splitting::isolateAtLeaf(
 			ta.copyTransitions(ta2);
 			size_t state = fae.freshState();
 			ta2.addFinalState(state);
-			const Transition& t = ta2.addTransition(transBox.first->lhs(), transBox.first->label(), state)->first;
+			ta2.addTransition(transBox.first->lhs(), transBox.first->label(), state);
+            const Transition& t = ta2.getTransition(transBox.first->lhs(), transBox.first->label(), state);
 			fae.setRoot(root, std::shared_ptr<TreeAut>(&ta2.uselessAndUnreachableFree(*fae.allocTA())));
 			fae.connectionGraph.invalidate(root);
 			std::set<const Box*> boxes;
@@ -413,7 +414,7 @@ void Splitting::isolateAtLeaf(
 		ta2.addFinalState(state);
 
 		// insert a root transition
-		ta2.addTransition(transBox.first->lhs(), transBox.first->label(), state)->first;
+		ta2.addTransition(transBox.first->lhs(), transBox.first->label(), state);
 
 		// copy to 'ta2' transitions from 'ta'
 		ta.copyTransitions(ta2);

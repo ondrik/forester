@@ -540,13 +540,19 @@ void TA<T>::buildLTCacheExt(
 }
 
 template <class T>
-const typename TA<T>::TransIDPair* TA<T>::addTransition(
+void TA<T>::addTransition(
 		const std::vector<size_t>&          lhs,
 		const T&                            label,
 		size_t                              rhs)
 {
     //vataAut_.AddTransition(lhs, reinterpret_cast<uintptr_t> (&label), rhs);
-	return this->internalAdd(Transition(lhs, label, rhs, this->lhsCache()));
+    this->internalAdd(Transition(lhs, label, rhs, this->lhsCache()));
+}
+
+template <class T>
+void TA<T>::addTransition(const Transition& transition)
+{
+    this->internalAdd(Transition(transition, this->lhsCache()));
 }
 
 template <class T>
@@ -565,17 +571,23 @@ const typename TA<T>::TransIDPair* TA<T>::addTransition(
 }
 
 template <class T>
-const typename TA<T>::TransIDPair* TA<T>::addTransition(const Transition& transition)
-{
-    return this->internalAdd(Transition(transition, this->lhsCache()));
-}
-
-template <class T>
 const typename TA<T>::TransIDPair* TA<T>::addTransition(
     const Transition&                 transition,
     const std::vector<size_t>&        index)
 {
     return this->internalAdd(Transition(transition, index, this->lhsCache()));
+}
+
+template<class T>
+const typename TA<T>::Transition& TA<T>::getTransition(
+        const std::vector<size_t>&          lhs,
+		const T&                            label,
+		size_t                              rhs)
+{
+    TransIDPair* pair = this->transCache().find(Transition(
+                    lhs, label, rhs, this->lhsCache()));
+    assert(pair != NULL);
+    return getTransitionFromPair(pair);
 }
 
 template <class T>
