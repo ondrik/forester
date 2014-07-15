@@ -35,9 +35,6 @@
 #include "utils.hh"
 #include "label.hh"
 
-// VATA headers
-//#include "libvata/include/vata/explicit_tree_aut.hh"
-
 class TA;
 
 typedef uintptr_t T;
@@ -384,7 +381,6 @@ private:  // data members
 
 	size_t nextState_;
 	std::set<size_t> finalStates_;
-    //VATA::ExplicitTreeAut vataAut_;
 	Backend* backend_;
 	size_t maxRank_;
 	trans_set_type transitions_;

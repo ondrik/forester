@@ -506,7 +506,7 @@ void TA::buildLTCache(lt_cache_type& cache) const
 void TA::buildLTCacheExt(
 	const TA&                 ta,
 	TA::lt_cache_type&        cache,
-    T                            lUndef)
+    T                         lUndef)
 {
 	for (TA::iterator i = ta.begin(); i != ta.end(); ++i)
 	{

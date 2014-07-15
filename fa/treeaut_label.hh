@@ -22,6 +22,7 @@
 
 #include "treeaut.hh"
 #include "label.hh"
+#include "vata_adapter.hh"
 
 
 /**
