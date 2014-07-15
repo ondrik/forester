@@ -27,6 +27,6 @@
 /**
  * @brief  The type used for tree automata
  */
-typedef TA<label_type> TreeAut;
+typedef TA TreeAut;
 
 #endif /* _TREE_AUT_LABEL_HH_ */

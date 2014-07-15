@@ -33,16 +33,17 @@
 #include "lts.hh"
 #include "streams.hh"
 #include "utils.hh"
+#include "label.hh"
 
 // VATA headers
 //#include "libvata/include/vata/explicit_tree_aut.hh"
 
-template <class T> class TA;
+class TA;
 
 template <class T>
 class TTBase
 {
-	friend class TA<T>;
+	friend class TA;
 
 public:   // data types
 
@@ -146,7 +147,7 @@ public:   // methods
 template <class T>
 class TT : public TTBase<T>
 {
-	friend class TA<T>;
+	friend class TA;
 
 private:  // data types
 
@@ -231,12 +232,12 @@ public:   // methods
 /**
  * @brief  Tree automaton
  */
-template <class T>
 class TA
 {
 	template<class TAC> friend class AntichainExt;
 public:   // data types
 	///	the type of a tree automaton transition
+    typedef label_type T;
 	typedef TT<T> Transition;
 
 private:
@@ -393,26 +394,26 @@ private: // private constructor
 	TA(Backend&             backend_);
     /*
     template <class F>
-	TA(const TA<T>&         ta,
+	TA(const TA&         ta,
 	    F                    f);
         */
 
 public:
 	TA();
-    TA(const TA<T>&         ta);
+    TA(const TA&         ta);
 
-    static TA<T> createTAWithSameTransitions(
-		const TA<T>&         ta);
+    static TA createTAWithSameTransitions(
+		const TA&         ta);
 
-    static TA<T>* allocateTAWithSameTransitions(
-		const TA<T>&         ta);
+    static TA* allocateTAWithSameTransitions(
+		const TA&         ta);
     
-    static TA<T> createTAWithSameFinalStates(
-		const TA<T>&         ta,
+    static TA createTAWithSameFinalStates(
+		const TA&         ta,
         bool                 copyFinalStates=true);
 
-    static TA<T>* allocateTAWithSameFinalStates(
-		const TA<T>&         ta,
+    static TA* allocateTAWithSameFinalStates(
+		const TA&         ta,
         bool                 copyFinalStates=true);
     
     ~TA()
@@ -423,54 +424,54 @@ public:
     std::vector<const Transition*> getEmptyRootTransitions() const;
 
     void copyReachableTransitionsFromRoot(
-            const TA<T>&     src,
+            const TA&     src,
             const size_t&    rootState);
     
-	typename TA<T>::Iterator begin() const
+	typename TA::Iterator begin() const
 	{
-		return typename TA<T>::Iterator(this->transitions_.begin());
+		return typename TA::Iterator(this->transitions_.begin());
 	}
 
-	typename TA<T>::Iterator end() const
+	typename TA::Iterator end() const
 	{
-		return typename TA<T>::Iterator(this->transitions_.end());
+		return typename TA::Iterator(this->transitions_.end());
 	}
 
-	typename TA<T>::Iterator begin(size_t rhs) const
+	typename TA::Iterator begin(size_t rhs) const
 	{
 		return Iterator(this->_lookup(rhs));
 	}
 
-	typename TA<T>::Iterator end(size_t rhs) const
+	typename TA::Iterator end(size_t rhs) const
 	{
-		typename TA<T>::Iterator i = this->begin(rhs);
+		typename TA::Iterator i = this->begin(rhs);
 		for (; i != this->end() && i->rhs() == rhs; ++i);
 		return Iterator(i);
 	}
 
-	typename TA<T>::Iterator end(size_t rhs, typename TA<T>::Iterator i) const
+	typename TA::Iterator end(size_t rhs, typename TA::Iterator i) const
 	{
 		for (; i != this->end() && i->rhs() == rhs; ++i);
 		return Iterator(i);
 	}
 
-	typename TA<T>::Iterator accBegin() const
+	typename TA::Iterator accBegin() const
 	{
 		return this->begin(this->getFinalState());
 	}
 
-	typename TA<T>::Iterator accEnd() const
+	typename TA::Iterator accEnd() const
 	{
-		typename TA<T>::Iterator i = this->accBegin();
+		typename TA::Iterator i = this->accBegin();
 		return this->end(this->getFinalState(), i);
 	}
 
-	typename TA<T>::Iterator accEnd(typename TA<T>::Iterator i) const
+	typename TA::Iterator accEnd(typename TA::Iterator i) const
 	{
 		return this->end(this->getFinalState(), i);
 	}
 
-	TA<T>& operator=(const TA<T>& rhs)
+	TA& operator=(const TA& rhs)
 	{
 		if (&rhs == this)
 			return *this;
@@ -570,24 +571,24 @@ public:
 	}
 
 /*
-	TA<T>::RhsIterator getAcceptingTransitions() const {
+	TA::RhsIterator getAcceptingTransitions() const {
 		return this->getRhsIterator(this->getFinalState());
 	}
 */
 	
     template <class F>
 	static size_t buProduct(
-		const TA<T>&                              ta1,
-		const TA<T>&                              ta2,
+		const TA&                              ta1,
+		const TA&                              ta2,
         T                                         lUndef,
 		F                                         f,
 		size_t                                    stateOffset = 0)
 	{
-		TA<T>::lt_cache_type cache1, cache2;
-        TA<T>::buildLTCacheExt(ta1, cache1, lUndef);
-		TA<T>::buildLTCacheExt(ta2, cache2, lUndef);
+		TA::lt_cache_type cache1, cache2;
+        TA::buildLTCacheExt(ta1, cache1, lUndef);
+		TA::buildLTCacheExt(ta2, cache2, lUndef);
 
-        return TA<T>::buProduct(ta1, ta2, f, stateOffset);
+        return TA::buProduct(ta1, ta2, f, stateOffset);
     }
 
 	// currently erases '1' from the relation
@@ -625,7 +626,7 @@ public:
 					{
 						for (const Transition* trans2 : l->second)
 						{
-							if (!TA<T>::transMatch(trans1, trans2, f, tmp, stateIndex))
+							if (!TA::transMatch(trans1, trans2, f, tmp, stateIndex))
 							{
 								match = false;
 								break;
@@ -654,7 +655,7 @@ public:
 
 	void predicateAbstraction(
 		std::vector<std::vector<bool>>&      result,
-		const TA<T>&                         predicate,
+		const TA&                         predicate,
 		const Index<size_t>&                 stateIndex) const
 	{
 		std::vector<size_t> states;
@@ -680,8 +681,8 @@ public:
 	}
 
 	// collapses states according to a given relation
-	TA<T>& collapsed(
-		TA<T>&                                   dst,
+	TA& collapsed(
+		TA&                                   dst,
 		const std::vector<std::vector<bool>>&    rel,
 		const Index<size_t>&                     stateIndex) const
 	{
@@ -721,7 +722,7 @@ public:
 		return dst;
 	}
 	
-	TA<T>& unreachableFree(TA<T>& dst) const
+	TA& unreachableFree(TA& dst) const
 	{
 		std::vector<const TransIDPair*> v1(
 			transitions_.begin(), this->transitions_.end()), v2;
@@ -757,7 +758,7 @@ public:
 		return dst;
 	}
 
-	TA<T>& uselessAndUnreachableFree(TA<T>& dst) const
+	TA& uselessAndUnreachableFree(TA& dst) const
 	{
 		std::vector<const TransIDPair*> v1(this->transitions_.begin(), this->transitions_.end()), v2, v3;
 		std::set<size_t> states;
@@ -822,22 +823,22 @@ public:
 		return dst;
 	}
 
-	TA<T>& minimizedCombo(TA<T>& dst) const
+	TA& minimizedCombo(TA& dst) const
 	{
 		Index<size_t> stateIndex;
 		this->buildSortedStateIndex(stateIndex);
-		typename TA<T>::Backend backend_;
+		typename TA::Backend backend_;
 		std::vector<std::vector<bool> > dwn;
 		this->downwardSimulation(dwn, stateIndex);
 		std::vector<std::vector<bool> > up;
 		this->upwardSimulation(up, stateIndex, dwn);
 		std::vector<std::vector<bool> > rel;
-		TA<T>::combinedSimulation(rel, dwn, up);
-		TA<T> tmp(backend_);
+		TA::combinedSimulation(rel, dwn, up);
+		TA tmp(backend_);
 		return this->collapsed(tmp, rel, stateIndex).minimized(dst);
 	}
 
-	TA<T>& minimized(TA<T>& dst) const
+	TA& minimized(TA& dst) const
 	{
 		Index<size_t> stateIndex;
 		this->buildSortedStateIndex(stateIndex);
@@ -845,7 +846,7 @@ public:
 		return this->minimized(dst, cons, stateIndex);
 	}
 
-	static bool subseteq(const TA<T>& a, const TA<T>& b);
+	static bool subseteq(const TA& a, const TA& b);
 
 	/**
 	 * @brief  Creates a new TA with renamed states
@@ -865,9 +866,9 @@ public:
 	 * @returns  The output TA (same as @p dst)
 	 */
 	template <class F>
-	static TA<T>& rename(
-		TA<T>&                   dst,
-		const TA<T>&             src,
+	static TA& rename(
+		TA&                   dst,
+		const TA&             src,
 		F                        funcRename,
 		bool                     addFinalStates = true)
 	{
@@ -889,14 +890,14 @@ public:
 	 *
 	 * @returns  Result tree automaton
 	 */
-	TA& copyTransitions(TA<T>& dst) const
+	TA& copyTransitions(TA& dst) const
 	{
 		for (const TransIDPair* trans : this->transitions_)
 			dst.addTransition(trans);
 		return dst;
 	}
 
-	TA& copyNotAcceptingTransitions(TA<T>& dst, const TA<T>& ta) const
+	TA& copyNotAcceptingTransitions(TA& dst, const TA& ta) const
 	{
         NonAcceptingF f(ta);
 
@@ -908,9 +909,9 @@ public:
 		return dst;
 	}
 
-	static TA<T>& disjointUnion(
-		TA<T>&                      dst,
-		const TA<T>&                src,
+	static TA& disjointUnion(
+		TA&                      dst,
+		const TA&                src,
 		bool                        addFinalStates = true)
 	{
 		if (addFinalStates)
@@ -925,8 +926,8 @@ public:
 		return dst;
 	}
 
-	TA<T>& unfoldAtRoot(
-		TA<T>&                   dst,
+	TA& unfoldAtRoot(
+		TA&                   dst,
 		size_t                   newState,
 		bool                     registerFinalState = true) const
 	{
@@ -943,8 +944,8 @@ public:
 		return dst;
 	}
 
-	TA<T>& unfoldAtRoot(
-		TA<T>&                                        dst,
+	TA& unfoldAtRoot(
+		TA&                                        dst,
 		const std::unordered_map<size_t, size_t>&     states,
 		bool                                          registerFinalState = true) const
 	{
@@ -977,7 +978,7 @@ public:
 	}
 
 /*
-	TA<T>& unfoldAtLeaf(TA<T>& dst, size_t selector) const {
+	TA& unfoldAtLeaf(TA& dst, size_t selector) const {
 		// TODO:
 		return dst;
 	}
@@ -985,7 +986,7 @@ public:
 
 private:
     void copyReachableTransitionsFromRoot(
-            const TA<T>&     src,
+            const TA&     src,
             td_cache_type    cache,
             const size_t&    rootState);
 
@@ -1018,17 +1019,17 @@ private:
 		return i;
 	}
 
-    typename TA<T>::TDIterator tdStart(const td_cache_type& cache) const
+    typename TA::TDIterator tdStart(const td_cache_type& cache) const
 	{
-		return typename TA<T>::TDIterator(cache, std::vector<size_t>(
+		return typename TA::TDIterator(cache, std::vector<size_t>(
                     finalStates_.begin(), finalStates_.end()));
 	}
 
-	typename TA<T>::TDIterator tdStart(
+	typename TA::TDIterator tdStart(
 		const td_cache_type&                 cache,
 		const std::vector<size_t>&           stack) const
 	{
-		return typename TA<T>::TDIterator(cache, stack);
+		return typename TA::TDIterator(cache, stack);
 	}
 
     typename Transition::lhs_cache_type& lhsCache() const
@@ -1059,8 +1060,8 @@ private:
 	void buildBUCache(bu_cache_type& cache) const;
 	void buildLTCache(lt_cache_type& cache) const;
     static void buildLTCacheExt(
-            const TA<T>&                 ta,
-	        TA<T>::lt_cache_type&        cache,
+            const TA&                 ta,
+	        TA::lt_cache_type&        cache,
             T                            lUndef);
 
     void downwardTranslation(
@@ -1092,14 +1093,14 @@ private:
 
     struct IntersectF
 	{
-		TA<T>& dst;
-		const TA<T>& src1;
-		const TA<T>& src2;
+		TA& dst;
+		const TA& src1;
+		const TA& src2;
 
 		IntersectF(
-			TA<T>&                dst,
-			const TA<T>&          src1,
-			const TA<T>&          src2) :
+			TA&                dst,
+			const TA&          src1,
+			const TA&          src2) :
 			dst(dst),
 			src1(src1),
 			src2(src2)
@@ -1119,19 +1120,19 @@ private:
 
 
 	static size_t intersection(
-		TA<T>&                           dst,
-		const TA<T>&                     src1,
-		const TA<T>&                     src2,
+		TA&                           dst,
+		const TA&                     src1,
+		const TA&                     src2,
 		size_t                           stateOffset = 0)
 	{
 		lt_cache_type cache1, cache2;
 		src1.buildLTCache(cache1);
 		src2.buildLTCache(cache2);
-		return TA<T>::buProduct(cache1, cache2, TA<T>::IntersectF(dst, src1, src2), stateOffset);
+		return TA::buProduct(cache1, cache2, TA::IntersectF(dst, src1, src2), stateOffset);
 	}
 
-	TA<T>& downwardSieve(
-		TA<T>&                                    dst,
+	TA& downwardSieve(
+		TA&                                    dst,
 		const std::vector<std::vector<bool>>&     cons,
 		const Index<size_t>&                      stateIndex) const
 	{
@@ -1168,16 +1169,16 @@ private:
 		return dst;
 	}
 
-	TA<T>& minimized(
-		TA<T>&                                   dst,
+	TA& minimized(
+		TA&                                   dst,
 		const std::vector<std::vector<bool>>&    cons,
 		const Index<size_t>&                     stateIndex) const
 	{
-		typename TA<T>::Backend backend_;
+		typename TA::Backend backend_;
 		std::vector<std::vector<bool>> dwn;
 		this->downwardSimulation(dwn, stateIndex);
 		utils::relAnd(dwn, cons, dwn);
-		TA<T> tmp1(backend_), tmp2(backend_), tmp3(backend_);
+		TA tmp1(backend_), tmp2(backend_), tmp3(backend_);
 		return this->collapsed(tmp1, dwn, stateIndex).uselessFree(tmp2).downwardSieve(tmp3, dwn, stateIndex).unreachableFree(dst);
 	}
 
@@ -1204,9 +1205,9 @@ private:
 	 * @returns  The output TA (same as @p dst)
 	 */
 	template <class F, class G>
-	static TA<T>& rename(
-		TA<T>&                   dst,
-		const TA<T>&             src,
+	static TA& rename(
+		TA&                   dst,
+		const TA&             src,
 		F                        funcRename,
 		G                        funcCopyTrans,
 		bool                     addFinalStates = true)
@@ -1238,9 +1239,9 @@ private:
 		return dst;
 	}
 
-    static TA<T>& reduce(
-		TA<T>&                       dst,
-		const TA<T>&                 src,
+    static TA& reduce(
+		TA&                       dst,
+		const TA&                 src,
 		Index<size_t>&               index,
 		size_t                       offset = 0,
 		bool                         addFinalStates = true)
@@ -1265,15 +1266,15 @@ private:
 
 	struct NonAcceptingF
 	{
-		const TA<T>& ta;
-		NonAcceptingF(const TA<T>& ta) : ta(ta) {}
+		const TA& ta;
+		NonAcceptingF(const TA& ta) : ta(ta) {}
 		bool operator()(const Transition* t) { return !ta.isFinalState(t->rhs()); }
 	};
 
-	static TA<T>& disjointUnion(
-		TA<T>&                      dst,
-		const TA<T>&                a,
-		const TA<T>&                b)
+	static TA& disjointUnion(
+		TA&                      dst,
+		const TA&                a,
+		const TA&                b)
 	{
 		for (size_t state : a.finalStates_)
 			dst.addFinalState(state);
@@ -1358,16 +1359,16 @@ private:
 		return product.size();
 	}
 
-	class Manager : Cache<TA<T>*>::Listener
+	class Manager : Cache<TA*>::Listener
 	{
-		typename TA<T>::Backend& backend_;
+		typename TA::Backend& backend_;
 
-		Cache<TA<T>*> taCache;
-		std::vector<TA<T>*> taPool;
+		Cache<TA*> taCache;
+		std::vector<TA*> taPool;
 
 	protected:
 
-		virtual void drop(typename Cache<TA<T>*>::value_type* x)
+		virtual void drop(typename Cache<TA*>::value_type* x)
 		{
 			x->first->clear();
 			this->taPool.push_back(x->first);
@@ -1375,7 +1376,7 @@ private:
 
 	public:
 
-		Manager(typename TA<T>::Backend& backend_) :
+		Manager(typename TA::Backend& backend_) :
 			backend_(backend_),
 			taCache{},
 			taPool{}
@@ -1389,44 +1390,44 @@ private:
 			assert(this->taCache.empty());
 		}
 
-		const Cache<TA<T>*>& getCache() const
+		const Cache<TA*>& getCache() const
 		{
 			return this->taCache;
 		}
 
-		TA<T>* alloc()
+		TA* alloc()
 		{
-			TA<T>* dst;
+			TA* dst;
 			if (!this->taPool.empty())
 			{
 				dst = this->taPool.back();
 				this->taPool.pop_back();
 			} else
 			{
-				dst = new TA<T>(this->backend_);
+				dst = new TA(this->backend_);
 			}
 			return this->taCache.lookup(dst)->first;
 		}
 
-		TA<T>* clone(TA<T>* src, bool copyFinalStates = true)
+		TA* clone(TA* src, bool copyFinalStates = true)
 		{
 			assert(src);
 			assert(src->backend_ == &this->backend_);
-			//return this->taCache.lookup(new TA<T>(*src, copyFinalStates))->first;
+			//return this->taCache.lookup(new TA(*src, copyFinalStates))->first;
 			return this->taCache.lookup(allocateTAWithSameFinalStates(
                         *src, copyFinalStates))->first;
 		}
 
-		TA<T>* addRef(TA<T>* x)
+		TA* addRef(TA* x)
 		{
-			typename Cache<TA<T>*>::value_type* v = this->taCache.find(x);
+			typename Cache<TA*>::value_type* v = this->taCache.find(x);
 			assert(v);
 			return this->taCache.addRef(v), x;
 		}
 
-		size_t release(TA<T>* x)
+		size_t release(TA* x)
 		{
-			typename Cache<TA<T>*>::value_type* v = this->taCache.find(x);
+			typename Cache<TA*>::value_type* v = this->taCache.find(x);
 			assert(v);
 			return this->taCache.release(v);
 		}
@@ -1434,18 +1435,18 @@ private:
 		void clear()
 		{
 			this->taCache.clear();
-			for (TA<T>* ta : this->taPool)
+			for (TA* ta : this->taPool)
 				delete ta;
 
 			this->taPool.clear();
 		}
 
-		bool isAlive(TA<T>* x)
+		bool isAlive(TA* x)
 		{
 			return this->taCache.find(x) != nullptr;
 		}
 
-		typename TA<T>::Backend& getBackend()
+		typename TA::Backend& getBackend()
 		{
 			return this->backend_;
 		}
@@ -1540,11 +1541,11 @@ private:
     struct PredicateF
 	{
 		std::vector<size_t>& dst;
-		const TA<T>& predicate;
+		const TA& predicate;
 
 		PredicateF(
 			std::vector<size_t>&          dst,
-			const TA<T>&                  predicate) :
+			const TA&                  predicate) :
 			dst(dst),
 			predicate(predicate)
 		{ }
@@ -1562,12 +1563,12 @@ private:
 
     void intersectingStates(
 		std::vector<size_t>&                 dst,
-		const TA<T>&                         predicate) const
+		const TA&                         predicate) const
 	{
 		lt_cache_type cache1, cache2;
 		this->buildLTCache(cache1);
 		predicate.buildLTCache(cache2);
-		TA<T>::buProduct(cache1, cache2, TA<T>::PredicateF(dst, predicate));
+		TA::buProduct(cache1, cache2, TA::PredicateF(dst, predicate));
 	}
 
 	/**
@@ -1605,7 +1606,7 @@ private:
 		return true;
 	}
 
-    TA<T>& uselessFree(TA<T>& dst) const
+    TA& uselessFree(TA& dst) const
 	{
 		std::vector<const TransIDPair*> v1(this->transitions_.begin(), this->transitions_.end()), v2;
 		std::set<size_t> states;
@@ -1649,23 +1650,23 @@ private:
 
     struct AcceptingF
 	{
-		const TA<T>& ta;
-		AcceptingF(const TA<T>& ta) : ta(ta) {}
+		const TA& ta;
+		AcceptingF(const TA& ta) : ta(ta) {}
 		bool operator()(const Transition* t) { return ta.isFinalState(t->rhs()); }
 	};
 
     // makes state numbers contiguous
 	TA& reduced(
-		TA<T>&                      dst,
+		TA&                      dst,
 		Index<size_t>&              index) const
 	{
-		return TA<T>::reduce(dst, *this, index);
+		return TA::reduce(dst, *this, index);
 	}
 
-	static TA<T>& renamedUnion(
-		TA<T>&                     dst,
-		const TA<T>&               a,
-		const TA<T>&               b,
+	static TA& renamedUnion(
+		TA&                     dst,
+		const TA&               a,
+		const TA&               b,
 		size_t&                    aSize,
 		size_t                     offset = 0)
 	{
@@ -1677,9 +1678,9 @@ private:
 		return dst;
 	}
 
-	static TA<T>& renamedUnion(
-		TA<T>&                    dst,
-		const TA<T>&              src,
+	static TA& renamedUnion(
+		TA&                    dst,
+		const TA&              src,
 		size_t                    offset,
 		size_t&                   srcSize)
 	{

@@ -90,7 +90,7 @@ public:   // methods
 
 	friend std::ostream& operator<<(std::ostream& os, const UFAE& ufae)
 	{
-		TAWriter<label_type>(os).writeOne(ufae.backend_);
+		//TAWriter<label_type>(os).writeOne(ufae.backend_);
 		return os;
 	}
 };

@@ -29,7 +29,7 @@ class AntichainExt : public Antichain
 {
 protected:
 
-	typedef std::vector<const typename TA<T>::TransIDPair*> trans_list_type;
+	typedef std::vector<const typename TA::TransIDPair*> trans_list_type;
 
 private:
 
@@ -39,7 +39,7 @@ private:
 		std::pair<size_t, std::set<size_t>>&   el,
 		bool&                                  isAccepting,
 		size_t                                 rhs,
-		const TA<T>&                           aut)
+		const TA&                           aut)
 	{
 		// minimization
 		for (size_t i : this->relIndex[rhs])
@@ -60,7 +60,7 @@ private:
 public:
 
 	void aAddTransition(
-		const typename TA<T>::TransIDPair*   t,
+		const typename TA::TransIDPair*   t,
 		size_t                               bSize)
 	{
 		std::unordered_set<size_t> s;
@@ -136,7 +136,7 @@ public:
 
 		bool get(
 			const std::pair<size_t, state_cache_type::value_type*>&   el,
-			const typename TA<T>::TransIDPair*                        t,
+			const typename TA::TransIDPair*                        t,
 			size_t                                                    index)
 		{
 			this->state.clear();
@@ -170,7 +170,7 @@ public:
 			return false;
 		}
 
-		bool match(const typename TA<T>::TransIDPair* t)
+		bool match(const typename TA::TransIDPair* t)
 		{
 			for (size_t i = 0; i < t->first.lhs().size(); ++i)
 			{
@@ -181,11 +181,11 @@ public:
 		}
 	};
 
-	static bool subseteq(const TA<T>& a, const TA<T>& b)
+	static bool subseteq(const TA& a, const TA& b)
 	{
-		TA<T> c;
+		TA c;
 		size_t countB;
-		TA<T>::renamedUnion(c, b, a, countB);
+		TA::renamedUnion(c, b, a, countB);
 		Index<size_t> stateIndex;
 		c.buildStateIndex(stateIndex);
 		size_t cSize = stateIndex.size();
@@ -207,7 +207,7 @@ public:
 		antichain.initIndex(cSize - countB, countB);
 		trans_list_type aLeaves;
 		std::unordered_map<T, trans_list_type> bTrans, bLeaves;
-		for (typename TA<T>::trans_set_type::const_iterator i = c.getTransitions().begin(); i != c.getTransitions().end(); ++i)
+		for (typename TA::trans_set_type::const_iterator i = c.getTransitions().begin(); i != c.getTransitions().end(); ++i)
 		{
 			size_t arity = (*i)->first.lhs().size();
 			if ((*i)->first.rhs() >= countB)

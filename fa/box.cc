@@ -357,6 +357,7 @@ std::ostream& operator<<(std::ostream& os, const Box& box)
 
 	os << " ) [" << box.outputSignature_ << "] ";
 
+    /*
 	TAWriter<label_type> writer(os);
 
 	for (auto state : box.output_->getFinalStates())
@@ -380,6 +381,7 @@ std::ostream& operator<<(std::ostream& os, const Box& box)
 
 	writer.endl();
 	writer.writeTransitions(*box.input_, writeStateF);
+    */
 
 	return os;
 }

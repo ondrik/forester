@@ -19,7 +19,7 @@
 
 #include "forestaut.hh"
 #include "streams.hh"
-#include "tatimint.hh"
+//#include "tatimint.hh"
 
 // anonymous namespace
 namespace
@@ -89,12 +89,12 @@ void FA::reorderBoxes(
 std::string FA::writeTransition(const Transition& trans)
 {
 	std::ostringstream oss;
-	TimbukWriter writer(oss);
+	//TimbukWriter writer(oss);
 
 	std::ostringstream tmp;
 	tmp << trans.label();
 
-	writer.writeTransition(trans.lhs(), tmp.str(), trans.rhs(), FA::writeState);
+	//writer.writeTransition(trans.lhs(), tmp.str(), trans.rhs(), FA::writeState);
 
 	return oss.str();
 }
@@ -102,6 +102,7 @@ std::string FA::writeTransition(const Transition& trans)
 
 std::ostream& operator<<(std::ostream& os, const TreeAut& ta)
 {
+    /*
 	TAWriter<label_type> writer(os);
 	os << '[';
 
@@ -110,6 +111,7 @@ std::ostream& operator<<(std::ostream& os, const TreeAut& ta)
 
 	os << " ]" << std::endl;;
 	writer.writeTransitions(ta, FA::writeState);
+    */
 	return os;
 }
 
@@ -131,6 +133,7 @@ std::ostream& operator<<(std::ostream& os, const FA& fa)
 		os << "===" << std::endl << "root " << i; // no cutpoint info
 		//os << "===" << std::endl << "root " << i << " [" << fa.connectionGraph.data[i] << ']';
 
+        /*
 		TAWriter<label_type> writer(os);
 
 		for (size_t state : fa.getRoot(i)->getFinalStates())
@@ -140,6 +143,7 @@ std::ostream& operator<<(std::ostream& os, const FA& fa)
 
 		writer.endl();
 		writer.writeTransitions(*fa.getRoot(i), FA::writeState);
+        */
 	}
 
 	return os;

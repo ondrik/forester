@@ -200,8 +200,7 @@ struct Env
 	}
 };
 
-template <class T>
-void TA<T>::downwardTranslation(
+void TA::downwardTranslation(
 	LTS&                    lts,
 	const Index<size_t>&    stateIndex,
 	const Index<T>&         labelIndex) const
@@ -230,8 +229,7 @@ void TA<T>::downwardTranslation(
 }
 
 
-template <class T>
-void TA<T>::downwardSimulation(
+void TA::downwardSimulation(
 	std::vector<std::vector<bool>>&   rel,
 	const Index<size_t>&              stateIndex) const
 {
@@ -245,8 +243,7 @@ void TA<T>::downwardSimulation(
 	alg.buildRel(stateIndex.size(), rel);
 }
 
-template <class T>
-void TA<T>::upwardTranslation(
+void TA::upwardTranslation(
 	LTS&                                    lts,
 	std::vector<std::vector<size_t>>&       part,
 	std::vector<std::vector<bool>>&         rel,
@@ -327,8 +324,7 @@ void TA<T>::upwardTranslation(
 	}
 }
 
-template <class T>
-void TA<T>::upwardSimulation(
+void TA::upwardSimulation(
 	std::vector<std::vector<bool>>&         rel,
 	const Index<size_t>&                    stateIndex,
 	const std::vector<std::vector<bool>>&   param) const
@@ -353,8 +349,7 @@ void TA<T>::upwardSimulation(
 	alg.buildRel(stateIndex.size(), rel);
 }
 
-template <class T>
-void TA<T>::combinedSimulation(
+void TA::combinedSimulation(
 	std::vector<std::vector<bool>>&           dst,
 	const std::vector<std::vector<bool>>&     dwn,
 	const std::vector<std::vector<bool>>&     up)
@@ -395,15 +390,13 @@ void TA<T>::combinedSimulation(
 	}
 }
 
-template <class T>
-bool TA<T>::subseteq(const TA<T>& a, const TA<T>& b)
+bool TA::subseteq(const TA& a, const TA& b)
 {
 	return AntichainExt<T>::subseteq(a, b);
 }
 
 
-template <class T>
-void TA<T>::buildStateIndex(Index<size_t>& index) const
+void TA::buildStateIndex(Index<size_t>& index) const
 {
     for (const TransIDPair* trans : this->transitions_)
     {
@@ -420,8 +413,7 @@ void TA<T>::buildStateIndex(Index<size_t>& index) const
     }
 }
 
-template <class T>
-void TA<T>::buildSortedStateIndex(Index<size_t>& index) const
+void TA::buildSortedStateIndex(Index<size_t>& index) const
 {
     std::set<size_t> s;
     for (const TransIDPair* trans : this->transitions_)
@@ -437,8 +429,7 @@ void TA<T>::buildSortedStateIndex(Index<size_t>& index) const
         index.add(state);
 }
 
-template <class T>
-void TA<T>::buildLabelIndex(Index<T>& index) const
+void TA::buildLabelIndex(Index<T>& index) const
 {
     for (const TransIDPair* trans : this->transitions_)
     {
@@ -446,8 +437,7 @@ void TA<T>::buildLabelIndex(Index<T>& index) const
     }
 }
 
-template <class T>
-void TA<T>::buildLhsIndex(Index<const std::vector<size_t>*>& index) const
+void TA::buildLhsIndex(Index<const std::vector<size_t>*>& index) const
 {
     for (const TransIDPair* trans : this->transitions_)
     {
@@ -455,8 +445,7 @@ void TA<T>::buildLhsIndex(Index<const std::vector<size_t>*>& index) const
     }
 }
 
-template <class T>
-typename TA<T>::td_cache_type TA<T>::buildTDCache() const
+typename TA::td_cache_type TA::buildTDCache() const
 {
     td_cache_type cache;
     for (const TransIDPair* trans : this->transitions_)
@@ -470,8 +459,7 @@ typename TA<T>::td_cache_type TA<T>::buildTDCache() const
     return cache;
 }
 
-template <class T>
-typename TA<T>::td_cache_type TA<T>::buildTDCacheWithEmptyRoot() const
+typename TA::td_cache_type TA::buildTDCacheWithEmptyRoot() const
 {
     td_cache_type cache = buildTDCache();
     cache.insert(
@@ -480,16 +468,14 @@ typename TA<T>::td_cache_type TA<T>::buildTDCacheWithEmptyRoot() const
     return cache;
 }
 
-template<class T>
-std::vector<const typename TA<T>::Transition*> TA<T>::getEmptyRootTransitions() const
+std::vector<const typename TA::Transition*> TA::getEmptyRootTransitions() const
 {
-    TA<T>::td_cache_type cache = buildTDCacheWithEmptyRoot();
+    TA::td_cache_type cache = buildTDCacheWithEmptyRoot();
     
     return cache.at(cEmptyRootTransIndex);
 }
 
-template <class T>
-void TA<T>::buildBUCache(bu_cache_type& cache) const
+void TA::buildBUCache(bu_cache_type& cache) const
 {
     std::unordered_set<size_t> s;
     for (const TransIDPair* trans : this->transitions_)
@@ -507,8 +493,7 @@ void TA<T>::buildBUCache(bu_cache_type& cache) const
     }
 }
 
-template <class T>
-void TA<T>::buildLTCache(lt_cache_type& cache) const
+void TA::buildLTCache(lt_cache_type& cache) const
 {
     for (const TransIDPair* trans : this->transitions_)
     {
@@ -518,13 +503,12 @@ void TA<T>::buildLTCache(lt_cache_type& cache) const
     }
 }
 
-template<class T>
-void TA<T>::buildLTCacheExt(
-	const TA<T>&                 ta,
-	TA<T>::lt_cache_type&        cache,
+void TA::buildLTCacheExt(
+	const TA&                 ta,
+	TA::lt_cache_type&        cache,
     T                            lUndef)
 {
-	for (TA<T>::iterator i = ta.begin(); i != ta.end(); ++i)
+	for (TA::iterator i = ta.begin(); i != ta.end(); ++i)
 	{
 		if (i->label()->isData())
 		{
@@ -539,8 +523,7 @@ void TA<T>::buildLTCacheExt(
 	}
 }
 
-template <class T>
-void TA<T>::addTransition(
+void TA::addTransition(
 		const std::vector<size_t>&          lhs,
 		const T&                            label,
 		size_t                              rhs)
@@ -549,37 +532,32 @@ void TA<T>::addTransition(
     this->internalAdd(Transition(lhs, label, rhs, this->lhsCache()));
 }
 
-template <class T>
-void TA<T>::addTransition(const Transition& transition)
+void TA::addTransition(const Transition& transition)
 {
     this->internalAdd(Transition(transition, this->lhsCache()));
 }
 
-template <class T>
-const typename TA<T>::TransIDPair* TA<T>::addTransition(
+const typename TA::TransIDPair* TA::addTransition(
 		const TransIDPair*       transition)
 {
     return this->internalAdd(Transition(transition->first, this->lhsCache()));
 }
 
-template <class T>
-const typename TA<T>::TransIDPair* TA<T>::addTransition(
+const typename TA::TransIDPair* TA::addTransition(
     const TransIDPair*               transition,
     const std::vector<size_t>&       index)
 {
     return this->internalAdd(Transition(transition->first, index, this->lhsCache()));
 }
 
-template <class T>
-const typename TA<T>::TransIDPair* TA<T>::addTransition(
+const typename TA::TransIDPair* TA::addTransition(
     const Transition&                 transition,
     const std::vector<size_t>&        index)
 {
     return this->internalAdd(Transition(transition, index, this->lhsCache()));
 }
 
-template<class T>
-const typename TA<T>::Transition& TA<T>::getTransition(
+const typename TA::Transition& TA::getTransition(
         const std::vector<size_t>&          lhs,
 		const T&                            label,
 		size_t                              rhs)
@@ -590,16 +568,14 @@ const typename TA<T>::Transition& TA<T>::getTransition(
     return getTransitionFromPair(pair);
 }
 
-template <class T>
-void TA<T>::copyReachableTransitionsFromRoot(const TA<T>& src,
+void TA::copyReachableTransitionsFromRoot(const TA& src,
         const size_t& rootState)
 {
     td_cache_type cache = src.buildTDCacheWithEmptyRoot();
     copyReachableTransitionsFromRoot(src, cache, rootState);
 }
 
-template <class T>
-void TA<T>::copyReachableTransitionsFromRoot(const TA<T>& src,
+void TA::copyReachableTransitionsFromRoot(const TA& src,
         td_cache_type cache, const size_t& rootState)
 {
     for (td_iterator k = src.tdStart(cache, {rootState});
@@ -610,8 +586,7 @@ void TA<T>::copyReachableTransitionsFromRoot(const TA<T>& src,
     }
 }
 
-template <class T>
-TA<T>::TA(
+TA::TA(
     Backend&             backend_) :
     nextState_(0),
     finalStates_{},
@@ -621,8 +596,7 @@ TA<T>::TA(
     transitions_{}
 { }
 
-template <class T>
-TA<T>::TA() :
+TA::TA() :
 		nextState_(0),
 		finalStates_{},
         //vataAut_(),
@@ -633,9 +607,8 @@ TA<T>::TA() :
     backend_ = new Backend();
 }
 
-template <class T>
-TA<T>::TA(
-    const TA<T>&         ta) :
+TA::TA(
+    const TA&         ta) :
     nextState_(ta.nextState_),
     finalStates_(),
     //vataAut_(),
@@ -652,8 +625,8 @@ TA<T>::TA(
 /*
 template <class T>
 template <class F>
-TA<T>::TA(
-    const TA<T>&         ta,
+TA::TA(
+    const TA&         ta,
     F                    f) :
     nextState_(ta.nextState_),
     finalStates_(),
@@ -672,26 +645,23 @@ TA<T>::TA(
 }
 */
 
-template <class T>
-TA<T> TA<T>::createTAWithSameTransitions(
-		const TA<T>&         ta)
+TA TA::createTAWithSameTransitions(
+		const TA&         ta)
 {
-        return TA<T>(*ta.backend_);
+        return TA(*ta.backend_);
 }
 
-template <class T>
-TA<T>* TA<T>::allocateTAWithSameTransitions(
-		const TA<T>&         ta)
+TA* TA::allocateTAWithSameTransitions(
+		const TA&         ta)
 {
-        return new TA<T>(*ta.backend_);
+        return new TA(*ta.backend_);
 }
 
-template <class T>
-TA<T> TA<T>::createTAWithSameFinalStates(
-        const TA<T>&         ta,
+TA TA::createTAWithSameFinalStates(
+        const TA&         ta,
         bool                 copyFinalStates)
 {
-    TA<T> taNew(ta);
+    TA taNew(ta);
     if (copyFinalStates)
     {
         taNew.finalStates_ = ta.finalStates_;
@@ -699,12 +669,11 @@ TA<T> TA<T>::createTAWithSameFinalStates(
     return taNew;
 }
 
-template <class T>
-TA<T>* TA<T>::allocateTAWithSameFinalStates(
-        const TA<T>&         ta,
+TA* TA::allocateTAWithSameFinalStates(
+        const TA&         ta,
         bool                 copyFinalStates)
 {
-    TA<T>* taNew = new TA<T>(ta);
+    TA* taNew = new TA(ta);
     if (copyFinalStates)
     {
         taNew->finalStates_ = ta.finalStates_;
@@ -714,4 +683,4 @@ TA<T>* TA<T>::allocateTAWithSameFinalStates(
 
 // this is really sad :-(
 #include "forestaut.hh"
-template class TA<label_type>;
+class TA;
