@@ -40,7 +40,8 @@
 
 class TA;
 
-template <class T>
+typedef label_type T;
+
 class TTBase
 {
 	friend class TA;
@@ -144,31 +145,30 @@ public:   // methods
 	{ }
 };
 
-template <class T>
-class TT : public TTBase<T>
+class TT : public TTBase
 {
 	friend class TA;
 
 private:  // data types
 
-	typename TTBase<T>::lhs_cache_type& lhsCache;
+	typename TTBase::lhs_cache_type& lhsCache;
 
 public:   // methods
 
 	TT(
 		const TT&           t) :
-		TTBase<T>(t.lhs_, t.label(), t.rhs()),
+		TTBase(t.lhs_, t.label(), t.rhs()),
 		lhsCache(t.lhsCache)
 	{
-		this->lhsCache.addRef(TTBase<T>::lhs_);
+		this->lhsCache.addRef(TTBase::lhs_);
 	}
 
 	TT(
 		const std::vector<size_t>&              lhs,
 		const T&                                label,
 		size_t                                  rhs,
-		typename TTBase<T>::lhs_cache_type&     lhsCache) :
-		TTBase<T>(lhsCache.lookup(lhs), label, rhs),
+		typename TTBase::lhs_cache_type&     lhsCache) :
+		TTBase(lhsCache.lookup(lhs), label, rhs),
 		lhsCache(lhsCache)
 	{ }
 
@@ -177,39 +177,39 @@ public:   // methods
 		const T&                                label,
 		size_t                                  rhs,
 		const std::vector<size_t>&              index,
-		typename TTBase<T>::lhs_cache_type&     lhsCache) :
-		TTBase<T>(nullptr, label, index[rhs]),
+		typename TTBase::lhs_cache_type&     lhsCache) :
+		TTBase(nullptr, label, index[rhs]),
 		lhsCache(lhsCache)
 	{
 		std::vector<size_t> tmp(lhs.size());
 		for (size_t i = 0; i < lhs.size(); ++i)
 			tmp[i] = index[lhs[i]];
-		TTBase<T>::lhs_ = this->lhsCache.lookup(tmp);
+		TTBase::lhs_ = this->lhsCache.lookup(tmp);
 	}
 
 	TT(
 		const TT&                                t,
-		typename TTBase<T>::lhs_cache_type&      lhsCache) :
-		TTBase<T>(lhsCache.lookup(t.lhs()), t.label(), t.rhs()),
+		typename TTBase::lhs_cache_type&      lhsCache) :
+		TTBase(lhsCache.lookup(t.lhs()), t.label(), t.rhs()),
 		lhsCache(lhsCache)
 	{ }
 
 	TT(
 		const TT&                                t,
 		const std::vector<size_t>&               index,
-		typename TTBase<T>::lhs_cache_type&      lhsCache) :
-		TTBase<T>(nullptr, t.label(), index[t.rhs()]),
+		typename TTBase::lhs_cache_type&      lhsCache) :
+		TTBase(nullptr, t.label(), index[t.rhs()]),
 		lhsCache(lhsCache)
 	{
 		std::vector<size_t> tmp(t.lhs().size());
 		for (size_t i = 0; i < t.lhs().size(); ++i)
 			tmp[i] = index[t.lhs()[i]];
-		TTBase<T>::lhs_ = this->lhsCache.lookup(tmp);
+		TTBase::lhs_ = this->lhsCache.lookup(tmp);
 	}
 
 	~TT()
 	{
-		this->lhsCache.release(TTBase<T>::lhs_);
+		this->lhsCache.release(TTBase::lhs_);
 	}
 
 	bool llhsLessThan(
@@ -237,8 +237,7 @@ class TA
 	template<class TAC> friend class AntichainExt;
 public:   // data types
 	///	the type of a tree automaton transition
-    typedef label_type T;
-	typedef TT<T> Transition;
+	typedef TT Transition;
 
 private:
 	/// the value type of the cache: a pair of a transition and its ID
@@ -254,7 +253,7 @@ private:
 	// this is the place where transitions_ are stored
 	struct Backend
 	{
-		typename TTBase<T>::lhs_cache_type lhsCache;
+		typename TTBase::lhs_cache_type lhsCache;
 		trans_cache_type transCache;
 
 		Backend() :
@@ -1012,10 +1011,10 @@ private:
 		char buffer[sizeof(std::pair<const Transition, size_t>)];
 		std::pair<const Transition, size_t>* tPtr = 
             reinterpret_cast<std::pair<const Transition, size_t>*>(buffer);
-		new (reinterpret_cast<TTBase<T>*>(const_cast<Transition*>(&tPtr->first)))
-            TTBase<T>(nullptr, T(), rhs);
+		new (reinterpret_cast<TTBase*>(const_cast<Transition*>(&tPtr->first)))
+            TTBase(nullptr, T(), rhs);
 		typename trans_set_type::const_iterator i = this->transitions_.lower_bound(tPtr);
-		(reinterpret_cast<TTBase<T>*>(const_cast<Transition*>(&tPtr->first)))->~TTBase();
+		(reinterpret_cast<TTBase*>(const_cast<Transition*>(&tPtr->first)))->~TTBase();
 		return i;
 	}
 

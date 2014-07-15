@@ -256,14 +256,14 @@ protected:
 	{
 		std::vector<std::set<size_t>>& selectors;
 		const TreeAut& ta;
-		const TT<label_type>& t;
+		const TT& t;
 
 		bool getRef(size_t state, size_t& ref) const;
 
 		LeafEnumF(
 			std::vector<std::set<size_t>>& selectors,
 			const TreeAut& ta,
-			const TT<label_type>& t
+			const TT& t
 		) :
 			selectors(selectors),
 			ta(ta),

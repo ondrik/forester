@@ -41,7 +41,7 @@ class Splitting
 public:   // data types
 
 	/// Transition
-	typedef TT<label_type> Transition;
+	typedef TT Transition;
 
 private:  // data members
 

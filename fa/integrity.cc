@@ -70,7 +70,7 @@ struct Integrity::CheckIntegrityF
 	const TreeAut& ta;
 
 	/// the transition that is checked
-	const TT<label_type>& t;
+	const TT& t;
 
 	/// the set of states which can only appear as cover in a structural box
 	std::set<size_t>* required;
@@ -85,7 +85,7 @@ struct Integrity::CheckIntegrityF
 	CheckIntegrityF(
 		const Integrity& integrity,
 		const TreeAut& ta,
-		const TT<label_type>& t,
+		const TT& t,
 		std::set<size_t>* required,
 		std::vector<bool>& bitmap,
 		std::map<std::pair<const TreeAut*, size_t>, std::set<size_t>>& states

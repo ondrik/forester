@@ -109,7 +109,7 @@ public:
 		assert(nullptr != this->fae.getRoot(root));
 		assert(nullptr != box);
 
-		const TT<label_type>& t = this->fae.getRoot(root)->getAcceptingTransition();
+		const TT& t = this->fae.getRoot(root)->getAcceptingTransition();
 
 		size_t lhsOffset = 0;
 		std::vector<size_t> index = { root };

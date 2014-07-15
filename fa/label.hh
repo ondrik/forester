@@ -259,6 +259,7 @@ struct label_type
 	label_type() : obj_(nullptr) {}
 	label_type(const label_type& label) : obj_(label.obj_) {}
 	label_type(const NodeLabel* obj) : obj_(obj) {}
+	label_type(uintptr_t obj) : label_type(reinterpret_cast<NodeLabel *>(obj)) {}
 
 	const NodeLabel& operator*() const {
 		assert(this->obj_);

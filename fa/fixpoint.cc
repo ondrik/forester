@@ -44,8 +44,8 @@ namespace
 struct ExactTMatchF
 {
 	bool operator()(
-		const TT<label_type>&              t1,
-		const TT<label_type>&              t2)
+		const TT&              t1,
+		const TT&              t2)
 	{
 		return t1.label() == t2.label();
 	}
@@ -54,8 +54,8 @@ struct ExactTMatchF
 struct SmartTMatchF
 {
 	bool operator()(
-		const TT<label_type>&              t1,
-		const TT<label_type>&              t2)
+		const TT&              t1,
+		const TT&              t2)
 	{
 		if (t1.label()->isNode() && t2.label()->isNode())
 		{
@@ -79,8 +79,8 @@ public:   // methods
 	{ }
 
 	bool operator()(
-		const TT<label_type>&              t1,
-		const TT<label_type>&              t2)
+		const TT&              t1,
+		const TT&              t2)
 	{
 		if (!t1.label()->isNode() || !t2.label()->isNode())
 			return t1.label() == t2.label();
@@ -144,8 +144,8 @@ struct CompareVariablesF
 			return true;
 		}
 
-		const TT<label_type>& t1 = ta1.getAcceptingTransition();
-		const TT<label_type>& t2 = ta2.getAcceptingTransition();
+		const TT& t1 = ta1.getAcceptingTransition();
+		const TT& t2 = ta2.getAcceptingTransition();
 		return (t1.label() == t2.label()) && (t1.lhs() == t2.lhs());
 	}
 };
@@ -314,7 +314,7 @@ bool testInclusion(
 
 struct CopyNonZeroRhsF
 {
-	bool operator()(const TT<label_type>* transition) const
+	bool operator()(const TT* transition) const
 	{
 		return transition->rhs() != 0;
 	}

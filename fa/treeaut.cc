@@ -513,11 +513,11 @@ void TA::buildLTCacheExt(
 		if (i->label()->isData())
 		{
 			cache.insert(
-				make_pair(lUndef, std::vector<const TT<T>*>())
+				make_pair(lUndef, std::vector<const TT*>())
 			).first->second.push_back(&*i);
 		} else {
 			cache.insert(
-				make_pair(i->label(), std::vector<const TT<T>*>())
+				make_pair(i->label(), std::vector<const TT*>())
 			).first->second.push_back(&*i);
 		}
 	}
