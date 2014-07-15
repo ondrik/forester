@@ -575,22 +575,7 @@ public:
 	}
 */
 	
-    template <class F>
-	static size_t buProduct(
-		const TA&                              ta1,
-		const TA&                              ta2,
-        T                                         lUndef,
-		F                                         f,
-		size_t                                    stateOffset = 0)
-	{
-		TA::lt_cache_type cache1, cache2;
-        TA::buildLTCacheExt(ta1, cache1, lUndef);
-		TA::buildLTCacheExt(ta2, cache2, lUndef);
-
-        return TA::buProduct(ta1, ta2, f, stateOffset);
-    }
-
-	// currently erases '1' from the relation
+    // currently erases '1' from the relation
 	template <class F>
 	void heightAbstraction(
 		std::vector<std::vector<bool>>&            result,
@@ -1289,6 +1274,21 @@ private:
 
 		return dst;
 	}
+
+    template <class F>
+	static size_t buProduct(
+		const TA&                              ta1,
+		const TA&                              ta2,
+        T                                         lUndef,
+		F                                         f,
+		size_t                                    stateOffset = 0)
+	{
+		TA::lt_cache_type cache1, cache2;
+        TA::buildLTCacheExt(ta1, cache1, lUndef);
+		TA::buildLTCacheExt(ta2, cache2, lUndef);
+
+        return TA::buProduct(ta1, ta2, f, stateOffset);
+    }
 
     template <class F>
 	static size_t buProduct(
