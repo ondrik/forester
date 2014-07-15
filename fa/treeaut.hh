@@ -40,7 +40,7 @@
 
 class TA;
 
-typedef label_type T;
+typedef uintptr_t T;
 
 class TTBase
 {
@@ -83,7 +83,7 @@ public:   // methods
 		return lhs_->first;
 	}
 
-	const T& label() const { return label_; }
+	const label_type label() const { return label_type(label_); }
 
 	size_t rhs() const { return rhs_; }
 

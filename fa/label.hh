@@ -271,6 +271,11 @@ struct label_type
 		return this->obj_;
 	}
 
+    operator uintptr_t() const {
+        assert(this->obj_);
+        return reinterpret_cast<uintptr_t>(obj_);
+    }
+
 	bool operator<(const label_type& rhs) const {
 		return this->obj_ < rhs.obj_;
 	}
