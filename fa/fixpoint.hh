@@ -75,7 +75,7 @@ public:
 			fwdConfWrapper_.fae2ta(ta, index, *fae);
 		}
 
-		if (!ta.getTransitions().empty())
+		if (!ta.areTransitionsEmpty())
 		{
 			fwdConfWrapper_.adjust(index);
 			ta.minimized(fwdConf_);

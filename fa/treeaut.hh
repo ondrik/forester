@@ -518,6 +518,11 @@ public:
 		const T&                            label,
 		size_t                              rhs);
 
+    bool areTransitionsEmpty()
+    {
+        return this->transitions_.empty();
+    }
+
 	void addFinalState(size_t state)
 	{
 		finalStates_.insert(state);
@@ -549,11 +554,6 @@ public:
 	{
 		assert(finalStates_.size() == 1);
 		return *finalStates_.begin();
-	}
-
-	const trans_set_type& getTransitions() const
-	{
-		return this->transitions_;
 	}
 
     const Transition& getAcceptingTransition() const
@@ -986,6 +986,11 @@ private:
 	const TransIDPair* addTransition(
 		const Transition&                 transition,
 		const std::vector<size_t>&        index);
+
+    const trans_set_type& getTransitions() const
+	{
+		return this->transitions_;
+	}
 
 	typename trans_set_type::const_iterator _lookup(size_t rhs) const
 	{
