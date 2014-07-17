@@ -89,6 +89,12 @@ public: // public methods
 		const VATAAdapter&                src,
 		bool                              addFinalStates = true);
 
+    /**
+     * Return true if there are no transitions in automata
+     * @returns True if there are no transitions, otherwise false
+     */
+    bool areTransitionsEmpty();
+
     /*
      
     void copyReachableTransitionsFromRoot(
@@ -144,11 +150,6 @@ public: // public methods
 	}
 
 	void buildStateIndex(Index<size_t>& index) const;
-
-    bool areTransitionsEmpty()
-    {
-        return this->transitions_.empty();
-    }
 
     // currently erases '1' from the relation
 	template <class F>

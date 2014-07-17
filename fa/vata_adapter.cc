@@ -145,3 +145,9 @@ VATAAdapter& VATAAdapter::minimized(VATAAdapter& dst) const
     dst.vataAut_ = vataAut_.Reduce();
     return dst;
 }
+
+// TODO is this correct
+bool VATAAdapter::areTransitionsEmpty()
+{
+    return vataAut_.AreTransitionsEmpty();
+}
