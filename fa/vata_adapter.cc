@@ -151,3 +151,10 @@ bool VATAAdapter::areTransitionsEmpty()
 {
     return vataAut_.AreTransitionsEmpty();
 }
+
+VATAAdapter& VATAAdapter::copyTransitions(VATAAdapter& dst) const
+{
+    CopyAllFunctor copyAllFunctor;
+    dst.vataAut_.CopyTransitionsFrom(vataAut_, copyAllFunctor);
+	return dst;
+}

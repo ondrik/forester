@@ -31,6 +31,16 @@ public:   // data types
 	typedef TreeAut::Transition Transition;
     typedef TreeAut::Iterator iterator;
 
+private: // private data types
+    class CopyAllFunctor : public TreeAut::AbstractCopyF
+    {
+    public:
+        bool operator()(const Transition&)
+        {
+            return true;
+        }
+    };
+
 private: // data members
     TreeAut vataAut_;
 
@@ -94,6 +104,8 @@ public: // public methods
      * @returns True if there are no transitions, otherwise false
      */
     bool areTransitionsEmpty();
+
+	VATAAdapter& copyTransitions(VATAAdapter& dst) const;
 
     /*
      
@@ -313,13 +325,6 @@ public: // public methods
 			// predicate over transitions_ to be copied
 			[](const Transition&){ return true; },
 			addFinalStates);
-	}
-
-	TA& copyTransitions(TA& dst) const
-	{
-		for (const TransIDPair* trans : this->transitions_)
-			dst.addTransition(trans);
-		return dst;
 	}
 
 	TA& copyNotAcceptingTransitions(TA& dst, const TA& ta) const
