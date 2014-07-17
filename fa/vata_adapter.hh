@@ -8,13 +8,13 @@
  * the Free Software Foundation, either version 3 of the License, or
  * any later version.
  *
- * predator is distributed in the hope that it will be useful,
+ * forester is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with predator.  If not, see <http://www.gnu.org/licenses/>.
+ * along with forester.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 // VATA headers
@@ -22,16 +22,16 @@
 
 class VATAAdapter
 {
+private:
+    typedef VATA::ExplicitTreeAut TreeAut;
+    typedef TreeAut::SymbolType SymbolType;
+
 public:   // data types
 	///	the type of a tree automaton transition
-	typedef VATA::ExplicitTreeAut::Transition Transition;
-    typedef VATA::ExplicitTreeAut::Iterator iterator;
+	typedef TreeAut::Transition Transition;
+    typedef TreeAut::Iterator iterator;
 
-private:
-    typedef VATA::ExplicitTreeAut::SymbolType Symbol;
-    typedef VATA::ExplicitTreeAut TreeAut;
-
-private: // private data members
+private: // data members
     TreeAut vataAut_;
 
 private: // private methods
@@ -40,6 +40,7 @@ private: // private methods
 public: // public methods
 	VATAAdapter();
 	VATAAdapter(const VATAAdapter& adapter);
+    ~VATAAdapter();
 
     static VATAAdapter createVATAAdapterWithSameTransitions(
 		const VATAAdapter&         ta);
@@ -54,26 +55,21 @@ public: // public methods
     static VATAAdapter* allocateVATAAdapterWithSameFinalStates(
 		const VATAAdapter&         ta,
         bool                 copyFinalStates=true);
-    
-    ~VATAAdapter();
 
-    void copyReachableTransitionsFromRoot(
-            const VATAAdapter&        src,
-            const size_t&    rootState);
-    
 	iterator begin() const;
 	iterator end() const;
 
     VATAAdapter& operator=(const VATAAdapter& rhs);
-	void addTransition(const Transition& transition);
+
     void addTransition(
 		const std::vector<size_t>&          children,
-		const Symbol&                       symbol,
+		const SymbolType&                   symbol,
 		size_t                              parent);
+    void addTransition(const Transition& transition);
 
     const Transition getTransition(
         const std::vector<size_t>&          children,
-		const Symbol&                       symbol,
+		const SymbolType&                       symbol,
 		size_t                              parent);
 
     void addFinalState(size_t state);
@@ -86,15 +82,19 @@ public: // public methods
 
     VATAAdapter& unreachableFree(VATAAdapter& dst) const;
 	VATAAdapter& uselessAndUnreachableFree(VATAAdapter& dst) const;
+    VATAAdapter& minimized(VATAAdapter& dst) const;
 
 	static VATAAdapter& disjointUnion(
 		VATAAdapter&                      dst,
 		const VATAAdapter&                src,
 		bool                              addFinalStates = true);
 
-    VATAAdapter& minimized(VATAAdapter& dst) const;
-
     /*
+     
+    void copyReachableTransitionsFromRoot(
+            const VATAAdapter&        src,
+            const size_t&    rootState);
+
     std::vector<const Transition*> getEmptyRootTransitions() const;
 
 	typename TA::Iterator begin(size_t rhs) const

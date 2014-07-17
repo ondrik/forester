@@ -1,5 +1,4 @@
 #include "vata_adapter.hh"
-
 VATAAdapter::VATAAdapter(TreeAut aut) : vataAut_(aut)
 {}
 
@@ -54,22 +53,22 @@ VATAAdapter& VATAAdapter::operator=(const VATAAdapter& rhs)
     return *this;
 }
 
-void VATAAdapter::addTransition(const Transition& transition)
-{
-    this->vataAut_.AddTransition(transition);
-}
-
 void VATAAdapter::addTransition(
 		const std::vector<size_t>&          children,
-		const Symbol&                       symbol,
+		const SymbolType&                   symbol,
 		size_t                              parent)
 {
     this->vataAut_.AddTransition(children, symbol, parent);
 }
 
+void VATAAdapter::addTransition(const Transition& transition)
+{
+    this->vataAut_.AddTransition(transition);
+}
+
 const VATAAdapter::Transition VATAAdapter::getTransition(
         const std::vector<size_t>&          children,
-		const Symbol&                       symbol,
+		const SymbolType&                   symbol,
 		size_t                              parent)
 
 {
@@ -139,7 +138,6 @@ VATAAdapter& VATAAdapter::disjointUnion(
 
    return dst;
 }
-
 
 // TODO: Is this correct?
 VATAAdapter& VATAAdapter::minimized(VATAAdapter& dst) const
