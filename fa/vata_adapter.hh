@@ -107,6 +107,12 @@ public: // public methods
 
 	VATAAdapter& copyTransitions(VATAAdapter& dst) const;
 
+	template <class TVisitor>
+	void accept(TVisitor& visitor) const
+	{
+		visitor(*this);
+	}
+
     /*
      
     void copyReachableTransitionsFromRoot(
@@ -373,12 +379,6 @@ public: // public methods
 				dst.addFinalState(j->second);
 		}
 		return dst;
-	}
-
-	template <class TVisitor>
-	void accept(TVisitor& visitor) const
-	{
-		visitor(*this);
 	}
     */
 };
