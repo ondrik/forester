@@ -47,6 +47,35 @@ VATAAdapter::iterator VATAAdapter::end() const
 	return vataAut_.end();
 }
 
+typename VATAAdapter::DownAccessor VATAAdapter::begin(
+        size_t rhs) const
+{
+    return vataAut_[rhs];
+}
+
+/*
+typename VATAAdapter::DownAccessor VATAAdapter::end(size_t rhs) const
+{
+		for (auto i : vataAut_[rhs])
+        {
+            if (i.GetParent() != rhs)
+            {
+                break; 
+            }
+        }i != this->end() && i->rhs() == rhs; ++i);
+		return Iterator(i);
+
+}
+
+typename VATAAdapter::DownAccessor VATAAdapter::end(size_t rhs,
+        DownAccessor i) const
+{
+		for (; i != i->end() && i->rhs() == rhs; ++i);
+		return DownAccessor(i);
+}
+*/
+
+
 VATAAdapter& VATAAdapter::operator=(const VATAAdapter& rhs)
 {
     this->vataAut_ = rhs.vataAut_;
@@ -156,5 +185,14 @@ VATAAdapter& VATAAdapter::copyTransitions(VATAAdapter& dst) const
 {
     CopyAllFunctor copyAllFunctor;
     dst.vataAut_.CopyTransitionsFrom(vataAut_, copyAllFunctor);
+	return dst;
+}
+	
+VATAAdapter& VATAAdapter::copyNotAcceptingTransitions(
+        VATAAdapter&                       dst,
+        const VATAAdapter&                 ta) const
+{
+    CopyNonAcceptingFunctor copyFunctor(ta);
+    dst.vataAut_.CopyTransitionsFrom(vataAut_, copyFunctor);
 	return dst;
 }

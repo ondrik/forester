@@ -30,6 +30,7 @@ public:   // data types
 	///	the type of a tree automaton transition
 	typedef TreeAut::Transition Transition;
     typedef TreeAut::Iterator iterator;
+    typedef TreeAut::DownAccessor DownAccessor;
 
 private: // private data types
     class CopyAllFunctor : public TreeAut::AbstractCopyF
@@ -37,6 +38,24 @@ private: // private data types
     public:
         bool operator()(const Transition&)
         {
+            return true;
+        }
+    };
+
+    class CopyNonAcceptingFunctor : public TreeAut::AbstractCopyF
+    {
+    private:
+        const VATAAdapter& ta_;
+    public:
+        CopyNonAcceptingFunctor(const VATAAdapter& ta) : ta_(ta)
+        {}
+        bool operator()(const Transition& t)
+        {
+            if (ta_.isFinalState(t.GetParent()))
+            {
+                return false;
+            }
+
             return true;
         }
     };
@@ -68,6 +87,9 @@ public: // public methods
 
 	iterator begin() const;
 	iterator end() const;
+	DownAccessor begin(size_t rhs) const;
+	//DownAccessor end(size_t rhs) const;
+    //DownAccessor end(size_t rhs, DownAccessor i) const;
 
     VATAAdapter& operator=(const VATAAdapter& rhs);
 
@@ -113,34 +135,27 @@ public: // public methods
 		visitor(*this);
 	}
 
+	VATAAdapter& copyNotAcceptingTransitions(
+            VATAAdapter& dst,
+            const VATAAdapter& ta) const;
+
     /*
-     
-    void copyReachableTransitionsFromRoot(
-            const VATAAdapter&        src,
-            const size_t&    rootState);
-
-    std::vector<const Transition*> getEmptyRootTransitions() const;
-
-	typename TA::Iterator begin(size_t rhs) const
+    // HOW TODO this in VATA
+	void clear()
 	{
-		return Iterator(this->_lookup(rhs));
-	}
-
-	typename TA::Iterator end(size_t rhs) const
-	{
-		typename TA::Iterator i = this->begin(rhs);
-		for (; i != this->end() && i->rhs() == rhs; ++i);
-		return Iterator(i);
-	}
-
-	typename TA::Iterator end(size_t rhs, typename TA::Iterator i) const
-	{
-		for (; i != this->end() && i->rhs() == rhs; ++i);
-		return Iterator(i);
+		this->maxRank_ = 0;
+		nextState_ = 0;
+		for (TransIDPair* trans : this->transitions_)
+		{
+			this->transCache().release(trans);
+		}
+		this->transitions_.clear();
+		finalStates_.clear();
 	}
 
 	typename TA::Iterator accBegin() const
 	{
+        return this->getAccTransitions()->begin()
 		return this->begin(this->getFinalState());
 	}
 
@@ -155,17 +170,11 @@ public: // public methods
 		return this->end(this->getFinalState(), i);
 	}
 
-	void clear()
-	{
-		this->maxRank_ = 0;
-		nextState_ = 0;
-		for (TransIDPair* trans : this->transitions_)
-		{
-			this->transCache().release(trans);
-		}
-		this->transitions_.clear();
-		finalStates_.clear();
-	}
+    void copyReachableTransitionsFromRoot(
+            const VATAAdapter&        src,
+            const size_t&    rootState);
+
+    std::vector<const Transition*> getEmptyRootTransitions() const;
 
 	void buildStateIndex(Index<size_t>& index) const;
 
@@ -331,18 +340,6 @@ public: // public methods
 			// predicate over transitions_ to be copied
 			[](const Transition&){ return true; },
 			addFinalStates);
-	}
-
-	TA& copyNotAcceptingTransitions(TA& dst, const TA& ta) const
-	{
-        NonAcceptingF f(ta);
-
-		for (const TransIDPair* trans : this->transitions_)
-		{
-			if (f(&trans->first))
-				dst.addTransition(trans);
-		}
-		return dst;
 	}
 
 	TA& unfoldAtRoot(
