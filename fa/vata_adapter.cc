@@ -206,3 +206,9 @@ VATAAdapter& VATAAdapter::copyNotAcceptingTransitions(
     dst.vataAut_.CopyTransitionsFrom(vataAut_, copyFunctor);
 	return dst;
 }
+
+void VATAAdapter::clear()
+{
+    vataAut_.Clear();
+}
+

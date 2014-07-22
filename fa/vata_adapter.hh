@@ -148,20 +148,9 @@ public: // public methods
             VATAAdapter& dst,
             const VATAAdapter& ta) const;
 
-    /*
-    // HOW TODO this in VATA
-	void clear()
-	{
-		this->maxRank_ = 0;
-		nextState_ = 0;
-		for (TransIDPair* trans : this->transitions_)
-		{
-			this->transCache().release(trans);
-		}
-		this->transitions_.clear();
-		finalStates_.clear();
-	}
+    void clear();
 
+    /*
     void copyReachableTransitionsFromRoot(
             const VATAAdapter&        src,
             const size_t&    rootState);
