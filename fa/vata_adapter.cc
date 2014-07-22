@@ -47,34 +47,44 @@ VATAAdapter::iterator VATAAdapter::end() const
 	return vataAut_.end();
 }
 
-typename VATAAdapter::DownAccessor VATAAdapter::begin(
+// TODO CHECK semantic against original implementation
+typename VATAAdapter::DownAccessor::Iterator VATAAdapter::begin(
         size_t rhs) const
 {
-    return vataAut_[rhs];
+    return vataAut_[rhs].begin();
 }
 
-/*
-typename VATAAdapter::DownAccessor VATAAdapter::end(size_t rhs) const
+// TODO CHECK semantic against original implementation
+typename VATAAdapter::DownAccessor::Iterator VATAAdapter::end(
+        size_t rhs) const
 {
-		for (auto i : vataAut_[rhs])
-        {
-            if (i.GetParent() != rhs)
-            {
-                break; 
-            }
-        }i != this->end() && i->rhs() == rhs; ++i);
-		return Iterator(i);
-
+    return vataAut_[rhs].end();
 }
 
-typename VATAAdapter::DownAccessor VATAAdapter::end(size_t rhs,
-        DownAccessor i) const
+// TODO CHECK semantic against original implementation
+typename VATAAdapter::DownAccessor::Iterator VATAAdapter::end(
+        size_t rhs,
+        DownAccessor::Iterator i) const
 {
-		for (; i != i->end() && i->rhs() == rhs; ++i);
-		return DownAccessor(i);
+    return vataAut_[rhs].end();
 }
-*/
 
+typename VATAAdapter::AcceptTrans::Iterator VATAAdapter::accBegin() const
+{
+   return vataAut_.GetAcceptTrans().begin();
+}
+
+typename VATAAdapter::AcceptTrans::Iterator VATAAdapter::accEnd() const
+{
+   return vataAut_.GetAcceptTrans().end();
+}
+
+// TODO CHECK semantic against original implementation
+typename VATAAdapter::AcceptTrans::Iterator VATAAdapter::accEnd(
+        VATAAdapter::AcceptTrans::Iterator i) const
+{
+   return vataAut_.GetAcceptTrans().end();
+}
 
 VATAAdapter& VATAAdapter::operator=(const VATAAdapter& rhs)
 {

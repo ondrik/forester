@@ -31,6 +31,7 @@ public:   // data types
 	typedef TreeAut::Transition Transition;
     typedef TreeAut::Iterator iterator;
     typedef TreeAut::DownAccessor DownAccessor;
+    typedef TreeAut::AcceptTrans AcceptTrans;
 
 private: // private data types
     class CopyAllFunctor : public TreeAut::AbstractCopyF
@@ -87,9 +88,17 @@ public: // public methods
 
 	iterator begin() const;
 	iterator end() const;
-	DownAccessor begin(size_t rhs) const;
-	//DownAccessor end(size_t rhs) const;
-    //DownAccessor end(size_t rhs, DownAccessor i) const;
+
+    DownAccessor::Iterator begin(size_t rhs) const;
+    DownAccessor::Iterator end(size_t rhs) const;
+    DownAccessor::Iterator end(
+            size_t rhs,
+            DownAccessor::Iterator i) const;
+
+    AcceptTrans::Iterator accBegin() const;
+	AcceptTrans::Iterator accEnd() const;
+	AcceptTrans::Iterator accEnd(
+            AcceptTrans::Iterator i) const;
 
     VATAAdapter& operator=(const VATAAdapter& rhs);
 
@@ -151,23 +160,6 @@ public: // public methods
 		}
 		this->transitions_.clear();
 		finalStates_.clear();
-	}
-
-	typename TA::Iterator accBegin() const
-	{
-        return this->getAccTransitions()->begin()
-		return this->begin(this->getFinalState());
-	}
-
-	typename TA::Iterator accEnd() const
-	{
-		typename TA::Iterator i = this->accBegin();
-		return this->end(this->getFinalState(), i);
-	}
-
-	typename TA::Iterator accEnd(typename TA::Iterator i) const
-	{
-		return this->end(this->getFinalState(), i);
 	}
 
     void copyReachableTransitionsFromRoot(
