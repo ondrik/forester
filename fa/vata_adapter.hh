@@ -151,6 +151,8 @@ public: // public methods
     void clear();
 
     /*
+	static bool subseteq(const TA& a, const TA& b);
+
     void copyReachableTransitionsFromRoot(
             const VATAAdapter&        src,
             const size_t&    rootState);
@@ -290,23 +292,6 @@ public: // public methods
 		return dst;
 	}
 	
-	TA& minimizedCombo(TA& dst) const
-	{
-		Index<size_t> stateIndex;
-		this->buildSortedStateIndex(stateIndex);
-		typename TA::Backend backend_;
-		std::vector<std::vector<bool> > dwn;
-		this->downwardSimulation(dwn, stateIndex);
-		std::vector<std::vector<bool> > up;
-		this->upwardSimulation(up, stateIndex, dwn);
-		std::vector<std::vector<bool> > rel;
-		TA::combinedSimulation(rel, dwn, up);
-		TA tmp(backend_);
-		return this->collapsed(tmp, rel, stateIndex).minimized(dst);
-	}
-
-	static bool subseteq(const TA& a, const TA& b);
-
 	template <class F>
 	static TA& rename(
 		TA&                   dst,

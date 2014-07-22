@@ -260,6 +260,7 @@ public:
 		}
 	}
 
+    /*
 	void minimizeRootsCombo()
 	{
 		for (std::shared_ptr<TreeAut> ta : roots_)
@@ -270,6 +271,7 @@ public:
 			ta = std::shared_ptr<TreeAut>(&ta->minimizedCombo(*this->allocTA()));
 		}
 	}
+    */
 
 	void unreachableFree(std::shared_ptr<TreeAut>& ta)
 	{
