@@ -80,6 +80,7 @@ add_library(fa SHARED
 	treeaut.cc
     ufae.cc
     vata_adapter.cc
+    vata_abstraction.cc
 	virtualmachine.cc
 )
 set_target_properties(fa PROPERTIES LINK_FLAGS -lrt)

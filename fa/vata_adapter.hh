@@ -17,12 +17,20 @@
  * along with forester.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#ifndef VATA_AUT_H
+#define VATA_AUT_H
+
+#include "utils.hh"
+#include "vata_abstraction.hh"
+
 // VATA headers
 #include "libvata/include/vata/explicit_tree_aut.hh"
 
 class VATAAdapter
 {
 private:
+    friend class VATAAbstraction;
+
     typedef VATA::ExplicitTreeAut TreeAut;
     typedef TreeAut::SymbolType SymbolType;
 
@@ -34,6 +42,9 @@ public:   // data types
     typedef TreeAut::AcceptTrans AcceptTrans;
 
 private: // private data types
+	typedef typename std::unordered_map<size_t,
+            std::vector<const Transition*>> tdCacheType;
+
     class CopyAllFunctor : public TreeAut::AbstractCopyF
     {
     public:
@@ -161,15 +172,44 @@ public: // public methods
 		const std::unordered_map<size_t, size_t>&     states,
 		bool                                          registerFinalState = true) const;
 
-    /*
+	void buildStateIndex(Index<size_t>& index) const;
+    TreeAut::AcceptTrans getEmptyRootTransitions() const;
 
     void copyReachableTransitionsFromRoot(
             const VATAAdapter&        src,
             const size_t&    rootState);
 
-    std::vector<const Transition*> getEmptyRootTransitions() const;
+    template <class F>
+    static VATAAdapter& rename(
+            VATAAdapter&                   dst,
+            const VATAAdapter&             src,
+            F                              funcRename,
+            bool                           addFinalStates = true)
+    {
+        std::vector<size_t> children;
+        if (addFinalStates)
+        {
+            for (auto state : src.getFinalStates())
+            {
+                dst.addFinalState(funcRename(state));
+            }
+        }
 
-	void buildStateIndex(Index<size_t>& index) const;
+        for (auto trans : src.vataAut_)
+        {
+            children.resize(trans.GetChildrenSize());
+            for (size_t j = 0; j < trans.GetChildrenSize(); ++j)
+            {
+                children[j] = funcRename(trans.GetNthChildren(j));
+            }
+
+            dst.addTransition(children,
+                    trans.GetSymbol(),
+                    funcRename(trans.GetParent()));
+        }
+
+        return dst;
+    }
 
     // currently erases '1' from the relation
 	template <class F>
@@ -179,60 +219,10 @@ public: // public methods
 		F                                          f,
 		const Index<size_t>&                       stateIndex) const
 	{
-		td_cache_type cache = this->buildTDCache();
-
-		std::vector<std::vector<bool>> tmp;
-
-		while (height--)
-		{
-			tmp = result;
-
-			for (Index<size_t>::iterator i = stateIndex.begin(); i != stateIndex.end(); ++i)
-			{
-				const size_t& state1 = i->second;
-				typename td_cache_type::iterator j = cache.insert(
-					std::make_pair(i->first, std::vector<const Transition*>())
-				).first;
-				for (Index<size_t>::iterator k = stateIndex.begin(); k != stateIndex.end(); ++k)
-				{
-					const size_t& state2 = k->second;
-					if ((state1 == state2) || !tmp[state1][state2])
-						continue;
-					typename td_cache_type::iterator l = cache.insert(
-						std::make_pair(k->first, std::vector<const Transition*>())
-					).first;
-					bool match = true;
-					for (const Transition* trans1 : j->second)
-					{
-						for (const Transition* trans2 : l->second)
-						{
-							if (!TA::transMatch(trans1, trans2, f, tmp, stateIndex))
-							{
-								match = false;
-								break;
-							}
-						}
-						if (!match)
-							break;
-					}
-					if (!match)
-						result[state1][state2] = false;
-				}
-			}
-		}
-
-		for (size_t i = 0; i < result.size(); ++i)
-		{
-			for (size_t j = 0; j < i; ++j)
-			{
-				if (!result[i][j])
-					result[j][i] = false;
-				if (!result[j][i])
-					result[i][j] = false;
-			}
-		}
+        VATAAbstraction::heightAbstraction(vataAut_, result, height, f, stateIndex);
 	}
 
+    /*
 	// collapses states according to a given relation
 	TA& collapsed(
 		TA&                                   dst,
@@ -275,20 +265,69 @@ public: // public methods
 		return dst;
 	}
 	
-	template <class F>
-	static TA& rename(
-		TA&                   dst,
-		const TA&             src,
-		F                        funcRename,
-		bool                     addFinalStates = true)
-	{
-		return rename(
-			dst,
-			src,
-			funcRename,
-			// predicate over transitions_ to be copied
-			[](const Transition&){ return true; },
-			addFinalStates);
-	}
     */
+
+private:
+	/**
+	 * @brief  Determines whether two transitions_ match
+	 *
+	 * This function determines whether two transitions_ match (and can therefore
+	 * e.g. be merged during abstraction). First, the @p funcMatch functor is used
+	 * to determine whether the transitions_ are to be checked at all.
+	 */
+	template <class F>
+	static bool transMatch(
+		const Transition&                         t1,
+		const Transition&                         t2,
+		F                                         funcMatch,
+		const std::vector<std::vector<bool>>&     mat,
+		const Index<size_t>&                      stateIndex)
+	{
+		if (!funcMatch(t1, t2))
+			return false;
+
+		if (t1.GetChildrenSize() != t2.GetChildrenSize())
+			return false;
+
+		for (size_t m = 0; m < t1.GetChildrenSize(); ++m)
+		{
+			if (!mat[stateIndex[t1.GetNthChildren(m)]][stateIndex[t2.GetNthChildren(m)]])
+			{
+				return false;
+			}
+		}
+
+		return true;
+	}
+
+    template <class F>
+    bool areStatesEquivalent(
+            int                            state1,
+            int                            state2,
+            F                              f,
+		    const Index<size_t>&           stateIndex,
+            std::vector<std::vector<bool>> tmp) const
+    {
+        if ((state1 == state2) || !tmp[state1][state2])
+            return false;
+
+        for (const Transition& trans1 : vataAut_[state1])
+        {
+            for (const Transition& trans2 : vataAut_[state2])
+            {
+                if (!VATAAdapter::transMatch(
+                            trans1, trans2, f, tmp, stateIndex))
+                {
+                    return false;
+                }
+            }
+        }
+
+        return true;
+    }
+
+    void completeSymmetricIndex(std::vector<std::vector<bool>>& result) const;
 };
+
+#endif
+#define VATA_AUT_H

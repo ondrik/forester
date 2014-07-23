@@ -152,7 +152,7 @@ public:
 		size_t                          stateOffset,
 		F                               funcCompat)
 	{
-		for (const Transition* trans : src.getEmptyRootTransitions())
+		for (auto trans : src.getEmptyRootTransitions())
 		{ // iterate over all "synthetic" transitions and constuct new FAE for each
 			assert(nullptr != trans);
 

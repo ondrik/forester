@@ -258,3 +258,51 @@ VATAAdapter& VATAAdapter::unfoldAtRoot(
 
     return dst;
 }
+
+void VATAAdapter::buildStateIndex(Index<size_t>& index) const
+{
+    for (auto trans : vataAut_)
+    {
+        for (auto state : trans.GetChildren())
+        {
+            index.add(state);
+        }
+        index.add(trans.GetParent());
+    }
+
+    for (size_t state : getFinalStates())
+    {
+        index.add(state);
+    }
+}
+
+// TODO: check this if there will be problems (and they will)
+VATAAdapter::TreeAut::AcceptTrans VATAAdapter::getEmptyRootTransitions() const
+{
+    return vataAut_.GetAcceptTrans();
+}
+
+void VATAAdapter::copyReachableTransitionsFromRoot(
+    const VATAAdapter&        src,
+    const size_t&             rootState)
+{
+    for (const Transition& k : src.vataAut_[rootState])
+    {
+        addTransition(k);
+    }
+}
+    
+void VATAAdapter::completeSymmetricIndex(
+        std::vector<std::vector<bool>>& result) const
+{
+    for (size_t i = 0; i < result.size(); ++i)
+    {
+        for (size_t j = 0; j < i; ++j)
+        {
+            if (!result[i][j])
+                result[j][i] = false;
+            if (!result[j][i])
+                result[i][j] = false;
+        }
+    }
+}
