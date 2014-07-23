@@ -291,18 +291,3 @@ void VATAAdapter::copyReachableTransitionsFromRoot(
         addTransition(k);
     }
 }
-    
-void VATAAdapter::completeSymmetricIndex(
-        std::vector<std::vector<bool>>& result) const
-{
-    for (size_t i = 0; i < result.size(); ++i)
-    {
-        for (size_t j = 0; j < i; ++j)
-        {
-            if (!result[i][j])
-                result[j][i] = false;
-            if (!result[j][i])
-                result[i][j] = false;
-        }
-    }
-}

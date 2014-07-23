@@ -29,8 +29,6 @@
 class VATAAdapter
 {
 private:
-    friend class VATAAbstraction;
-
     typedef VATA::ExplicitTreeAut TreeAut;
     typedef TreeAut::SymbolType SymbolType;
 
@@ -266,67 +264,6 @@ public: // public methods
 	}
 	
     */
-
-private:
-	/**
-	 * @brief  Determines whether two transitions_ match
-	 *
-	 * This function determines whether two transitions_ match (and can therefore
-	 * e.g. be merged during abstraction). First, the @p funcMatch functor is used
-	 * to determine whether the transitions_ are to be checked at all.
-	 */
-	template <class F>
-	static bool transMatch(
-		const Transition&                         t1,
-		const Transition&                         t2,
-		F                                         funcMatch,
-		const std::vector<std::vector<bool>>&     mat,
-		const Index<size_t>&                      stateIndex)
-	{
-		if (!funcMatch(t1, t2))
-			return false;
-
-		if (t1.GetChildrenSize() != t2.GetChildrenSize())
-			return false;
-
-		for (size_t m = 0; m < t1.GetChildrenSize(); ++m)
-		{
-			if (!mat[stateIndex[t1.GetNthChildren(m)]][stateIndex[t2.GetNthChildren(m)]])
-			{
-				return false;
-			}
-		}
-
-		return true;
-	}
-
-    template <class F>
-    bool areStatesEquivalent(
-            int                            state1,
-            int                            state2,
-            F                              f,
-		    const Index<size_t>&           stateIndex,
-            std::vector<std::vector<bool>> tmp) const
-    {
-        if ((state1 == state2) || !tmp[state1][state2])
-            return false;
-
-        for (const Transition& trans1 : vataAut_[state1])
-        {
-            for (const Transition& trans2 : vataAut_[state2])
-            {
-                if (!VATAAdapter::transMatch(
-                            trans1, trans2, f, tmp, stateIndex))
-                {
-                    return false;
-                }
-            }
-        }
-
-        return true;
-    }
-
-    void completeSymmetricIndex(std::vector<std::vector<bool>>& result) const;
 };
 
 #endif
