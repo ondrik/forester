@@ -212,3 +212,7 @@ void VATAAdapter::clear()
     vataAut_.Clear();
 }
 
+bool VATAAdapter::subseteq(const VATAAdapter& a, const VATAAdapter& b)
+{
+   return TreeAut::CheckInclusion(a.vataAut_, b.vataAut_); 
+}

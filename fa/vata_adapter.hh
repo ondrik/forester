@@ -149,9 +149,9 @@ public: // public methods
             const VATAAdapter& ta) const;
 
     void clear();
+	static bool subseteq(const VATAAdapter& a, const VATAAdapter& b);
 
     /*
-	static bool subseteq(const TA& a, const TA& b);
 
     void copyReachableTransitionsFromRoot(
             const VATAAdapter&        src,
@@ -219,33 +219,6 @@ public: // public methods
 					result[j][i] = false;
 				if (!result[j][i])
 					result[i][j] = false;
-			}
-		}
-	}
-
-	void predicateAbstraction(
-		std::vector<std::vector<bool>>&      result,
-		const TA&                         predicate,
-		const Index<size_t>&                 stateIndex) const
-	{
-		std::vector<size_t> states;
-		this->intersectingStates(states, predicate);
-		std::set<size_t> s;
-		for (std::vector<size_t>::iterator i = states.begin(); i != states.end(); ++i)
-			s.insert(stateIndex[*i]);
-		for (size_t i = 0; i < result.size(); ++i)
-		{
-			if (s.count(i) == 1)
-				continue;
-			for (size_t j = 0; j < i; ++j)
-			{
-				result[i][j] = 0;
-				result[j][i] = 0;
-			}
-			for (size_t j = i + 1; j < result.size(); ++j)
-			{
-				result[i][j] = 0;
-				result[j][i] = 0;
 			}
 		}
 	}

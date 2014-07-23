@@ -633,6 +633,7 @@ public:
 		}
 	}
 
+    /*
 	void predicateAbstraction(
 		std::vector<std::vector<bool>>&      result,
 		const TA&                         predicate,
@@ -659,6 +660,7 @@ public:
 			}
 		}
 	}
+    */
 
 	// collapses states according to a given relation
 	TA& collapsed(
