@@ -151,6 +151,16 @@ public: // public methods
     void clear();
 	static bool subseteq(const VATAAdapter& a, const VATAAdapter& b);
 
+    VATAAdapter& unfoldAtRoot(
+		VATAAdapter&             dst,
+		size_t                   newState,
+		bool                     registerFinalState = true) const;
+
+	VATAAdapter& unfoldAtRoot(
+		VATAAdapter&                                  dst,
+		const std::unordered_map<size_t, size_t>&     states,
+		bool                                          registerFinalState = true) const;
+
     /*
 
     void copyReachableTransitionsFromRoot(
@@ -279,42 +289,6 @@ public: // public methods
 			// predicate over transitions_ to be copied
 			[](const Transition&){ return true; },
 			addFinalStates);
-	}
-
-	TA& unfoldAtRoot(
-		TA&                   dst,
-		size_t                   newState,
-		bool                     registerFinalState = true) const
-	{
-		if (registerFinalState)
-			dst.addFinalState(newState);
-
-		for (const TransIDPair* trans : this->transitions_)
-		{
-			dst.addTransition(trans);
-			if (this->isFinalState(trans->first.rhs()))
-				dst.addTransition(trans->first.lhs(), trans->first.label(), newState);
-		}
-
-		return dst;
-	}
-
-	TA& unfoldAtRoot(
-		TA&                                        dst,
-		const std::unordered_map<size_t, size_t>&     states,
-		bool                                          registerFinalState = true) const
-	{
-		this->copyTransitions(dst);
-		for (size_t state : finalStates_)
-		{
-			std::unordered_map<size_t, size_t>::const_iterator j = states.find(state);
-			assert(j != states.end());
-			for (typename trans_set_type::const_iterator k = this->_lookup(state); k != this->transitions_.end() && (*k)->first.rhs() == state; ++k)
-				dst.addTransition((*k)->first.lhs(), (*k)->first.label(), j->second);
-			if (registerFinalState)
-				dst.addFinalState(j->second);
-		}
-		return dst;
 	}
     */
 };

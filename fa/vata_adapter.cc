@@ -216,3 +216,45 @@ bool VATAAdapter::subseteq(const VATAAdapter& a, const VATAAdapter& b)
 {
    return TreeAut::CheckInclusion(a.vataAut_, b.vataAut_); 
 }
+
+VATAAdapter& VATAAdapter::unfoldAtRoot(
+    VATAAdapter&                   dst,
+	size_t                         newState,
+	bool                           registerFinalState) const
+{
+    if (registerFinalState)
+        dst.addFinalState(newState);
+
+    for (auto trans : vataAut_)
+    {
+        dst.addTransition(trans);
+        if (isFinalState(trans.GetParent()))
+            dst.addTransition(trans.GetChildren(), trans.GetSymbol(), newState);
+    }
+
+    return dst;
+}
+
+
+VATAAdapter& VATAAdapter::unfoldAtRoot(
+    VATAAdapter&                                  dst,
+    const std::unordered_map<size_t, size_t>&     states,
+    bool                                          registerFinalState) const
+{
+    copyTransitions(dst);
+    for (auto state : getFinalStates())
+    {
+        std::unordered_map<size_t, size_t>::const_iterator j = states.find(state);
+        assert(j != states.end());
+
+        for (auto trans : vataAut_[state])
+        { // TODO: Check: is this semantic same as origin?
+            dst.addTransition(trans.GetChildren(), trans.GetSymbol(), j->second);
+        }
+
+        if (registerFinalState)
+            dst.addFinalState(j->second);
+    }
+
+    return dst;
+}
