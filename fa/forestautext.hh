@@ -154,7 +154,6 @@ public:
 	{
 		for (auto trans : src.getEmptyRootTransitions())
 		{ // iterate over all "synthetic" transitions and constuct new FAE for each
-			assert(nullptr != trans);
 
 			const size_t& numRoots = trans.GetChildrenSize();
 			if ((fae.getRootCount() != numRoots) ||

@@ -130,7 +130,7 @@ struct Integrity::CheckIntegrityF
 
 			case  box_type_e::bSel:
 			{
-				assert(offset < this->t.GetNthChildren());
+				assert(offset < this->t.GetChildrenSize());
 
 				if (!this->integrity.checkState(this->ta,
                             this->t.GetNthChildren(offset),

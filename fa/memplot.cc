@@ -520,7 +520,7 @@ public:   // methods
 			{
 				// Assertions
 				assert(nullptr != label.data.data);
-				assert(trans.lhs().empty());
+				assert(trans.GetChildrenSize());
 
 				const Data& data = *label.data.data;
 

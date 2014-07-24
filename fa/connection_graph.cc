@@ -243,9 +243,9 @@ void ConnectionGraph::fixSignatures(
 
 			do
 			{
-				std::vector<size_t> lhs(trans.GetChildren().size());
+				std::vector<size_t> lhs(trans.GetChildrenSize());
 
-				for (size_t i = 0; i < trans.GetChildren().size(); ++i)
+				for (size_t i = 0; i < trans.GetChildrenSize(); ++i)
 				{
 					assert(i < choice.size());
 

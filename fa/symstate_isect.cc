@@ -488,8 +488,9 @@ void SymState::SubstituteRefs(
 				const Transition& srcTrans = *srcIt;
 
 				// we handle data one level up
-				assert(!thisTrans.label()->isData() && !srcTrans.label()->isData());
-				assert(!thisTrans.lhs().empty() && !srcTrans.lhs().empty());
+				assert(!TreeAut::GetSymbol(thisTrans)->isData() 
+                        && !TreeAut::GetSymbol(srcTrans)->isData());
+				assert(!thisTrans.GetChildren().empty() && !srcTrans.GetChildren().empty());
 
 				// TODO: so far, we are not doing unfolding!
 				if (TreeAut::GetSymbol(thisTrans) == TreeAut::GetSymbol(srcTrans))

@@ -528,7 +528,7 @@ void Folding::componentCut(
 			// look for target cutpoint
 			for (size_t j = 0; j < box->getArity(); ++j)
 			{	// try all states outgoing from the box
-				assert(lhsOffset + j < trans.lhs().size());
+				assert(lhsOffset + j < trans.GetChildrenSize());
 
 				if (ConnectionGraph::containsCutpoint(
 					Folding::getSignature(trans.GetNthChildren(lhsOffset + j), signatures), target))
@@ -577,7 +577,7 @@ void Folding::componentCut(
 			{	// in case the box _leads_ to the target cutpoint
 				for (size_t j = 0; j < box->getArity(); ++j)
 				{	// for each output of the box
-					assert(lhsOffset + j < trans.lhs().size());
+					assert(lhsOffset + j < trans.GetChildrenSize());
 
 					ConnectionGraph::processStateSignature(
 						tmp,
