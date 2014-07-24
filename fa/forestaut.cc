@@ -92,7 +92,7 @@ std::string FA::writeTransition(const Transition& trans)
 	//TimbukWriter writer(oss);
 
 	std::ostringstream tmp;
-	tmp << trans.label();
+	tmp << TreeAut::GetSymbol(trans);
 
 	//writer.writeTransition(trans.lhs(), tmp.str(), trans.rhs(), FA::writeState);
 

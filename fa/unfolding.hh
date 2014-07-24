@@ -54,14 +54,14 @@ protected:
 
 		for (size_t state : src.getFinalStates())
 		{
-			for (TreeAut::iterator i = src.begin(state); i != src.end(state, i); ++i)
+			for (auto i = src.begin(state); i != src.end(state, i); ++i)
 			{
 				std::vector<size_t> lhs;
 				std::vector<const AbstractBox*> label;
 				size_t lhsOffset = 0;
 				if (box) {
 					bool found = false;
-					for (const AbstractBox* aBox : i->label()->getNode()) {
+					for (const AbstractBox* aBox : TreeAut::GetSymbol(*i)->getNode()) {
 						if (!aBox->isStructural()) {
 							label.push_back(aBox);
 							continue;
@@ -70,7 +70,7 @@ protected:
 						if (b != static_cast<const StructuralBox*>(box)) {
 							// this box is not interesting
 							for (size_t k = 0; k < b->getArity(); ++k, ++lhsOffset)
-								lhs.push_back(i->lhs()[lhsOffset]);
+								lhs.push_back(i->GetNthChildren(lhsOffset));
 							label.push_back(b);
 							continue;
 						}
@@ -86,16 +86,18 @@ protected:
 						assert(false);
 
 				} else {
-					lhs = i->lhs();
-					label = i->label()->getNode();
+					lhs = i->GetChildren();
+					label = TreeAut::GetSymbol(*i)->getNode();
 				}
-				for (TreeAut::iterator j = tmp2.accBegin(); j != tmp2.accEnd(j); ++j) {
+				for (auto j = tmp2.accBegin(); j != tmp2.accEnd(j); ++j) {
 					std::vector<size_t> lhs2 = lhs;
 					std::vector<const AbstractBox*> label2 = label;
-					lhs2.insert(lhs2.end(), j->lhs().begin(), j->lhs().end());
-					label2.insert(label2.end(), j->label()->getNode().begin(), j->label()->getNode().end());
+					lhs2.insert(lhs2.end(), j->GetChildren().begin(), j->GetChildren().end());
+					label2.insert(label2.end(),
+                            TreeAut::GetSymbol(*j)->getNode().begin(),
+                            TreeAut::GetSymbol(*j)->getNode().end());
 					FA::reorderBoxes(label2, lhs2);
-					dst.addTransition(lhs2, this->fae.boxMan->lookupLabel(label2), j->rhs());
+					dst.addTransition(lhs2, this->fae.boxMan->lookupLabel(label2), j->GetParent());
 				}
 			}
 		}
@@ -109,12 +111,13 @@ public:
 		assert(nullptr != this->fae.getRoot(root));
 		assert(nullptr != box);
 
-		const TT& t = this->fae.getRoot(root)->getAcceptingTransition();
+		const TreeAut::Transition& t = 
+            this->fae.getRoot(root)->getAcceptingTransition();
 
 		size_t lhsOffset = 0;
 		std::vector<size_t> index = { root };
 
-		for (const AbstractBox* aBox : t.label()->getNode())
+		for (const AbstractBox* aBox : TreeAut::GetSymbol(t)->getNode())
 		{
 			if (static_cast<const AbstractBox*>(box) != aBox)
 			{
@@ -125,7 +128,7 @@ public:
 
 			for (size_t j = 0; j < box->getArity(); ++j)
 			{
-				const Data& data = this->fae.getData(t.lhs()[lhsOffset + j]);
+				const Data& data = this->fae.getData(t.GetNthChildren(lhsOffset + j));
 
 				if (data.isUndef())
 					index.push_back(static_cast<size_t>(-1));

@@ -64,9 +64,14 @@
 				false);
 
 			assert(root->getFinalStates().size());
+            std::set<size_t> finalStates;
+            for (size_t state : root->getFinalStates())
+            {
+                finalStates.insert(state);
+            }
 			tmp.push_back(Cursor<std::set<size_t>::const_iterator>(
-				root->getFinalStates().begin(),
-				root->getFinalStates().end()));
+				finalStates.begin(),
+				finalStates.end()));
 		}
 
 		std::vector<size_t> lhs(tmp.size());

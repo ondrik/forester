@@ -44,25 +44,27 @@ namespace
 struct ExactTMatchF
 {
 	bool operator()(
-		const TT&              t1,
-		const TT&              t2)
+		const TreeAut::Transition&  t1,
+		const TreeAut::Transition&  t2)
 	{
-		return t1.label() == t2.label();
+		return TreeAut::GetSymbol(t1) == TreeAut::GetSymbol(t2);
 	}
 };
 
 struct SmartTMatchF
 {
 	bool operator()(
-		const TT&              t1,
-		const TT&              t2)
+		const TreeAut::Transition&  t1,
+		const TreeAut::Transition&  t2)
 	{
-		if (t1.label()->isNode() && t2.label()->isNode())
+        label_type l1 = TreeAut::GetSymbol(t1);
+        label_type l2 = TreeAut::GetSymbol(t2);
+		if (l1->isNode() && l2->isNode())
 		{
-			return t1.label()->getTag() == t2.label()->getTag();
+			return l1->getTag() == l2->getTag();
 		}
 
-		return t1.label() == t2.label();
+		return l1 == l2;
 	}
 };
 
@@ -79,24 +81,26 @@ public:   // methods
 	{ }
 
 	bool operator()(
-		const TT&              t1,
-		const TT&              t2)
+		const TreeAut::Transition&  t1,
+		const TreeAut::Transition&  t2)
 	{
-		if (!t1.label()->isNode() || !t2.label()->isNode())
-			return t1.label() == t2.label();
+        label_type l1 = TreeAut::GetSymbol(t1);
+        label_type l2 = TreeAut::GetSymbol(t2);
+		if (!l1->isNode() || !l2->isNode())
+			return l1 == l2;
 
-		if (t1.label()->getTag() != t2.label()->getTag())
+		if (l1->getTag() != l2->getTag())
 			return false;
 
-		if (&t1.lhs() == &t2.lhs())
+		if (&t1.GetParent() == &t2.GetParent())
 			return true;
 
-		if (t1.lhs().size() != t2.lhs().size())
+		if (t1.GetChildrenSize() != t2.GetChildrenSize())
 			return false;
 
-		for (size_t i = 0; i < t1.lhs().size(); ++i)
+		for (size_t i = 0; i < t1.GetChildrenSize(); ++i)
 		{
-			size_t s1 = t1.lhs()[i], s2 = t2.lhs()[i], ref;
+			size_t s1 = t1.GetNthChildren(i), s2 = t2.GetNthChildren(i), ref;
 
 			if (s1 == s2)
 				continue;
@@ -144,9 +148,10 @@ struct CompareVariablesF
 			return true;
 		}
 
-		const TT& t1 = ta1.getAcceptingTransition();
-		const TT& t2 = ta2.getAcceptingTransition();
-		return (t1.label() == t2.label()) && (t1.lhs() == t2.lhs());
+		const TreeAut::Transition& t1 = ta1.getAcceptingTransition();
+		const TreeAut::Transition& t2 = ta2.getAcceptingTransition();
+		return (TreeAut::GetSymbol(t1) == TreeAut::GetSymbol(t2) &&
+                t1.GetParent() == t2.GetParent());
 	}
 };
 

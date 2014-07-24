@@ -65,16 +65,16 @@ void ConnectionGraph::computeSignatures(
 	{	// traverse transitions of the TA
 		const Data* data;
 
-		if (trans.label()->isData(data))
+		if (TreeAut::GetSymbol(trans)->isData(data))
 		{	// for data transitions
 			if (data->isRef())
 			{	// for references, add the referenced root
 				v[0] = CutpointInfo(data->d_ref.root);
-				ConnectionGraph::updateStateSignature(stateMap, trans.rhs(), v);
+				ConnectionGraph::updateStateSignature(stateMap, trans.GetParent(), v);
 			} else
 			{	// for non-reference data states
-				assert(stateMap.find(trans.rhs()) == stateMap.end());
-				ConnectionGraph::updateStateSignature(stateMap, trans.rhs(),
+				assert(stateMap.find(trans.GetParent()) == stateMap.end());
+				ConnectionGraph::updateStateSignature(stateMap, trans.GetParent(),
 					CutpointSignature());
 			}
 		} else
@@ -100,10 +100,10 @@ void ConnectionGraph::computeSignatures(
 		for (auto i = transitions.begin(); i != transitions.end(); )
 		{
 			const Transition& t = **i;
-			assert((*t.label()).isNode());
+			assert(TreeAut::GetSymbol(t)->isNode());
 
 			v.clear();
-			if (!processNode(v, t.lhs(), t.label(), stateMap))
+			if (!processNode(v, t.GetChildren(), t.GetSymbol(), stateMap))
 			{	// in case this transition cannot be processed because of some downward
 				// states with missing cutpoint information
 				++i;
@@ -111,7 +111,7 @@ void ConnectionGraph::computeSignatures(
 			}
 
 			ConnectionGraph::normalizeSignature(v);
-			ConnectionGraph::updateStateSignature(stateMap, t.rhs(), v);
+			ConnectionGraph::updateStateSignature(stateMap, t.GetParent(), v);
 
 			changed = true;
 			i = transitions.erase(i);
@@ -172,7 +172,7 @@ void ConnectionGraph::fixSignatures(
 	{
 		const Data* data = nullptr;
 
-		if (trans.label()->isData(data))
+		if (TreeAut::GetSymbol(trans)->isData(data))
 		{
 			assert(nullptr != data);
 			if (data->isRef())
@@ -183,7 +183,7 @@ void ConnectionGraph::fixSignatures(
 				v.clear();
 			}
 
-			auto p = signatureMap.insert(std::make_pair(std::make_pair(trans.rhs(), v), trans.rhs()));
+			auto p = signatureMap.insert(std::make_pair(std::make_pair(trans.GetParent(), v), trans.GetParent()));
 
 			if (!p.second)
 			{
@@ -191,10 +191,10 @@ void ConnectionGraph::fixSignatures(
 			}
 
 			invSignatureMap.insert(
-				std::make_pair(trans.rhs(), std::vector<CutpointSignature>())
+				std::make_pair(trans.GetParent(), std::vector<CutpointSignature>())
 				).first->second.push_back(v);
 
-			ConnectionGraph::updateStateSignature(stateMap, trans.rhs(), v);
+			ConnectionGraph::updateStateSignature(stateMap, trans.GetParent(), v);
 
 			dst.addTransition(trans);
 		}
@@ -214,15 +214,15 @@ void ConnectionGraph::fixSignatures(
 		{
 			const Transition& trans = *t;
 
-			assert((*trans.label()).isNode());
+			assert(TreeAut::GetSymbol(trans)->isNode());
 
 			ChoiceType choice;
 
 			size_t i;
 
-			for (i = 0; i < trans.lhs().size(); ++i)
+			for (i = 0; i < trans.GetChildrenSize(); ++i)
 			{
-				auto iter = invSignatureMap.find(trans.lhs()[i]);
+				auto iter = invSignatureMap.find(trans.GetNthChildren(i));
 
 				if (iter == invSignatureMap.end())
 				{
@@ -234,7 +234,7 @@ void ConnectionGraph::fixSignatures(
 				choice.push_back(ChoiceElement(iter->second.begin(), iter->second.end()));
 			}
 
-			if (i < trans.lhs().size())
+			if (i < trans.GetChildrenSize())
 			{
 				continue;
 			}
@@ -243,13 +243,13 @@ void ConnectionGraph::fixSignatures(
 
 			do
 			{
-				std::vector<size_t> lhs(trans.lhs().size());
+				std::vector<size_t> lhs(trans.GetChildren().size());
 
-				for (size_t i = 0; i < trans.lhs().size(); ++i)
+				for (size_t i = 0; i < trans.GetChildren().size(); ++i)
 				{
 					assert(i < choice.size());
 
-					auto iter = signatureMap.find(std::make_pair(trans.lhs()[i], *choice[i].iter));
+					auto iter = signatureMap.find(std::make_pair(trans.GetNthChildren(i), *choice[i].iter));
 
 					assert(iter != signatureMap.end());
 
@@ -258,30 +258,30 @@ void ConnectionGraph::fixSignatures(
 
 				v.clear();
 
-				if (!processNode(v, lhs, trans.label(), stateMap))
+				if (!processNode(v, lhs, trans.GetSymbol(), stateMap))
 				{
 					assert(false);
 				}
 
 				ConnectionGraph::normalizeSignature(v);
 
-				auto p = signatureMap.insert(std::make_pair(std::make_pair(trans.rhs(), v), offset));
+				auto p = signatureMap.insert(std::make_pair(std::make_pair(trans.GetParent(), v), offset));
 
 				if (p.second)
 				{
 					++offset;
 
-					if (ta.isFinalState(trans.rhs()))
+					if (ta.isFinalState(trans.GetParent()))
 					{
 						dst.addFinalState(p.first->second);
 					}
 
 					ConnectionGraph::updateStateSignature(stateMap, p.first->second, v);
 
-					buffer.push_back(std::make_pair(trans.rhs(), v));
+					buffer.push_back(std::make_pair(trans.GetParent(), v));
 				}
 
-				dst.addTransition(lhs, trans.label(), p.first->second);
+				dst.addTransition(lhs, trans.GetSymbol(), p.first->second);
 
 			} while (NextChoice()(choice));
 

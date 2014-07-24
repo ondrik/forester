@@ -47,11 +47,11 @@ TreeAut& FAE::relabelReferences(
 	dst.addFinalStates(src.getFinalStates());
 	for (const Transition& tr : src)
 	{
-		if (tr.label()->isData())
+		if (TreeAut::GetSymbol(tr)->isData())
 			continue;
 
 		std::vector<size_t> lhs;
-		for (size_t state : tr.lhs())
+		for (size_t state : tr.GetChildren())
 		{
 			const Data* data;
 			if (this->isData(state, data))
@@ -75,7 +75,7 @@ TreeAut& FAE::relabelReferences(
 			}
 		}
 
-		dst.addTransition(lhs, tr.label(), tr.rhs());
+		dst.addTransition(lhs, TreeAut::GetSymbol(tr), tr.GetParent());
 	}
 
 	return dst;
@@ -91,7 +91,7 @@ TreeAut& FAE::invalidateReference(
 	for (const Transition& tr : src)
 	{
 		std::vector<size_t> lhs;
-		for (size_t state : tr.lhs())
+		for (size_t state : tr.GetChildren())
 		{
 			const Data* data;
 			if (FAE::isData(state, data) && data->isRef(root))
@@ -101,8 +101,8 @@ TreeAut& FAE::invalidateReference(
 				lhs.push_back(state);
 			}
 		}
-		if (!FAE::isRef(tr.label(), root))
-			dst.addTransition(lhs, tr.label(), tr.rhs());
+		if (!FAE::isRef(TreeAut::GetSymbol(tr), root))
+			dst.addTransition(lhs, TreeAut::GetSymbol(tr), tr.GetParent());
 	}
 	return dst;
 }

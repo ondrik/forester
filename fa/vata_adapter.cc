@@ -11,26 +11,26 @@ VATAAdapter::VATAAdapter(const VATAAdapter& adapter) : vataAut_(adapter.vataAut_
 VATAAdapter::~VATAAdapter()
 {}
 
-VATAAdapter VATAAdapter::createVATAAdapterWithSameTransitions(
+VATAAdapter VATAAdapter::createTAWithSameTransitions(
     const VATAAdapter&         ta)
 {
     return VATAAdapter(TreeAut(ta.vataAut_, true, false));
 }
 
-VATAAdapter* VATAAdapter::allocateVATAAdapterWithSameTransitions(
+VATAAdapter* VATAAdapter::allocateTAWithSameTransitions(
     const VATAAdapter&         ta)
 {
     return new VATAAdapter(TreeAut(ta.vataAut_, true, false));
 }
     
-VATAAdapter VATAAdapter::createVATAAdapterWithSameFinalStates(
+VATAAdapter VATAAdapter::createTAWithSameFinalStates(
     const VATAAdapter&         ta,
     bool                 copyFinalStates)
 {
     return VATAAdapter(TreeAut(ta.vataAut_, true, copyFinalStates));
 }
 
-VATAAdapter* VATAAdapter::allocateVATAAdapterWithSameFinalStates(
+VATAAdapter* VATAAdapter::allocateTAWithSameFinalStates(
     const VATAAdapter&         ta,
     bool                 copyFinalStates)
 {
@@ -119,6 +119,11 @@ const VATAAdapter::Transition VATAAdapter::getTransition(
     assert(false);
     return Transition();
 }
+	
+const label_type VATAAdapter::GetSymbol(const Transition& t)
+{
+    return label_type(t.GetSymbol()); 
+}
 
 void VATAAdapter::addFinalState(size_t state)
 {
@@ -128,6 +133,14 @@ void VATAAdapter::addFinalState(size_t state)
 void VATAAdapter::addFinalStates(const std::set<size_t>& states)
 {
     vataAut_.SetStatesFinal(states);
+}
+
+void VATAAdapter::addFinalStates(const std::unordered_set<size_t>& states)
+{
+    for (size_t state : states)
+    {
+        vataAut_.SetStateFinal(state);
+    }
 }
 
 bool VATAAdapter::isFinalState(size_t state) const
@@ -290,4 +303,50 @@ void VATAAdapter::copyReachableTransitionsFromRoot(
     {
         addTransition(k);
     }
+}
+
+// collapses states according to a given relation
+VATAAdapter& VATAAdapter::collapsed(
+    VATAAdapter&                             dst,
+    const std::vector<std::vector<bool>>&    rel,
+    const Index<size_t>&                     stateIndex) const
+{
+    return dst;
+
+    /*
+    std::vector<size_t> headIndex;
+    utils::relBuildClasses(rel, headIndex);
+
+    std::ostringstream os;
+    utils::printCont(os, headIndex);
+
+    // TODO: perhaps improve indexing
+    std::vector<size_t> invStateIndex(stateIndex.size());
+    for (Index<size_t>::iterator i = stateIndex.begin(); i != stateIndex.end(); ++i)
+    {
+        invStateIndex[i->second] = i->first;
+    }
+
+    for (std::vector<size_t>::iterator i = headIndex.begin(); i != headIndex.end(); ++i)
+    {
+        *i = invStateIndex[*i];
+    }
+
+    for (const size_t& state : finalStates_)
+    {
+        dst.addFinalState(headIndex[stateIndex[state]]);
+    }
+
+    for (const TransIDPair* trans : this->transitions_)
+    {
+        std::vector<size_t> lhs;
+        stateIndex.translate(lhs, trans->first.lhs());
+        for (size_t j = 0; j < lhs.size(); ++j)
+            lhs[j] = headIndex[lhs[j]];
+        dst.addTransition(lhs, trans->first.label(), headIndex[stateIndex[trans->first.rhs()]]);
+        std::ostringstream os;
+        utils::printCont(os, lhs);
+    }
+    return dst;
+    */
 }

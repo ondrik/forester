@@ -74,15 +74,30 @@ protected:// methods
 
 public:   // methods
 
+	const size_t GetNthChildren(int n)
+    {
+        return lhs()[n]; 
+    }
+	const std::vector<size_t>& GetChildren() const
+    {
+        return lhs(); 
+    }
 	const std::vector<size_t>& lhs() const
 	{
 		assert(nullptr != lhs_);
 		return lhs_->first;
 	}
+    const size_t GetChildrenSize()
+    {
+		assert(nullptr != lhs_);
+		return lhs_->first.size();
+    }
 
 	const label_type label() const { return label_type(label_); }
+	const label_type GetSymbol() const { return label_type(label_); }
 
 	size_t rhs() const { return rhs_; }
+	size_t GetParent() const { return rhs_; }
 
 	bool operator==(const TTBase& rhs) const
 	{

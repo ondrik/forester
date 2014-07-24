@@ -75,11 +75,11 @@ bool Box::checkDownwardCoverage(
 	const std::vector<size_t>&                    v,
 	const TreeAut&                                ta)
 {
-	for (TreeAut::iterator i = ta.accBegin(); i != ta.accEnd(i); ++i)
+	for (auto i = ta.accBegin(); i != ta.accEnd(i); ++i)
 	{
 		std::vector<size_t> v2;
 
-		Box::getDownwardCoverage(v2, i->label()->getNode());
+		Box::getDownwardCoverage(v2, TreeAut::GetSymbol(*i)->getNode());
 
 		if (v2 != v)
 			return false;
@@ -97,7 +97,7 @@ void Box::getDownwardCoverage(
 
 	assert(ta.accBegin() != ta.accEnd());
 
-	Box::getDownwardCoverage(v, ta.accBegin()->label()->getNode());
+	Box::getDownwardCoverage(v, TreeAut::GetSymbol(*ta.accBegin())->getNode());
 
 	assert(Box::checkDownwardCoverage(v, ta));
 
@@ -116,7 +116,7 @@ void Box::getAcceptingLabels(
 	for (auto& state : ta.getFinalStates())
 	{
 		for (auto i = ta.begin(state); i != ta.end(state, i); ++i)
-			labels.push_back(i->label());
+			labels.push_back(i->GetSymbol());
 	}
 
 	std::sort(labels.begin(), labels.end());
@@ -168,14 +168,14 @@ Box::Box(
 
 bool Box::LeafEnumF::getRef(size_t state, size_t& ref) const
 {
-	TreeAut::iterator i = this->ta.begin(state);
+	auto i = this->ta.begin(state);
 
 	assert(i != this->ta.end(state));
 
-	if (!i->label()->isData())
+	if (!TreeAut::GetSymbol(*i)->isData())
 		return false;
 
-	const Data& data = i->label()->getData();
+	const Data& data = TreeAut::GetSymbol(*i)->getData();
 
 	if (!data.isRef())
 		return false;
@@ -200,7 +200,7 @@ bool Box::LeafEnumF::operator()(
 	{
 		size_t ref;
 
-		if (this->getRef(t.lhs()[offset], ref))
+		if (this->getRef(t.GetNthChildren(offset), ref))
 		{
 			this->selectors[ref].insert(
 				box->inputCoverage(k).begin(), box->inputCoverage(k).end()
@@ -218,8 +218,8 @@ void Box::enumerateSelectorsAtLeaves(
 {
 	for (auto i = ta.begin(); i != ta.end(); ++i)
 	{
-		if (i->label()->isNode())
-			i->label()->iterate(LeafEnumF(selectors, ta, *i));
+		if (TreeAut::GetSymbol(*i)->isNode())
+			TreeAut::GetSymbol(*i)->iterate(LeafEnumF(selectors, ta, *i));
 	}
 }
 
@@ -338,6 +338,7 @@ void Box::initialize()
 
 std::ostream& operator<<(std::ostream& os, const Box& box)
 {
+    /*/
 	auto writeStateF = [](size_t state) -> std::string {
 
 		std::ostringstream ss;
@@ -349,6 +350,7 @@ std::ostream& operator<<(std::ostream& os, const Box& box)
 
 		return ss.str();
 	};
+    */
 
 	os << "===" << std::endl << "output (";
 

@@ -22,6 +22,7 @@
 
 #include "utils.hh"
 #include "vata_abstraction.hh"
+#include "label.hh"
 
 // VATA headers
 #include "libvata/include/vata/explicit_tree_aut.hh"
@@ -81,17 +82,17 @@ public: // public methods
 	VATAAdapter(const VATAAdapter& adapter);
     ~VATAAdapter();
 
-    static VATAAdapter createVATAAdapterWithSameTransitions(
+    static VATAAdapter createTAWithSameTransitions(
 		const VATAAdapter&         ta);
 
-    static VATAAdapter* allocateVATAAdapterWithSameTransitions(
+    static VATAAdapter* allocateTAWithSameTransitions(
 		const VATAAdapter&         ta);
     
-    static VATAAdapter createVATAAdapterWithSameFinalStates(
+    static VATAAdapter createTAWithSameFinalStates(
 		const VATAAdapter&         ta,
         bool                 copyFinalStates=true);
 
-    static VATAAdapter* allocateVATAAdapterWithSameFinalStates(
+    static VATAAdapter* allocateTAWithSameFinalStates(
 		const VATAAdapter&         ta,
         bool                 copyFinalStates=true);
 
@@ -122,8 +123,11 @@ public: // public methods
 		const SymbolType&                       symbol,
 		size_t                              parent);
 
+	static const label_type GetSymbol(const Transition& t);
+
     void addFinalState(size_t state);
 	void addFinalStates(const std::set<size_t>& states);
+	void addFinalStates(const std::unordered_set<size_t>& states);
 
     bool isFinalState(size_t state) const;
 	const std::unordered_set<size_t>& getFinalStates() const;
@@ -220,50 +224,11 @@ public: // public methods
         VATAAbstraction::heightAbstraction(vataAut_, result, height, f, stateIndex);
 	}
 
-    /*
 	// collapses states according to a given relation
-	TA& collapsed(
-		TA&                                   dst,
+	VATAAdapter& collapsed(
+		VATAAdapter&                             dst,
 		const std::vector<std::vector<bool>>&    rel,
-		const Index<size_t>&                     stateIndex) const
-	{
-		std::vector<size_t> headIndex;
-		utils::relBuildClasses(rel, headIndex);
-
-		std::ostringstream os;
-		utils::printCont(os, headIndex);
-
-		// TODO: perhaps improve indexing
-		std::vector<size_t> invStateIndex(stateIndex.size());
-		for (Index<size_t>::iterator i = stateIndex.begin(); i != stateIndex.end(); ++i)
-		{
-			invStateIndex[i->second] = i->first;
-		}
-
-		for (std::vector<size_t>::iterator i = headIndex.begin(); i != headIndex.end(); ++i)
-		{
-			*i = invStateIndex[*i];
-		}
-
-		for (const size_t& state : finalStates_)
-		{
-			dst.addFinalState(headIndex[stateIndex[state]]);
-		}
-
-		for (const TransIDPair* trans : this->transitions_)
-		{
-			std::vector<size_t> lhs;
-			stateIndex.translate(lhs, trans->first.lhs());
-			for (size_t j = 0; j < lhs.size(); ++j)
-				lhs[j] = headIndex[lhs[j]];
-			dst.addTransition(lhs, trans->first.label(), headIndex[stateIndex[trans->first.rhs()]]);
-			std::ostringstream os;
-			utils::printCont(os, lhs);
-		}
-		return dst;
-	}
-	
-    */
+		const Index<size_t>&                     stateIndex) const;
 };
 
 #endif

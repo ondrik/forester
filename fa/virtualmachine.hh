@@ -47,7 +47,7 @@ class VirtualMachine
 public:   // data types
 
 	/// Transition
-	typedef TT Transition;
+	typedef TreeAut::Transition Transition;
 
 private:   // data members
 

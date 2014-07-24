@@ -23,6 +23,7 @@
 // Standard library headers
 #include <vector>
 #include <ostream>
+#include <unordered_set>
 
 // Forester headers
 #include "utils.hh"

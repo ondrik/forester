@@ -156,9 +156,9 @@ public:
 		{ // iterate over all "synthetic" transitions and constuct new FAE for each
 			assert(nullptr != trans);
 
-			const size_t& numRoots = trans->lhs().size();
+			const size_t& numRoots = trans.GetChildrenSize();
 			if ((fae.getRootCount() != numRoots) ||
-				(fae.GetVariables() != trans->label()->getVData()))
+				(fae.GetVariables() != TreeAut::GetSymbol(trans)->getVData()))
 			{	// in case the number of components or global variables does not match
 				continue;
 			}
@@ -172,7 +172,7 @@ public:
 				TreeAut* ta = TreeAut::allocateTAWithSameTransitions(tap);
 				roots.push_back(std::shared_ptr<TreeAut>(ta));
 
-				const size_t& rootState = trans->lhs()[j];
+				const size_t& rootState = trans.GetNthChildren(j);
 
                 // TODO PERF: If you want this faster provide your td_cache build
                 // out of the inner cycle
@@ -461,7 +461,7 @@ public:
 
         label_type label = this->getRoot(target)->begin(
 			*this->getRoot(target)->getFinalStates().begin()
-		)->label();
+		)->GetSymbol();
         size_t offset = static_cast<size_t>(-1);
         const AbstractBox* abstractBox = label->getBoxFromNode(offset);
 
