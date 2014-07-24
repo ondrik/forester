@@ -116,7 +116,7 @@ void Box::getAcceptingLabels(
 	for (auto& state : ta.getFinalStates())
 	{
 		for (auto i = ta.begin(state); i != ta.end(state, i); ++i)
-			labels.push_back(i->GetSymbol());
+			labels.push_back(TreeAut::GetSymbol(*i));
 	}
 
 	std::sort(labels.begin(), labels.end());

@@ -92,7 +92,7 @@ public:   // methods
 		if (l1->getTag() != l2->getTag())
 			return false;
 
-		if (&t1.GetParent() == &t2.GetParent())
+		if (&t1.GetChildren() == &t2.GetChildren())
 			return true;
 
 		if (t1.GetChildrenSize() != t2.GetChildrenSize())

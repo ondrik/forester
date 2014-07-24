@@ -74,7 +74,7 @@ protected:// methods
 
 public:   // methods
 
-	const size_t GetNthChildren(int n)
+	size_t GetNthChildren(int n) const
     {
         return lhs()[n]; 
     }
@@ -87,7 +87,7 @@ public:   // methods
 		assert(nullptr != lhs_);
 		return lhs_->first;
 	}
-    const size_t GetChildrenSize()
+    size_t GetChildrenSize() const
     {
 		assert(nullptr != lhs_);
 		return lhs_->first.size();
@@ -532,6 +532,8 @@ public:
         const std::vector<size_t>&          lhs,
 		const T&                            label,
 		size_t                              rhs);
+	
+    static const label_type GetSymbol(const Transition& trans);
 
     bool areTransitionsEmpty()
     {

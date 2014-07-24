@@ -567,6 +567,11 @@ const typename TA::Transition& TA::getTransition(
     assert(pair != NULL);
     return getTransitionFromPair(pair);
 }
+    
+const label_type TA::GetSymbol(const Transition& trans)
+{
+    return trans.GetSymbol();
+}
 
 void TA::copyReachableTransitionsFromRoot(const TA& src,
         const size_t& rootState)
