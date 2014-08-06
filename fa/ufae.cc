@@ -54,7 +54,7 @@
 		const FAE&                 src) const
 	{
 		dst.addFinalState(0);
-		std::vector<Cursor<std::set<size_t>::const_iterator>> tmp;
+		std::vector<Cursor<std::unordered_set<size_t>::const_iterator>> tmp;
 		for (auto root : src.getRoots())
 		{
 			TreeAut::rename(
@@ -64,14 +64,9 @@
 				false);
 
 			assert(root->getFinalStates().size());
-            std::set<size_t> finalStates;
-            for (size_t state : root->getFinalStates())
-            {
-                finalStates.insert(state);
-            }
-			tmp.push_back(Cursor<std::set<size_t>::const_iterator>(
-				finalStates.begin(),
-				finalStates.end()));
+			tmp.push_back(Cursor<std::unordered_set<size_t>::const_iterator>(
+				root->getFinalStates().begin(),
+				root->getFinalStates().end()));
 		}
 
 		std::vector<size_t> lhs(tmp.size());

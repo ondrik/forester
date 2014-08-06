@@ -415,7 +415,7 @@ void TA::buildStateIndex(Index<size_t>& index) const
 
 void TA::buildSortedStateIndex(Index<size_t>& index) const
 {
-    std::set<size_t> s;
+    std::unordered_set<size_t> s;
     for (const TransIDPair* trans : this->transitions_)
     {
         for (size_t state : trans->first.lhs())

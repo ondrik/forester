@@ -395,7 +395,7 @@ private: // private constants
 private:  // data members
 
 	size_t nextState_;
-	std::set<size_t> finalStates_;
+	std::unordered_set<size_t> finalStates_;
 	Backend* backend_;
 	size_t maxRank_;
 	trans_set_type transitions_;
@@ -552,7 +552,7 @@ public:
 	}
     */
 
-	void addFinalStates(const std::set<size_t>& states)
+	void addFinalStates(const std::unordered_set<size_t>& states)
 	{
 		finalStates_.insert(states.begin(), states.end());
 	}
@@ -562,7 +562,7 @@ public:
 		return (finalStates_.find(state) != finalStates_.end());
 	}
 
-	const std::set<size_t>& getFinalStates() const
+	const std::unordered_set<size_t>& getFinalStates() const
 	{
 		return finalStates_;
 	}
@@ -725,7 +725,7 @@ public:
 	{
 		std::vector<const TransIDPair*> v1(
 			transitions_.begin(), this->transitions_.end()), v2;
-		std::set<size_t> states(finalStates_.begin(), finalStates_.end());
+		std::unordered_set<size_t> states(finalStates_.begin(), finalStates_.end());
 		for (size_t finState : finalStates_)
 		{
 			dst.addFinalState(finState);
@@ -760,7 +760,7 @@ public:
 	TA& uselessAndUnreachableFree(TA& dst) const
 	{
 		std::vector<const TransIDPair*> v1(this->transitions_.begin(), this->transitions_.end()), v2, v3;
-		std::set<size_t> states;
+		std::unordered_set<size_t> states;
 		bool changed = true;
 		while (changed)
 		{
@@ -796,7 +796,7 @@ public:
 		}
 		std::swap(v1, v3);
 		v2.clear();
-		states = std::set<size_t>(dst.finalStates_.begin(), dst.finalStates_.end());
+		states = std::unordered_set<size_t>(dst.finalStates_.begin(), dst.finalStates_.end());
 		changed = true;
 		while (changed)
 		{
