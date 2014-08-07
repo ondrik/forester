@@ -333,7 +333,7 @@ void Splitting::isolateAtLeaf(
 	for (const Transition& trans : *fae_.getRoot(root))
 	{	// traverse accepting transitions
         label_type label = TreeAut::GetSymbol(trans);
-		if (label->isNode())
+		if (!label->isNode())
 		{	// copy non-nodes
 			ta.addTransition(trans);
 			continue;
@@ -395,7 +395,7 @@ void Splitting::isolateAtLeaf(
 					// TODO: several transitions may be added, is it correct??
 					*k = fae.addData(ta2, Data::createRef(fae.getRootCount()));
 					ta2.addTransition(lhs,
-                            trans.GetSymbol(),
+                            TreeAut::GetSymbol(trans),
                             trans.GetParent());
 					*k = transBox.first->GetParent();
 				}

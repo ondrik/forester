@@ -219,7 +219,9 @@ void Box::enumerateSelectorsAtLeaves(
 	for (auto i = ta.begin(); i != ta.end(); ++i)
 	{
 		if (TreeAut::GetSymbol(*i)->isNode())
+        {
 			TreeAut::GetSymbol(*i)->iterate(LeafEnumF(selectors, ta, *i));
+        }
 	}
 }
 

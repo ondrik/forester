@@ -172,7 +172,9 @@ void Integrity::enumerateSelectorsAtLeaf(
 		for (auto rule : *p_ta)
 		{
 			if (TreeAut::GetSymbol(rule)->isNode())
+            {
 				TreeAut::GetSymbol(rule)->iterate(LeafEnumF(fae_, rule, target, selectors));
+            }
 		}
 	}
 }
