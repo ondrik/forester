@@ -232,4 +232,3 @@ public: // public methods
 };
 
 #endif
-#define VATA_AUT_H

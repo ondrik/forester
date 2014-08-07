@@ -166,17 +166,15 @@ const VATAAdapter::Transition& VATAAdapter::getAcceptingTransition() const
 // TODO: Is this correct?
 VATAAdapter& VATAAdapter::unreachableFree(VATAAdapter& dst) const
 {
-    vataAut_.RemoveUnreachableStates();
-    dst = *this;
+    dst.vataAut_ = vataAut_.RemoveUnreachableStates();
     return dst;
 }
 
 // TODO: Is this correct?
 VATAAdapter& VATAAdapter::uselessAndUnreachableFree(VATAAdapter& dst) const
 {
-    vataAut_.RemoveUselessStates();
-    vataAut_.RemoveUnreachableStates();
-    dst = *this;
+    dst.vataAut_ = vataAut_.RemoveUselessStates();
+    dst.vataAut_ = dst.vataAut_.RemoveUnreachableStates();
     return dst;
 }
 
@@ -236,7 +234,9 @@ VATAAdapter& VATAAdapter::unfoldAtRoot(
 	bool                           registerFinalState) const
 {
     if (registerFinalState)
+    {
         dst.addFinalState(newState);
+    }
 
     for (auto trans : vataAut_)
     {
@@ -261,12 +261,14 @@ VATAAdapter& VATAAdapter::unfoldAtRoot(
         assert(j != states.end());
 
         for (auto trans : vataAut_[state])
-        { // TODO: Check: is this semantic same as origin?
+        { // TODO: Check: is this semantic same as the original?
             dst.addTransition(trans.GetChildren(), trans.GetSymbol(), j->second);
         }
 
         if (registerFinalState)
+        {
             dst.addFinalState(j->second);
+        }
     }
 
     return dst;
