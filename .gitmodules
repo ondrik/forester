@@ -1,0 +1,3 @@
+[submodule "fa/libvata"]
+	path = fa/libvata
+	url = git@github.com:martinhruska/libvata.git
