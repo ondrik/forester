@@ -155,12 +155,21 @@ public:
 		for (auto trans : src.getEmptyRootTransitions())
 		{ // iterate over all "synthetic" transitions and constuct new FAE for each
 
+            #ifdef USE_VATA
 			const size_t& numRoots = trans.GetChildrenSize();
 			if ((fae.getRootCount() != numRoots) ||
 				(fae.GetVariables() != TreeAut::GetSymbol(trans)->getVData()))
 			{	// in case the number of components or global variables does not match
 				continue;
 			}
+            #else
+			const size_t& numRoots = trans->GetChildrenSize();
+			if ((fae.getRootCount() != numRoots) ||
+				(fae.GetVariables() != TreeAut::GetSymbol(*trans)->getVData()))
+			{	// in case the number of components or global variables does not match
+				continue;
+			}
+            #endif
 
 			std::vector<std::shared_ptr<TreeAut>> roots;
 			size_t j;
@@ -171,7 +180,11 @@ public:
 				TreeAut* ta = TreeAut::allocateTAWithSameTransitions(tap);
 				roots.push_back(std::shared_ptr<TreeAut>(ta));
 
+                #ifdef USE_VATA
 				const size_t& rootState = trans.GetNthChildren(j);
+                #else
+				const size_t& rootState = trans->GetNthChildren(j);
+                #endif
 
                 // TODO PERF: If you want this faster provide your td_cache build
                 // out of the inner cycle

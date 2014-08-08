@@ -24,11 +24,15 @@
 #include "label.hh"
 #include "vata_adapter.hh"
 
+#define USE_VATA
 
 /**
  * @brief  The type used for tree automata
  */
-//typedef TA TreeAut;
-typedef VATAAdapter TreeAut;
+#ifdef USE_VATA
+    typedef VATAAdapter TreeAut;
+#else
+    typedef TA TreeAut;
+#endif
 
 #endif /* _TREE_AUT_LABEL_HH_ */

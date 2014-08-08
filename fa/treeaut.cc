@@ -595,7 +595,6 @@ TA::TA(
     Backend&             backend_) :
     nextState_(0),
     finalStates_{},
-    //vataAut_(),
     backend_(&backend_),
     maxRank_(0),
     transitions_{}
@@ -604,7 +603,6 @@ TA::TA(
 TA::TA() :
 		nextState_(0),
 		finalStates_{},
-        //vataAut_(),
 		backend_(),
 		maxRank_(0),
 		transitions_{}
@@ -616,7 +614,6 @@ TA::TA(
     const TA&         ta) :
     nextState_(ta.nextState_),
     finalStates_(),
-    //vataAut_(),
     backend_(ta.backend_),
     maxRank_(ta.maxRank_),
     transitions_(ta.transitions_)
