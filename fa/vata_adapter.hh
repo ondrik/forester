@@ -23,6 +23,7 @@
 #include "utils.hh"
 #include "vata_abstraction.hh"
 #include "label.hh"
+#include "streams.hh"
 
 // VATA headers
 #include "libvata/include/vata/explicit_tree_aut.hh"
@@ -188,6 +189,7 @@ public: // public methods
             F                              funcRename,
             bool                           addFinalStates = true)
     {
+        FA_DEBUG_AT(1,"TA rename\n");
         std::vector<size_t> children;
         if (addFinalStates)
         {
@@ -221,6 +223,7 @@ public: // public methods
 		F                                          f,
 		const Index<size_t>&                       stateIndex) const
 	{
+        FA_DEBUG_AT(1,"TA height abstraction\n");
         VATAAbstraction::heightAbstraction(vataAut_, result, height, f, stateIndex);
 	}
 
