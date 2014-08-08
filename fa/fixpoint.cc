@@ -150,8 +150,8 @@ struct CompareVariablesF
 
 		const TreeAut::Transition& t1 = ta1.getAcceptingTransition();
 		const TreeAut::Transition& t2 = ta2.getAcceptingTransition();
-		return (TreeAut::GetSymbol(t1) == TreeAut::GetSymbol(t2) &&
-                t1.GetParent() == t2.GetParent());
+		return (TreeAut::GetSymbol(t1) == TreeAut::GetSymbol(t2)) &&
+                (t1.GetChildren() == t2.GetChildren());
 	}
 };
 
