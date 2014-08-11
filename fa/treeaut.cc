@@ -461,7 +461,7 @@ typename TA::td_cache_type TA::buildTDCache() const
 
 typename TA::td_cache_type TA::buildTDCacheWithEmptyRoot() const
 {
-    td_cache_type cache = buildTDCache();
+    td_cache_type cache = this->buildTDCache();
     cache.insert(
         std::make_pair(cEmptyRootTransIndex, std::vector<const Transition*>()));
 
@@ -471,7 +471,7 @@ typename TA::td_cache_type TA::buildTDCacheWithEmptyRoot() const
 std::vector<const typename TA::Transition*> TA::getEmptyRootTransitions() const
 {
     TA::td_cache_type cache = buildTDCacheWithEmptyRoot();
-    
+
     return cache.at(cEmptyRootTransIndex);
 }
 
@@ -567,7 +567,7 @@ const typename TA::Transition& TA::getTransition(
     assert(pair != NULL);
     return getTransitionFromPair(pair);
 }
-    
+
 const label_type TA::GetSymbol(const Transition& trans)
 {
     return trans.GetSymbol();
