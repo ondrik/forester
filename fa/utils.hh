@@ -23,6 +23,7 @@
 // Standard library headers
 #include <ostream>
 #include <set>
+#include <stdexcept>
 #include <type_traits>
 #include <unordered_map>
 #include <unordered_set>
