@@ -129,7 +129,9 @@ void VATAAdapter::addTransition(const Transition& transition)
 // OL: I don't know whether it is or is not necessary to return the reference
 // (as in the original). There may be some guys depending on the returning
 // value to be a reference? Let's take a look at this.
-const VATAAdapter::Transition VATAAdapter::getTransition(
+// MH: Noone needs this as the reference, but it'll be more efficient
+// to use the reference
+const VATAAdapter::Transition& VATAAdapter::getTransition(
         const std::vector<size_t>&          children,
 		const SymbolType&                   symbol,
 		size_t                              parent)
@@ -158,6 +160,8 @@ void VATAAdapter::addFinalState(size_t state)
 }
 
 // OL: maybe use one templated function for the two methods?
+// MH: I don't see any advantage in it, this make API clearer
+// and it is more efficient for std::set
 void VATAAdapter::addFinalStates(const std::set<size_t>& states)
 {
     FA_DEBUG_AT(1,"TA add final states\n");
@@ -181,29 +185,30 @@ bool VATAAdapter::isFinalState(size_t state) const
 
 const std::unordered_set<size_t>& VATAAdapter::getFinalStates() const
 {
-    FA_DEBUG_AT(1,"TA is final states\n");
+    FA_DEBUG_AT(1,"TA get final states\n");
     return vataAut_.GetFinalStates();
 }
 
 size_t VATAAdapter::getFinalState() const
 {
-	FA_DEBUG_AT(1,"TA get final states\n");
+	FA_DEBUG_AT(1,"TA get final state\n");
 
 	const std::unordered_set<size_t>& finalStates = this->getFinalStates();
 	assert(1 == finalStates.size());
-  return *finalStates.begin();
+    return *finalStates.begin();
 }
 
 const VATAAdapter::Transition& VATAAdapter::getAcceptingTransition() const
 {
     FA_DEBUG_AT(1,"TA get accepting transitions\n");
-		assert(1 == vataAut_.GetAcceptTrans().size());
+	assert( ++(vataAut_.GetAcceptTrans().begin()) == vataAut_.GetAcceptTrans().end());
     return *(vataAut_.GetAcceptTrans().begin());
 }
 
 // TODO: Is this correct?
 // OL: Let's simplify it to use the C++11 r-value reference. But this can be
 // done only if dst is empty.
+// MH: Does it mean to implement move constructor to VATAAdapter or something more complex?
 VATAAdapter& VATAAdapter::unreachableFree(VATAAdapter& dst) const
 {
     FA_DEBUG_AT(1,"TA unreachable\n");
@@ -231,10 +236,9 @@ VATAAdapter& VATAAdapter::disjointUnion(
 		bool                              addFinalStates)
 {
     FA_DEBUG_AT(1,"TA disjoint\n");
-   dst.vataAut_ = TreeAut::UnionDisjointStates(
+    dst.vataAut_ = TreeAut::UnionDisjointStates(
            dst.vataAut_, src.vataAut_, addFinalStates);
-
-   return dst;
+    return dst;
 }
 
 // TODO: Is this correct?

@@ -119,7 +119,7 @@ public: // public methods
 		size_t                              parent);
     void addTransition(const Transition& transition);
 
-    const Transition getTransition(
+    const Transition& getTransition(
         const std::vector<size_t>&          children,
 		const SymbolType&                       symbol,
 		size_t                              parent);
