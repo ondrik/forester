@@ -126,11 +126,6 @@ void VATAAdapter::addTransition(const Transition& transition)
     this->vataAut_.AddTransition(transition);
 }
 
-// OL: I don't know whether it is or is not necessary to return the reference
-// (as in the original). There may be some guys depending on the returning
-// value to be a reference? Let's take a look at this.
-// MH: Noone needs this as the reference, but it'll be more efficient
-// to use the reference
 const VATAAdapter::Transition& VATAAdapter::getTransition(
         const std::vector<size_t>&          children,
 		const SymbolType&                   symbol,
@@ -159,9 +154,6 @@ void VATAAdapter::addFinalState(size_t state)
     vataAut_.SetStateFinal(state);
 }
 
-// OL: maybe use one templated function for the two methods?
-// MH: I don't see any advantage in it, this make API clearer
-// and it is more efficient for std::set
 void VATAAdapter::addFinalStates(const std::set<size_t>& states)
 {
     FA_DEBUG_AT(1,"TA add final states\n");
@@ -205,9 +197,7 @@ const VATAAdapter::Transition& VATAAdapter::getAcceptingTransition() const
     return *(vataAut_.GetAcceptTrans().begin());
 }
 
-// TODO: Is this correct?
-// OL: Let's simplify it to use the C++11 r-value reference. But this can be
-// done only if dst is empty.
+// TODO: Rewrite to std::move, later pure function
 // MH: Does it mean to implement move constructor to VATAAdapter or something more complex?
 VATAAdapter& VATAAdapter::unreachableFree(VATAAdapter& dst) const
 {
@@ -216,10 +206,7 @@ VATAAdapter& VATAAdapter::unreachableFree(VATAAdapter& dst) const
     return dst;
 }
 
-// TODO: Is this correct?
-// OL: Let's simplify it to use the C++11 r-value reference. But this can be
-// done only if dst is empty.
-// Further: in which other should we do it? Let's discuss this.
+// TODO: Rewrite to std::move
 VATAAdapter& VATAAdapter::uselessAndUnreachableFree(VATAAdapter& dst) const
 {
     FA_DEBUG_AT(1,"TA useless\n");
@@ -228,8 +215,7 @@ VATAAdapter& VATAAdapter::uselessAndUnreachableFree(VATAAdapter& dst) const
     return dst;
 }
 
-// OL: Let's simplify it to use the C++11 r-value reference. But this can be
-// done only if dst is empty.
+// TODO: Rewrite to std::move
 VATAAdapter& VATAAdapter::disjointUnion(
 		VATAAdapter&                      dst,
 		const VATAAdapter&                src,
@@ -241,11 +227,9 @@ VATAAdapter& VATAAdapter::disjointUnion(
     return dst;
 }
 
-// TODO: Is this correct?
+// TODO: Rewrite to std::move
 // OL: Should be, though the signature of Reduce is about to change in VATA to
 // have as the parameter settings of the minimization.
-// OL: Let's simplify it to use the C++11 r-value reference. But this can be
-// done only if dst is empty.
 VATAAdapter& VATAAdapter::minimized(VATAAdapter& dst) const
 {
     FA_DEBUG_AT(1,"TA minimized\n");
@@ -253,15 +237,13 @@ VATAAdapter& VATAAdapter::minimized(VATAAdapter& dst) const
     return dst;
 }
 
-// TODO is this correct
 bool VATAAdapter::areTransitionsEmpty()
 {
     FA_DEBUG_AT(1,"TA are transitions empty\n");
     return vataAut_.AreTransitionsEmpty();
 }
 
-// OL: Let's simplify it to use the C++11 r-value reference. But this can be
-// done only if dst is empty.
+// TODO: Rewrite to std::move
 VATAAdapter& VATAAdapter::copyTransitions(VATAAdapter& dst) const
 {
     FA_DEBUG_AT(1,"TA copy transitions\n");
@@ -270,8 +252,7 @@ VATAAdapter& VATAAdapter::copyTransitions(VATAAdapter& dst) const
 	return dst;
 }
 
-// OL: Let's simplify it to use the C++11 r-value reference. But this can be
-// done only if dst is empty.
+// TODO: Rewrite to std::move
 VATAAdapter& VATAAdapter::copyNotAcceptingTransitions(
         VATAAdapter&                       dst,
         const VATAAdapter&                 ta) const
@@ -294,8 +275,7 @@ bool VATAAdapter::subseteq(const VATAAdapter& a, const VATAAdapter& b)
    return TreeAut::CheckInclusion(a.vataAut_, b.vataAut_);
 }
 
-// OL: Let's simplify it to use the C++11 r-value reference. But this can be
-// done only if dst is empty.
+// TODO: Rewrite to std::move
 VATAAdapter& VATAAdapter::unfoldAtRoot(
     VATAAdapter&                   dst,
 	size_t                         newState,
@@ -318,13 +298,10 @@ VATAAdapter& VATAAdapter::unfoldAtRoot(
 }
 
 
-// OL: Let's simplify it to use the C++11 r-value reference. But this can be
-// done only if dst is empty.
-// We might also change the name of the function, or at least of the 'states'
-// parameter
+// TODO: Rewrite to std::move
 VATAAdapter& VATAAdapter::unfoldAtRoot(
     VATAAdapter&                                  dst,
-    const std::unordered_map<size_t, size_t>&     states,
+    const std::unordered_map<size_t, size_t>&     statesTranslator,
     bool                                          registerFinalState) const
 {
     FA_DEBUG_AT(1,"TA unfoldAtRoot1\n");
@@ -335,8 +312,7 @@ VATAAdapter& VATAAdapter::unfoldAtRoot(
         assert(j != states.end());
 
         for (auto trans : vataAut_[state])
-        { // TODO: Check: is this semantic same as the original?
-					// OL: I'd say it is
+        {
             dst.addTransition(trans.GetChildren(), trans.GetSymbol(), j->second);
         }
 
@@ -349,7 +325,7 @@ VATAAdapter& VATAAdapter::unfoldAtRoot(
     return dst;
 }
 
-// OL: Make this a VATA function? E.g. GetUsedStates()?.
+// TODO: Implement GetUsedStates with return type std::vector<size_t>
 void VATAAdapter::buildStateIndex(Index<size_t>& index) const
 {
     FA_DEBUG_AT(1,"TA buildStateIndex\n");
@@ -369,12 +345,11 @@ void VATAAdapter::buildStateIndex(Index<size_t>& index) const
 }
 
 // TODO: check this if there will be problems (and they will)
-// OL: This is AFAIK used only once in code (forestautext.hh)
-// OL: maybe return vataAut_[cEmptyRootIndex]?
-// OL: maybe log the transitions that are returned in the original and this version?
 VATAAdapter::TreeAut::AcceptTrans VATAAdapter::getEmptyRootTransitions() const
 {
     FA_DEBUG_AT(1,"TA get empty root\n");
+    assert(vataAut_.IsStateFinal(cEmptyRootIndex)
+            && vataAut_.GetFinalStates().size() == 1);
     return vataAut_.GetAcceptTrans();
 }
 

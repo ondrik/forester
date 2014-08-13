@@ -72,6 +72,9 @@ private: // private data types
         }
     };
 
+private: // private constants
+    const int cEmptyRootTransIndex = 0;
+
 private: // data members
     TreeAut vataAut_;
 
