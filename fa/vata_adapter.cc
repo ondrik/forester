@@ -196,12 +196,11 @@ size_t VATAAdapter::getFinalState() const
 const VATAAdapter::Transition& VATAAdapter::getAcceptingTransition() const
 {
     FA_DEBUG_AT(1,"TA get accepting transitions\n");
-	assert( ++(vataAut_.GetAcceptTrans().begin()) == vataAut_.GetAcceptTrans().end());
+	assert(++(vataAut_.GetAcceptTrans().begin()) == vataAut_.GetAcceptTrans().end());
     return *(vataAut_.GetAcceptTrans().begin());
 }
 
 // TODO: Rewrite to std::move, later pure function
-// MH: Does it mean to implement move constructor to VATAAdapter or something more complex?
 VATAAdapter& VATAAdapter::unreachableFree(VATAAdapter& dst) const
 {
     FA_DEBUG_AT(1,"TA unreachable\n");
