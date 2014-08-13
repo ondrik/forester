@@ -1,5 +1,8 @@
 #include "vata_adapter.hh"
 
+#include <vector>
+#include <unordered_set>
+
 VATAAdapter::VATAAdapter(TreeAut aut) : vataAut_(aut)
 {}
 
@@ -126,7 +129,7 @@ void VATAAdapter::addTransition(const Transition& transition)
     this->vataAut_.AddTransition(transition);
 }
 
-const VATAAdapter::Transition& VATAAdapter::getTransition(
+const VATAAdapter::Transition VATAAdapter::getTransition(
         const std::vector<size_t>&          children,
 		const SymbolType&                   symbol,
 		size_t                              parent)
@@ -308,8 +311,8 @@ VATAAdapter& VATAAdapter::unfoldAtRoot(
     this->copyTransitions(dst);
     for (auto state : this->getFinalStates())
     {
-        std::unordered_map<size_t, size_t>::const_iterator j = states.find(state);
-        assert(j != states.end());
+        std::unordered_map<size_t, size_t>::const_iterator j = statesTranslator.find(state);
+        assert(j != statesTranslator.end());
 
         for (auto trans : vataAut_[state])
         {
@@ -325,20 +328,11 @@ VATAAdapter& VATAAdapter::unfoldAtRoot(
     return dst;
 }
 
-// TODO: Implement GetUsedStates with return type std::vector<size_t>
 void VATAAdapter::buildStateIndex(Index<size_t>& index) const
 {
     FA_DEBUG_AT(1,"TA buildStateIndex\n");
-    for (auto trans : vataAut_)
-    {
-        for (auto state : trans.GetChildren())
-        {
-            index.add(state);
-        }
-        index.add(trans.GetParent());
-    }
 
-    for (size_t state : getFinalStates())
+    for (auto state : vataAut_.GetUsedStates())
     {
         index.add(state);
     }
@@ -348,7 +342,7 @@ void VATAAdapter::buildStateIndex(Index<size_t>& index) const
 VATAAdapter::TreeAut::AcceptTrans VATAAdapter::getEmptyRootTransitions() const
 {
     FA_DEBUG_AT(1,"TA get empty root\n");
-    assert(vataAut_.IsStateFinal(cEmptyRootIndex)
+    assert(vataAut_.IsStateFinal(cEmptyRootTransIndex)
             && vataAut_.GetFinalStates().size() == 1);
     return vataAut_.GetAcceptTrans();
 }
@@ -362,9 +356,30 @@ void VATAAdapter::copyReachableTransitionsFromRoot(
     const size_t&             rootState)
 {
     FA_DEBUG_AT(1,"TA copy reachable transitions from root\n");
-    for (const Transition& k : src.vataAut_[rootState])
+    std::vector<const Transition*> stack;
+    std::unordered_set<size_t> visited;
+
+    for (const Transition& t : src.vataAut_[rootState])
     {
-        this->addTransition(k);
+        stack.push_back(&t);
+    }
+
+    while(!stack.empty())
+    {
+        const Transition& t = *(stack.back());
+        stack.pop_back();
+        this->addTransition(t);
+        visited.insert(t.GetParent());
+        for (size_t child : t.GetChildren())
+        {
+            if (visited.count(child) == 0)
+            {
+                for (const Transition& k : src.vataAut_[child])
+                {
+                    stack.push_back(&k);
+                }
+            }
+        }
     }
 }
 
