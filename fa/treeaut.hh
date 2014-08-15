@@ -31,7 +31,6 @@
 // Forester headers
 #include "cache.hh"
 #include "lts.hh"
-#include "streams.hh"
 #include "utils.hh"
 #include "label.hh"
 
@@ -578,7 +577,7 @@ public:
 		// Assertions
 		assert(this->accBegin() != this->accEnd());
 		assert(++(this->accBegin()) == this->accEnd());
-
+    
 		return *(this->accBegin());
 	}
 

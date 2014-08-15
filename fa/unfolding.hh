@@ -70,7 +70,7 @@ protected:
 						if (b != static_cast<const StructuralBox*>(box)) {
 							// this box is not interesting
 							for (size_t k = 0; k < b->getArity(); ++k, ++lhsOffset)
-								lhs.push_back(i->GetNthChildren(lhsOffset));
+								lhs.push_back((*i).GetNthChildren(lhsOffset));
 							label.push_back(b);
 							continue;
 						}
@@ -86,18 +86,18 @@ protected:
 						assert(false);
 
 				} else {
-					lhs = i->GetChildren();
+					lhs = (*i).GetChildren();
 					label = TreeAut::GetSymbol(*i)->getNode();
 				}
 				for (auto j = tmp2.accBegin(); j != tmp2.accEnd(j); ++j) {
 					std::vector<size_t> lhs2 = lhs;
 					std::vector<const AbstractBox*> label2 = label;
-					lhs2.insert(lhs2.end(), j->GetChildren().begin(), j->GetChildren().end());
+					lhs2.insert(lhs2.end(), (*j).GetChildren().begin(), (*j).GetChildren().end());
 					label2.insert(label2.end(),
                             TreeAut::GetSymbol(*j)->getNode().begin(),
                             TreeAut::GetSymbol(*j)->getNode().end());
 					FA::reorderBoxes(label2, lhs2);
-					dst.addTransition(lhs2, this->fae.boxMan->lookupLabel(label2), j->GetParent());
+					dst.addTransition(lhs2, this->fae.boxMan->lookupLabel(label2), (*j).GetParent());
 				}
 			}
 		}

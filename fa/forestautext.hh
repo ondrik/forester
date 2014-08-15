@@ -471,9 +471,9 @@ public:
 		assert(nullptr != this->getRoot(target));
 		assert(!this->getRoot(target)->getFinalStates().empty());
 
-        label_type label = this->getRoot(target)->begin(
+        label_type label = (*this->getRoot(target)->begin(
 			*this->getRoot(target)->getFinalStates().begin()
-		)->GetSymbol();
+		)).GetSymbol();
         size_t offset = static_cast<size_t>(-1);
         const AbstractBox* abstractBox = label->getBoxFromNode(offset);
 

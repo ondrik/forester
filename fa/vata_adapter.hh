@@ -124,7 +124,7 @@ public: // public methods
 
     const Transition getTransition(
         const std::vector<size_t>&          children,
-		const SymbolType&                       symbol,
+		const SymbolType&                   symbol,
 		size_t                              parent);
 
 	static const label_type GetSymbol(const Transition& t);
@@ -136,7 +136,7 @@ public: // public methods
     bool isFinalState(size_t state) const;
 	const std::unordered_set<size_t>& getFinalStates() const;
 	size_t getFinalState() const;
-    const Transition& getAcceptingTransition() const;
+    const Transition getAcceptingTransition() const;
 
     VATAAdapter& unreachableFree(VATAAdapter& dst) const;
 	VATAAdapter& uselessAndUnreachableFree(VATAAdapter& dst) const;
@@ -158,6 +158,7 @@ public: // public methods
 	template <class TVisitor>
 	void accept(TVisitor& visitor) const
 	{
+        FA_DEBUG_AT(1,"TA accept\n");
 		visitor(*this);
 	}
 

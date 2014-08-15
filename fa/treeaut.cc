@@ -528,7 +528,6 @@ void TA::addTransition(
 		const T&                            label,
 		size_t                              rhs)
 {
-    //vataAut_.AddTransition(lhs, reinterpret_cast<uintptr_t> (&label), rhs);
     this->internalAdd(Transition(lhs, label, rhs, this->lhsCache()));
 }
 

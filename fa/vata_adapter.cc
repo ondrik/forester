@@ -2,6 +2,7 @@
 
 #include <vector>
 #include <unordered_set>
+#include <utility>
 
 VATAAdapter::VATAAdapter(TreeAut aut) : vataAut_(aut)
 {}
@@ -193,49 +194,45 @@ size_t VATAAdapter::getFinalState() const
     return *finalStates.begin();
 }
 
-const VATAAdapter::Transition& VATAAdapter::getAcceptingTransition() const
+const VATAAdapter::Transition VATAAdapter::getAcceptingTransition() const
 {
+    assert(++(vataAut_.GetAcceptTrans().begin()) == vataAut_.GetAcceptTrans().end());
     FA_DEBUG_AT(1,"TA get accepting transitions\n");
-	assert(++(vataAut_.GetAcceptTrans().begin()) == vataAut_.GetAcceptTrans().end());
     return *(vataAut_.GetAcceptTrans().begin());
 }
 
-// TODO: Rewrite to std::move, later pure function
 VATAAdapter& VATAAdapter::unreachableFree(VATAAdapter& dst) const
 {
     FA_DEBUG_AT(1,"TA unreachable\n");
-    dst.vataAut_ = vataAut_.RemoveUnreachableStates();
+    dst.vataAut_ = std::move(vataAut_.RemoveUnreachableStates());
     return dst;
 }
 
-// TODO: Rewrite to std::move
 VATAAdapter& VATAAdapter::uselessAndUnreachableFree(VATAAdapter& dst) const
 {
     FA_DEBUG_AT(1,"TA useless\n");
-    dst.vataAut_ = vataAut_.RemoveUselessStates();
-    dst.vataAut_ = dst.vataAut_.RemoveUnreachableStates();
+    dst.vataAut_ = std::move(vataAut_.RemoveUselessStates());
+    dst.vataAut_ = std::move(dst.vataAut_.RemoveUnreachableStates());
     return dst;
 }
 
-// TODO: Rewrite to std::move
 VATAAdapter& VATAAdapter::disjointUnion(
 		VATAAdapter&                      dst,
 		const VATAAdapter&                src,
 		bool                              addFinalStates)
 {
     FA_DEBUG_AT(1,"TA disjoint\n");
-    dst.vataAut_ = TreeAut::UnionDisjointStates(
-           dst.vataAut_, src.vataAut_, addFinalStates);
+    dst.vataAut_ = std::move(TreeAut::UnionDisjointStates(
+           dst.vataAut_, src.vataAut_));
     return dst;
 }
 
-// TODO: Rewrite to std::move
 // OL: Should be, though the signature of Reduce is about to change in VATA to
 // have as the parameter settings of the minimization.
 VATAAdapter& VATAAdapter::minimized(VATAAdapter& dst) const
 {
     FA_DEBUG_AT(1,"TA minimized\n");
-    dst.vataAut_ = vataAut_.Reduce();
+    dst.vataAut_ = std::move(vataAut_.Reduce());
     return dst;
 }
 

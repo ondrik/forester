@@ -56,7 +56,7 @@ void ConnectionGraph::computeSignatures(
 	stateMap.clear();
 
 	// the workset of transitions
-	std::list<const Transition*> transitions;
+	std::list<Transition> transitions;
 
 	CutpointSignature v(1);
 
@@ -79,7 +79,7 @@ void ConnectionGraph::computeSignatures(
 			}
 		} else
 		{	// for non-data states
-			transitions.push_back(&trans);
+			transitions.push_back(trans);
 		}
 	}
 
@@ -99,7 +99,7 @@ void ConnectionGraph::computeSignatures(
 		changed = false;
 		for (auto i = transitions.begin(); i != transitions.end(); )
 		{
-			const Transition& t = **i;
+			const Transition& t = *i;
 			assert(TreeAut::GetSymbol(t)->isNode());
 
 			v.clear();
