@@ -61,27 +61,27 @@ VATAAdapter::iterator VATAAdapter::end() const
 
 // TODO CHECK semantic against original implementation
 typename VATAAdapter::DownAccessor::Iterator VATAAdapter::begin(
-        size_t rhs) const
+        size_t parent) const
 {
     FA_DEBUG_AT(1,"TA Down begin\n");
-    return vataAut_[rhs].begin();
+    return vataAut_[parent].begin();
 }
 
 // TODO CHECK semantic against original implementation
 typename VATAAdapter::DownAccessor::Iterator VATAAdapter::end(
-        size_t rhs) const
+        size_t parent) const
 {
     FA_DEBUG_AT(1,"TA Down end\n");
-    return vataAut_[rhs].end();
+    return vataAut_[parent].end();
 }
 
 // TODO CHECK semantic against original implementation
 typename VATAAdapter::DownAccessor::Iterator VATAAdapter::end(
-        size_t rhs,
+        size_t parent,
         DownAccessor::Iterator i) const
 {
     FA_DEBUG_AT(1,"TA Down end 1\n");
-    return vataAut_[rhs].end();
+    return vataAut_[parent].end();
 }
 
 typename VATAAdapter::AcceptTrans::Iterator VATAAdapter::accBegin() const
