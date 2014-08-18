@@ -2,6 +2,7 @@
 
 #include <vector>
 #include <unordered_set>
+#include <unordered_map>
 #include <utility>
 
 VATAAdapter::VATAAdapter(TreeAut aut) : vataAut_(aut)
@@ -227,8 +228,6 @@ VATAAdapter& VATAAdapter::disjointUnion(
     return dst;
 }
 
-// OL: Should be, though the signature of Reduce is about to change in VATA to
-// have as the parameter settings of the minimization.
 VATAAdapter& VATAAdapter::minimized(VATAAdapter& dst) const
 {
     FA_DEBUG_AT(1,"TA minimized\n");
@@ -386,43 +385,23 @@ VATAAdapter& VATAAdapter::collapsed(
     const std::vector<std::vector<bool>>&    rel,
     const Index<size_t>&                     stateIndex) const
 {
+    std::unordered_map<size_t, size_t> vataRel; // relation compatible with the one in VATA
+    int i = 0;
+    for(std::vector<bool> row  : rel)
+    {
+        int j = 0;
+        for(bool rel : row)
+        {
+            if (rel)
+            {
+                vataRel[i] = j;
+            }
+            ++j;
+        }
+        ++i;
+    }
     FA_DEBUG_AT(1,"TA collapsed\n");
+    dst.vataAut_ = std::move(vataAut_.CollapseStates(vataRel));
+
     return dst;
-
-    /*
-    std::vector<size_t> headIndex;
-    utils::relBuildClasses(rel, headIndex);
-
-    std::ostringstream os;
-    utils::printCont(os, headIndex);
-
-    // TODO: perhaps improve indexing
-    std::vector<size_t> invStateIndex(stateIndex.size());
-    for (Index<size_t>::iterator i = stateIndex.begin(); i != stateIndex.end(); ++i)
-    {
-        invStateIndex[i->second] = i->first;
-    }
-
-    for (std::vector<size_t>::iterator i = headIndex.begin(); i != headIndex.end(); ++i)
-    {
-        *i = invStateIndex[*i];
-    }
-
-    for (const size_t& state : finalStates_)
-    {
-        dst.addFinalState(headIndex[stateIndex[state]]);
-    }
-
-    for (const TransIDPair* trans : this->transitions_)
-    {
-        std::vector<size_t> lhs;
-        stateIndex.translate(lhs, trans->first.lhs());
-        for (size_t j = 0; j < lhs.size(); ++j)
-            lhs[j] = headIndex[lhs[j]];
-        dst.addTransition(lhs, trans->first.label(), headIndex[stateIndex[trans->first.rhs()]]);
-        std::ostringstream os;
-        utils::printCont(os, lhs);
-    }
-    return dst;
-    */
 }
