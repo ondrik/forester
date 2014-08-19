@@ -74,12 +74,7 @@ private: // private data types
         {}
         bool operator()(const Transition& t)
         {
-            if (ta_.isFinalState(t.GetParent()))
-            {
-                return false;
-            }
-
-            return true;
+            return !ta_.isFinalState(t.GetParent());
         }
     };
 
@@ -344,6 +339,17 @@ public: // public methods
      */
     VATAAdapter& minimized(VATAAdapter& dst) const;
 
+    /**
+     * @brief Union of two automata with disjoint states sets
+     *
+     * Method creates union of two automata which have disjoint
+     * set of states. Disjoint of states is guranteed by user
+     * of the method
+     *
+     * @param[in/out] dst Result automaton and also one of the operands of the union
+     * @param[in] src States of this automaton will be copied
+     * @param[in] addFinalStates Determines whether final states will be also copied
+     */
 	static VATAAdapter& disjointUnion(
 		VATAAdapter&                      dst,
 		const VATAAdapter&                src,

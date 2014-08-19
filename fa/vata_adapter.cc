@@ -223,8 +223,20 @@ VATAAdapter& VATAAdapter::disjointUnion(
 		bool                              addFinalStates)
 {
     FA_DEBUG_AT(1,"TA disjoint\n");
-    dst.vataAut_ = std::move(TreeAut::UnionDisjointStates(
-           dst.vataAut_, src.vataAut_));
+    if (addFinalStates)
+    {
+        dst.vataAut_ = std::move(TreeAut::UnionDisjointStates(
+            src.vataAut_, dst.vataAut_));
+    }
+    else
+    { // if it is not needed copy the final states
+      // it is sufficient to copy just the transitions
+        for (const Transition& t : src.vataAut_)
+        {
+            dst.addTransition(t);
+        }
+    }
+
     return dst;
 }
 
@@ -351,17 +363,17 @@ void VATAAdapter::copyReachableTransitionsFromRoot(
     const size_t&             rootState)
 {
     FA_DEBUG_AT(1,"TA copy reachable transitions from root\n");
-    std::vector<const Transition*> stack;
+    std::vector<Transition> stack;
     std::unordered_set<size_t> visited;
 
     for (const Transition& t : src.vataAut_[rootState])
     {
-        stack.push_back(&t);
+        stack.push_back(t);
     }
 
     while(!stack.empty())
     {
-        const Transition& t = *(stack.back());
+        const Transition t = stack.back();
         stack.pop_back();
         this->addTransition(t);
         visited.insert(t.GetParent());
@@ -369,9 +381,9 @@ void VATAAdapter::copyReachableTransitionsFromRoot(
         {
             if (visited.count(child) == 0)
             {
-                for (const Transition& k : src.vataAut_[child])
+                for (const Transition k : src.vataAut_[child])
                 {
-                    stack.push_back(&k);
+                    stack.push_back(k);
                 }
             }
         }
@@ -385,21 +397,32 @@ VATAAdapter& VATAAdapter::collapsed(
     const std::vector<std::vector<bool>>&    rel,
     const Index<size_t>&                     stateIndex) const
 {
-    std::unordered_map<size_t, size_t> vataRel; // relation compatible with the one in VATA
-    int i = 0;
-    for(std::vector<bool> row  : rel)
+    // relation compatible with the one in VATA
+    std::unordered_map<size_t, size_t> vataRel(rel.size());
+    for (size_t state1 : vataAut_.GetUsedStates())
     {
-        int j = 0;
-        for(bool rel : row)
+        size_t i = stateIndex.translate(state1);
+        for (size_t state2 : vataAut_.GetUsedStates())
         {
-            if (rel)
+            size_t j = stateIndex.translate(state1);
+            if (rel[i][j])
             {
-                vataRel[i] = j;
+                if (vataRel.count(state1))
+                { // completion of the equivalence relation
+                    vataRel[state1] = vataRel[state2];
+                }
+                else
+                { // first time in relation
+                    vataRel[state1] = state2;
+                }
             }
-            ++j;
         }
-        ++i;
+        if (!vataRel.count(state1))
+        {
+            vataRel[state1] = state1;
+        }
     }
+    
     FA_DEBUG_AT(1,"TA collapsed\n");
     dst.vataAut_ = std::move(vataAut_.CollapseStates(vataRel));
 

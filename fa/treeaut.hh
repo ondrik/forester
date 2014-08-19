@@ -910,7 +910,7 @@ public:
 	static TA& disjointUnion(
 		TA&                      dst,
 		const TA&                src,
-		bool                        addFinalStates = true)
+		bool                     addFinalStates = true)
 	{
 		if (addFinalStates)
 		{
