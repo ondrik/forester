@@ -89,7 +89,6 @@ void ConnectionGraph::computeSignatures(
 	// all downward predecessors of the transition are processed, it updates
 	// information about the transition and removes it from 'transitions'. This
 	// is repeated until 'transitions' is empty.
-
 	bool changed = true;
 	while (transitions.size()/* && changed*/)
 	{	// while there are still some transitions to be processed
@@ -106,7 +105,7 @@ void ConnectionGraph::computeSignatures(
 			if (!processNode(v, t.GetChildren(), t.GetSymbol(), stateMap))
 			{	// in case this transition cannot be processed because of some downward
 				// states with missing cutpoint information
-				++i;
+                ++i;
 				continue;
 			}
 

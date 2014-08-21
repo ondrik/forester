@@ -432,15 +432,16 @@ VATAAdapter& VATAAdapter::collapsed(
 
 std::ostream& operator<<(std::ostream& os, const VATAAdapter& ta)
 {
+    /*
     os << "TREE AUT " << std::endl;
     for (auto t : ta)
     {
         os << t.GetParent() << " " << VATAAdapter::GetSymbol(t) << " ";
-        for (auto s : t.GetChildren()) std::cerr << s << " " ;
+        for (auto s : t.GetChildren()) os << s << " " ;
         os << "\n";
     }
 
     os.flush();
-
+*/
     return os;
 }
