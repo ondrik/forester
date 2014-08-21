@@ -80,6 +80,7 @@ add_library(fa SHARED
 	timbuk.cc
 	treeaut.cc
     ufae.cc
+    unfolding.cc
     vata_adapter.cc
     vata_abstraction.cc
 	virtualmachine.cc
