@@ -409,7 +409,7 @@ VATAAdapter& VATAAdapter::collapsed(
             {
                 if (vataRel.count(state1))
                 { // completion of the equivalence relation
-                    vataRel[state1] = vataRel[state2];
+                    vataRel[state2] = vataRel[state1];
                 }
                 else
                 { // first time in relation
@@ -432,7 +432,6 @@ VATAAdapter& VATAAdapter::collapsed(
 
 std::ostream& operator<<(std::ostream& os, const VATAAdapter& ta)
 {
-    /*
     os << "TREE AUT " << std::endl;
     for (auto t : ta)
     {
@@ -442,6 +441,5 @@ std::ostream& operator<<(std::ostream& os, const VATAAdapter& ta)
     }
 
     os.flush();
-*/
     return os;
 }
