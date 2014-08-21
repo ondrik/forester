@@ -99,10 +99,10 @@ std::string FA::writeTransition(const Transition& trans)
 	return oss.str();
 }
 
-
+/*
 std::ostream& operator<<(std::ostream& os, const TreeAut& ta)
 {
-    /*
+    
 	TAWriter<label_type> writer(os);
 	os << '[';
 
@@ -111,9 +111,9 @@ std::ostream& operator<<(std::ostream& os, const TreeAut& ta)
 
 	os << " ]" << std::endl;;
 	writer.writeTransitions(ta, FA::writeState);
-    */
 	return os;
 }
+    */
 
 
 std::ostream& operator<<(std::ostream& os, const FA& fa)

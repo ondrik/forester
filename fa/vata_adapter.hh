@@ -444,6 +444,8 @@ public: // public methods
 		VATAAdapter&                             dst,
 		const std::vector<std::vector<bool>>&    rel,
 		const Index<size_t>&                     stateIndex) const;
+
+    friend std::ostream& operator<<(std::ostream& os, const VATAAdapter& ta);
 };
 
 #endif
