@@ -141,7 +141,7 @@ const VATAAdapter::Transition VATAAdapter::getTransition(
     FA_DEBUG_AT(1,"TA get transition\n");
     if (vataAut_.ContainsTransition(children, symbol, parent))
     {
-        return Transition(symbol, parent, children);
+        return Transition(parent, symbol, children);
     }
 
     assert(false);
