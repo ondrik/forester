@@ -163,11 +163,11 @@ void ConnectionGraph::fixSignatures(
 	StateToCutpointSignatureMap stateMap;
 	StateCutpointSignatureToStateMap signatureMap;
 	std::unordered_map<size_t, CutpointSignatureList> invSignatureMap;
-	std::vector<const Transition*> transitions;
+	std::vector<Transition> transitions;
 
 	CutpointSignature v;
 
-	for (const Transition& trans : ta)
+	for (const Transition trans : ta)
 	{
 		const Data* data = nullptr;
 
@@ -199,7 +199,7 @@ void ConnectionGraph::fixSignatures(
 		}
 		else
 		{
-			transitions.push_back(&trans);
+			transitions.push_back(trans);
 		}
 	}
 
@@ -209,10 +209,8 @@ void ConnectionGraph::fixSignatures(
 	{
 		changed = false;
 
-		for (const Transition*& t : transitions)
+		for (const Transition& trans : transitions)
 		{
-			const Transition& trans = *t;
-
 			assert(TreeAut::GetSymbol(trans)->isNode());
 
 			ChoiceType choice;
