@@ -22,12 +22,15 @@
 
 // std headers
 #include <vector>
+#include <iostream>
 
 // Forester header
 #include "utils.hh"
 
 class VATAAbstraction
 {
+private:
+    typedef Index<size_t> StateToIndexMap;
 public:
     // currently erases '1' from the relation
 	template <class A, class F>
@@ -36,7 +39,7 @@ public:
 		std::vector<std::vector<bool>>&            result,
 		size_t                                     height,
 		F                                          f,
-		const Index<size_t>&                       stateIndex)
+		const StateToIndexMap&                     stateIndex)
 	{
 		std::vector<std::vector<bool>> tmp;
 
@@ -44,16 +47,18 @@ public:
 		{
 			tmp = result;
 
-			for (Index<size_t>::iterator i = stateIndex.begin(); i != stateIndex.end(); ++i)
+			for (StateToIndexMap::iterator i = stateIndex.begin(); i != stateIndex.end(); ++i)
 			{
-				const size_t& state1 = i->second;
-				for (Index<size_t>::iterator k = stateIndex.begin(); k != stateIndex.end(); ++k)
+				const size_t& state1 = i->first;
+				const size_t& index1 = i->second;
+				for (StateToIndexMap::iterator k = stateIndex.begin(); k != stateIndex.end(); ++k)
 				{
-					const size_t& state2 = k->second;
+					const size_t& state2 = k->first;
+				    const size_t& index2 = k->second;
 					if (!VATAAbstraction::areStatesEquivalent(
                                 aut, state1, state2, f, stateIndex, tmp))
                     {
-						result[state1][state2] = false;
+						result[index1][index2] = false;
                     }
 				}
 			}
@@ -76,13 +81,17 @@ private:
 		const T&                                  trans2,
 		F                                         funcMatch,
 		const std::vector<std::vector<bool>>&     mat,
-		const Index<size_t>&                      stateIndex)
+		const StateToIndexMap&                    stateIndex)
 	{
 		if (!funcMatch(trans1, trans2))
+        {
 			return false;
+        }
 
 		if (trans1.GetChildrenSize() != trans2.GetChildrenSize())
+        {
 			return false;
+        }
 
 		for (size_t m = 0; m < trans1.GetChildrenSize(); ++m)
 		{
@@ -95,25 +104,42 @@ private:
 		return true;
 	}
 
+    /**
+     * @brief Function check whether two states are equivalent in a given automaton
+     *
+     * Checks whether two states are equivalent that means checking if all of 
+     * their transitions match.
+     *
+     * @return true When states are equivalent, otherwise false
+     */
     template <class A, class F>
     static bool areStatesEquivalent(
             const A&                       aut,
-            int                            state1,
-            int                            state2,
+            size_t                         state1,
+            size_t                         state2,
             F                              f,
-		    const Index<size_t>&           stateIndex,
+		    const StateToIndexMap&         stateIndex,
             std::vector<std::vector<bool>> tmp)
     {
-        if ((state1 == state2) || !tmp[state1][state2])
-            return false;
+        const int index1 = stateIndex[state1];
+        const int index2 = stateIndex[state2];
 
-        for (const typename A::Transition& trans1 : aut[state1])
+        if (state1 == state2)
         {
-            for (const typename A::Transition& trans2 : aut[state2])
+            return true;
+        }
+        if(!tmp[index1][index2])
+        {
+            return false;
+        }
+
+        for (const typename A::Transition trans1 : aut[state1])
+        {
+            for (const typename A::Transition trans2 : aut[state2])
             {
                 if (!VATAAbstraction::transMatch(
                             trans1, trans2, f, tmp, stateIndex))
-                {
+                { // if two transitions does not match, states are not equivalent
                     return false;
                 }
             }
