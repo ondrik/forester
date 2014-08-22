@@ -1707,6 +1707,13 @@ private:
 		srcSize = index.size();
 		return dst;
 	}
+    
+    /*
+    friend std::ostream& operator<<(std::ostream& os, const TA& ta)
+    {
+        return os;
+    }
+    */
 };
 
 #endif

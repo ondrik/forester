@@ -402,7 +402,6 @@ public: // public methods
             bool                           addFinalStates = true)
     {
         FA_DEBUG_AT(1,"TA rename\n");
-        std::vector<size_t> children;
         if (addFinalStates)
         {
             for (auto state : src.getFinalStates())
@@ -411,12 +410,12 @@ public: // public methods
             }
         }
 
-        for (auto trans : src.vataAut_)
+        for (const Transition trans : src.vataAut_)
         {
-            children.resize(trans.GetChildrenSize());
-            for (size_t j = 0; j < trans.GetChildrenSize(); ++j)
+            std::vector<size_t> children;
+            for (size_t j : trans.GetChildren())
             {
-                children[j] = funcRename(trans.GetNthChildren(j));
+                children.push_back(funcRename(j));
             }
 
             dst.addTransition(children,

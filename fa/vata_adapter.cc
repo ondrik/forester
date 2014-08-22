@@ -122,6 +122,7 @@ void VATAAdapter::addTransition(
 		size_t                              parent)
 {
     FA_DEBUG_AT(1,"TA add transition\n");
+
     this->vataAut_.AddTransition(children, symbol, parent);
 }
 
@@ -404,10 +405,10 @@ VATAAdapter& VATAAdapter::collapsed(
         size_t i = stateIndex.translate(state1);
         for (size_t state2 : vataAut_.GetUsedStates())
         {
-            size_t j = stateIndex.translate(state1);
+            size_t j = stateIndex.translate(state2);
             if (rel[i][j])
             {
-                if (vataRel.count(state1))
+                if (vataRel.count(state1) && vataRel[state1] != state1)
                 { // completion of the equivalence relation
                     vataRel[state2] = vataRel[state1];
                 }
@@ -422,9 +423,9 @@ VATAAdapter& VATAAdapter::collapsed(
             vataRel[state1] = state1;
         }
     }
-    
+
     FA_DEBUG_AT(1,"TA collapsed\n");
-    dst.vataAut_ = std::move(vataAut_.CollapseStates(vataRel));
+    dst.vataAut_ = vataAut_.CollapseStates(vataRel);
 
     return dst;
 }
@@ -433,7 +434,7 @@ VATAAdapter& VATAAdapter::collapsed(
 std::ostream& operator<<(std::ostream& os, const VATAAdapter& ta)
 {
     os << "TREE AUT " << std::endl;
-    for (auto t : ta)
+    for (auto t : ta.vataAut_)
     {
         os << t.GetParent() << " " << VATAAdapter::GetSymbol(t) << " ";
         for (auto s : t.GetChildren()) os << s << " " ;
