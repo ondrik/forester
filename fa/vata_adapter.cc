@@ -33,7 +33,7 @@ VATAAdapter* VATAAdapter::allocateTAWithSameTransitions(
 
 VATAAdapter VATAAdapter::createTAWithSameFinalStates(
     const VATAAdapter&         ta,
-    bool                 copyFinalStates)
+    bool                       copyFinalStates)
 {
     FA_DEBUG_AT(1,"Create TA with same final states\n");
     return VATAAdapter(TreeAut(ta.vataAut_, true, copyFinalStates));
