@@ -392,12 +392,14 @@ void TA::combinedSimulation(
 
 bool TA::subseteq(const TA& a, const TA& b)
 {
+    FA_DEBUG_AT(1,"TA subseteq\n");
 	return AntichainExt<T>::subseteq(a, b);
 }
 
 
 void TA::buildStateIndex(Index<size_t>& index) const
 {
+    FA_DEBUG_AT(1,"TA buildStateIndex\n");
     for (const TransIDPair* trans : this->transitions_)
     {
         for (size_t state : trans->first.lhs())
@@ -470,6 +472,7 @@ typename TA::td_cache_type TA::buildTDCacheWithEmptyRoot() const
 
 std::vector<const typename TA::Transition*> TA::getEmptyRootTransitions() const
 {
+    FA_DEBUG_AT(1,"TA get empty root\n");
     TA::td_cache_type cache = buildTDCacheWithEmptyRoot();
 
     return cache.at(cEmptyRootTransIndex);
@@ -528,11 +531,13 @@ void TA::addTransition(
 		const T&                            label,
 		size_t                              rhs)
 {
+    FA_DEBUG_AT(1,"TA add transition\n");
     this->internalAdd(Transition(lhs, label, rhs, this->lhsCache()));
 }
 
 void TA::addTransition(const Transition& transition)
 {
+    FA_DEBUG_AT(1,"TA add transition 1\n");
     this->internalAdd(Transition(transition, this->lhsCache()));
 }
 
@@ -561,6 +566,7 @@ const typename TA::Transition& TA::getTransition(
 		const T&                            label,
 		size_t                              rhs)
 {
+    FA_DEBUG_AT(1,"TA get transition\n");
     TransIDPair* pair = this->transCache().find(Transition(
                     lhs, label, rhs, this->lhsCache()));
     assert(pair != NULL);
@@ -569,12 +575,14 @@ const typename TA::Transition& TA::getTransition(
 
 const label_type TA::GetSymbol(const Transition& trans)
 {
+    FA_DEBUG_AT(1,"TA get symbol\n");
     return trans.GetSymbol();
 }
 
 void TA::copyReachableTransitionsFromRoot(const TA& src,
         const size_t& rootState)
 {
+    FA_DEBUG_AT(1,"TA copy reachable transitions from root\n");
     td_cache_type cache = src.buildTDCacheWithEmptyRoot();
     copyReachableTransitionsFromRoot(src, cache, rootState);
 }
@@ -649,12 +657,14 @@ TA::TA(
 TA TA::createTAWithSameTransitions(
 		const TA&         ta)
 {
+        FA_DEBUG_AT(1,"Create TA with same transitions\n");
         return TA(*ta.backend_);
 }
 
 TA* TA::allocateTAWithSameTransitions(
 		const TA&         ta)
 {
+        FA_DEBUG_AT(1,"Allocate TA with same transitions\n");
         return new TA(*ta.backend_);
 }
 
@@ -662,6 +672,7 @@ TA TA::createTAWithSameFinalStates(
         const TA&         ta,
         bool                 copyFinalStates)
 {
+    FA_DEBUG_AT(1,"Create TA with same final states\n");
     TA taNew(ta);
     if (copyFinalStates)
     {
@@ -674,12 +685,18 @@ TA* TA::allocateTAWithSameFinalStates(
         const TA&         ta,
         bool                 copyFinalStates)
 {
+    FA_DEBUG_AT(1,"Allocate TA with same final states\n");
     TA* taNew = new TA(ta);
     if (copyFinalStates)
     {
         taNew->finalStates_ = ta.finalStates_;
     }
     return taNew;
+}
+
+std::ostream& operator<<(std::ostream& os, const TA& ta)
+{
+    return os;
 }
 
 // this is really sad :-(

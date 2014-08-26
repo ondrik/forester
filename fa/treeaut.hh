@@ -29,6 +29,7 @@
 #include <stdexcept>
 
 // Forester headers
+#include "streams.hh"
 #include "cache.hh"
 #include "lts.hh"
 #include "utils.hh"
@@ -438,21 +439,25 @@ public:
     
 	typename TA::Iterator begin() const
 	{
+        FA_DEBUG_AT(1,"TA begin\n");
 		return typename TA::Iterator(this->transitions_.begin());
 	}
 
 	typename TA::Iterator end() const
 	{
+        FA_DEBUG_AT(1,"TA end\n");
 		return typename TA::Iterator(this->transitions_.end());
 	}
 
 	typename TA::Iterator begin(size_t rhs) const
 	{
+        FA_DEBUG_AT(1,"TA Down begin\n");
 		return Iterator(this->_lookup(rhs));
 	}
 
 	typename TA::Iterator end(size_t rhs) const
 	{
+        FA_DEBUG_AT(1,"TA Down end\n");
 		typename TA::Iterator i = this->begin(rhs);
 		for (; i != this->end() && i->rhs() == rhs; ++i);
 		return Iterator(i);
@@ -460,28 +465,33 @@ public:
 
 	typename TA::Iterator end(size_t rhs, typename TA::Iterator i) const
 	{
+        FA_DEBUG_AT(1,"TA Down end1\n");
 		for (; i != this->end() && i->rhs() == rhs; ++i);
 		return Iterator(i);
 	}
 
 	typename TA::Iterator accBegin() const
 	{
+        FA_DEBUG_AT(1,"TA Acc begin\n");
 		return this->begin(this->getFinalState());
 	}
 
 	typename TA::Iterator accEnd() const
 	{
+        FA_DEBUG_AT(1,"TA Acc end\n");
 		typename TA::Iterator i = this->accBegin();
 		return this->end(this->getFinalState(), i);
 	}
 
 	typename TA::Iterator accEnd(typename TA::Iterator i) const
 	{
+        FA_DEBUG_AT(1,"TA Acc begin 1\n");
 		return this->end(this->getFinalState(), i);
 	}
 
 	TA& operator=(const TA& rhs)
 	{
+        FA_DEBUG_AT(1,"TA =\n");
 		if (&rhs == this)
 			return *this;
 
@@ -502,6 +512,7 @@ public:
 
 	void clear()
 	{
+        FA_DEBUG_AT(1,"TA clear\n");
 		this->maxRank_ = 0;
 		nextState_ = 0;
 		for (TransIDPair* trans : this->transitions_)
@@ -536,11 +547,13 @@ public:
 
     bool areTransitionsEmpty()
     {
+        FA_DEBUG_AT(1,"TA are transitions empty\n");
         return this->transitions_.empty();
     }
 
 	void addFinalState(size_t state)
 	{
+        FA_DEBUG_AT(1,"TA add final state\n");
 		finalStates_.insert(state);
 	}
 
@@ -553,21 +566,25 @@ public:
 
 	void addFinalStates(const std::unordered_set<size_t>& states)
 	{
+        FA_DEBUG_AT(1,"TA add final states\n");
 		finalStates_.insert(states.begin(), states.end());
 	}
 
 	bool isFinalState(size_t state) const
 	{
+        FA_DEBUG_AT(1,"TA is final state\n");
 		return (finalStates_.find(state) != finalStates_.end());
 	}
 
 	const std::unordered_set<size_t>& getFinalStates() const
 	{
+	    FA_DEBUG_AT(1,"TA get final states\n");
 		return finalStates_;
 	}
 
 	size_t getFinalState() const
 	{
+	    FA_DEBUG_AT(1,"TA get final state\n");
 		assert(finalStates_.size() == 1);
 		return *finalStates_.begin();
 	}
@@ -578,6 +595,7 @@ public:
 		assert(this->accBegin() != this->accEnd());
 		assert(++(this->accBegin()) == this->accEnd());
     
+        FA_DEBUG_AT(1,"TA get accepting transitions\n");
 		return *(this->accBegin());
 	}
 
@@ -595,6 +613,7 @@ public:
 		F                                          f,
 		const Index<size_t>&                       stateIndex) const
 	{
+        FA_DEBUG_AT(1,"TA height abstraction\n");
 		td_cache_type cache = this->buildTDCache();
 
 		std::vector<std::vector<bool>> tmp;
@@ -684,6 +703,7 @@ public:
 		const std::vector<std::vector<bool>>&    rel,
 		const Index<size_t>&                     stateIndex) const
 	{
+        FA_DEBUG_AT(1,"TA collapsed\n");
 		std::vector<size_t> headIndex;
 		utils::relBuildClasses(rel, headIndex);
 
@@ -722,6 +742,7 @@ public:
 	
 	TA& unreachableFree(TA& dst) const
 	{
+        FA_DEBUG_AT(1,"TA unreachable\n");
 		std::vector<const TransIDPair*> v1(
 			transitions_.begin(), this->transitions_.end()), v2;
 		std::unordered_set<size_t> states(finalStates_.begin(), finalStates_.end());
@@ -870,6 +891,7 @@ public:
 		F                        funcRename,
 		bool                     addFinalStates = true)
 	{
+        FA_DEBUG_AT(1,"TA rename\n");
 		return rename(
 			dst,
 			src,
@@ -890,6 +912,7 @@ public:
 	 */
 	TA& copyTransitions(TA& dst) const
 	{
+        FA_DEBUG_AT(1,"TA copy transitions\n");
 		for (const TransIDPair* trans : this->transitions_)
 			dst.addTransition(trans);
 		return dst;
@@ -897,6 +920,7 @@ public:
 
 	TA& copyNotAcceptingTransitions(TA& dst, const TA& ta) const
 	{
+        FA_DEBUG_AT(1,"TA copy not accepting transitions\n");
         NonAcceptingF f(ta);
 
 		for (const TransIDPair* trans : this->transitions_)
@@ -912,6 +936,7 @@ public:
 		const TA&                src,
 		bool                     addFinalStates = true)
 	{
+        FA_DEBUG_AT(1,"TA disjoint\n");
 		if (addFinalStates)
 		{
 			for (size_t state : src.finalStates_)
@@ -926,9 +951,10 @@ public:
 
 	TA& unfoldAtRoot(
 		TA&                   dst,
-		size_t                   newState,
-		bool                     registerFinalState = true) const
+		size_t                newState,
+		bool                  registerFinalState = true) const
 	{
+        FA_DEBUG_AT(1,"TA unfoldAtRoot\n");
 		if (registerFinalState)
 			dst.addFinalState(newState);
 
@@ -947,6 +973,7 @@ public:
 		const std::unordered_map<size_t, size_t>&     states,
 		bool                                          registerFinalState = true) const
 	{
+        FA_DEBUG_AT(1,"TA unfoldAtRoot1\n");
 		this->copyTransitions(dst);
 		for (size_t state : finalStates_)
 		{
@@ -1177,6 +1204,7 @@ private:
 		const std::vector<std::vector<bool>>&    cons,
 		const Index<size_t>&                     stateIndex) const
 	{
+        FA_DEBUG_AT(1,"TA minimized\n");
 		typename TA::Backend backend_;
 		std::vector<std::vector<bool>> dwn;
 		this->downwardSimulation(dwn, stateIndex);
@@ -1626,6 +1654,7 @@ private:
 
     TA& uselessFree(TA& dst) const
 	{
+        FA_DEBUG_AT(1,"TA useless\n");
 		std::vector<const TransIDPair*> v1(this->transitions_.begin(), this->transitions_.end()), v2;
 		std::set<size_t> states;
 		bool changed = true;
@@ -1708,12 +1737,7 @@ private:
 		return dst;
 	}
     
-    /*
-    friend std::ostream& operator<<(std::ostream& os, const TA& ta)
-    {
-        return os;
-    }
-    */
+    friend std::ostream& operator<<(std::ostream& os, const TA& ta);
 };
 
 #endif
