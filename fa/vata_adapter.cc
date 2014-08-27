@@ -302,7 +302,9 @@ VATAAdapter& VATAAdapter::unfoldAtRoot(
     {
         dst.addTransition(trans);
         if (isFinalState(trans.GetParent()))
+        {
             dst.addTransition(trans.GetChildren(), trans.GetSymbol(), newState);
+        }
     }
 
     return dst;
