@@ -696,6 +696,22 @@ TA* TA::allocateTAWithSameFinalStates(
 
 std::ostream& operator<<(std::ostream& os, const TA& ta)
 {
+    os << "TREE AUT " << std::endl;
+    for (auto t : ta)
+    {
+        if(ta.isFinalState(t.GetParent()))
+        {
+            os << "[" << t.GetParent() << "] " << TA::GetSymbol(t) << " ";
+        }
+        else
+        {
+            os << t.GetParent() << " " << TA::GetSymbol(t) << " ";
+        }
+        for (auto s : t.GetChildren()) os << s << " " ;
+        os << "\n";
+    }
+
+    os.flush();
     return os;
 }
 
