@@ -56,17 +56,18 @@ public:   // methods
 		// Preconditions
 		assert(root < fae_.getRootCount());
 		assert(nullptr != fae_.getRoot(root));
-
+        
+        const TreeAut& rootTA = *fae_.getRoot(root);
 		Index<size_t> stateIndex;
-		fae_.getRoot(root)->buildStateIndex(stateIndex);
+		rootTA.buildStateIndex(stateIndex);
 		std::vector<std::vector<bool>> rel(stateIndex.size(),
 			std::vector<bool>(stateIndex.size(), true));
 
 		// compute the abstraction (i.e. which states are to be merged)
-		fae_.getRoot(root)->heightAbstraction(rel, height, f, stateIndex);
+		rootTA.heightAbstraction(rel, height, f, stateIndex);
 
 		ConnectionGraph::StateToCutpointSignatureMap stateMap;
-		ConnectionGraph::computeSignatures(stateMap, *fae_.getRoot(root));
+		ConnectionGraph::computeSignatures(stateMap, rootTA);
 		for (Index<size_t>::iterator j = stateIndex.begin(); j != stateIndex.end(); ++j)
 		{	// go through the matrix
 			for (Index<size_t>::iterator k = stateIndex.begin(); k != stateIndex.end(); ++k)
@@ -82,10 +83,25 @@ public:   // methods
 		}
 
 		TreeAut ta = TreeAut::createTAWithSameTransitions(fae_.ta);
-		fae_.getRoot(root)->collapsed(ta, rel, stateIndex);
+		rootTA.collapsed(ta, rel, stateIndex);
+        assert(areFinalStatesPreserved(rootTA, ta));
+
 		fae_.setRoot(root, std::shared_ptr<TreeAut>(fae_.allocTA()));
 		ta.uselessAndUnreachableFree(*fae_.getRoot(root));
 	}
+
+    bool areFinalStatesPreserved(const TreeAut& old, const TreeAut& reduced)
+    {
+        bool res = true;
+        Index<size_t> reducedAutIndex;
+        reduced.buildStateIndex(reducedAutIndex);
+        for (size_t state : old.getFinalStates())
+        { // does it really hold?
+            res &= !reducedAutIndex.find(state).second || reduced.isFinalState(state);
+        }
+
+        return res;
+    }
 
 
 	/**

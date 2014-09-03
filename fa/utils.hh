@@ -28,6 +28,7 @@
 #include <unordered_map>
 #include <unordered_set>
 #include <vector>
+#include <assert.h>
 
 template <class T>
 struct Index
@@ -93,7 +94,10 @@ struct Index
 	{
 		typename map_type::const_iterator i = this->map.find(x);
 		if (i == this->map.end())
+        {
+            assert(false);
 			throw std::runtime_error("Index::translate() : lookup failed");
+        }
 		return i->second;
 	}
 
