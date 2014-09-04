@@ -21,14 +21,14 @@ VATAAdapter VATAAdapter::createTAWithSameTransitions(
     const VATAAdapter&         ta)
 {
     FA_DEBUG_AT(1,"Create TA with same transitions\n");
-    return VATAAdapter(TreeAut(ta.vataAut_, true, false));
+    return VATAAdapter(TreeAut(ta.vataAut_, false, false));
 }
 
 VATAAdapter* VATAAdapter::allocateTAWithSameTransitions(
     const VATAAdapter&         ta)
 {
     FA_DEBUG_AT(1,"Allocate TA with same transitions\n");
-    return new VATAAdapter(TreeAut(ta.vataAut_, true, false));
+    return new VATAAdapter(TreeAut(ta.vataAut_, false, false));
 }
 
 VATAAdapter VATAAdapter::createTAWithSameFinalStates(
@@ -400,31 +400,20 @@ VATAAdapter& VATAAdapter::collapsed(
     const std::vector<std::vector<bool>>&    rel,
     const Index<size_t>&                     stateIndex) const
 {
-    // relation compatible with the one in VATA
-    std::unordered_map<size_t, size_t> vataRel(rel.size());
-    for (size_t state1 : vataAut_.GetUsedStates())
-    {
-        size_t i = stateIndex.translate(state1);
-        for (size_t state2 : vataAut_.GetUsedStates())
-        {
-            size_t j = stateIndex.translate(state2);
-            if (rel[i][j])
-            {
-                if (vataRel.count(state1) && vataRel[state1] != state1)
-                { // completion of the equivalence relation
-                    vataRel[state2] = vataRel[state1];
-                }
-                else
-                { // first time in relation
-                    vataRel[state1] = state2;
-                }
-            }
-        }
-        if (!vataRel.count(state1))
-        {
-            vataRel[state1] = state1;
-        }
-    }
+	 // relation compatible with the one in VATA
+     std::unordered_map<size_t, size_t> vataRel(rel.size());
+	 for (size_t state1 : vataAut_.GetUsedStates())
+	 {
+		 size_t i = stateIndex.translate(state1);
+		 for (size_t state2 : vataAut_.GetUsedStates())
+		 {
+			 size_t j = stateIndex.translate(state2);
+			 if (rel[i][j])
+			 {
+				 vataRel.insert(std::make_pair(state2,state1));
+			 }
+		 }
+	 }
 
     FA_DEBUG_AT(1,"TA collapsed\n");
     dst.vataAut_ = vataAut_.CollapseStates(vataRel);
