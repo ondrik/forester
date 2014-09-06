@@ -114,12 +114,12 @@ private:
      */
     template <class A, class F>
     static bool areStatesEquivalent(
-            const A&                       aut,
-            size_t                         state1,
-            size_t                         state2,
-            F                              f,
-		    const StateToIndexMap&         stateIndex,
-            std::vector<std::vector<bool>> tmp)
+		const A&                       aut,
+		size_t                         state1,
+		size_t                         state2,
+		F                              f,
+		const StateToIndexMap&         stateIndex,
+		std::vector<std::vector<bool>> tmp)
     {
         const int index1 = stateIndex[state1];
         const int index2 = stateIndex[state2];
