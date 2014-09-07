@@ -400,17 +400,18 @@ VATAAdapter& VATAAdapter::collapsed(
     const std::vector<std::vector<bool>>&    rel,
     const Index<size_t>&                     stateIndex) const
 {
+	 const std::vector<size_t> usedStates = vataAut_.GetUsedStates();
 	 // relation compatible with the one in VATA
-     std::unordered_map<size_t, size_t> vataRel(rel.size());
-	 for (size_t state1 : vataAut_.GetUsedStates())
+	 std::unordered_map<size_t, size_t> vataRel(rel.size());
+	 for (size_t state1 : usedStates)
 	 {
 		 size_t i = stateIndex.translate(state1);
-		 for (size_t state2 : vataAut_.GetUsedStates())
+		 for (size_t state2 : usedStates)
 		 {
 			 size_t j = stateIndex.translate(state2);
 			 if (rel[i][j])
 			 {
-				 vataRel.insert(std::make_pair(state2,state1));
+				 vataRel[state2] = state1;
 			 }
 		 }
 	 }
