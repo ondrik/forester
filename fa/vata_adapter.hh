@@ -440,9 +440,9 @@ public: // public methods
 
 	// collapses states according to a given relation
 	VATAAdapter& collapsed(
-		VATAAdapter&                             dst,
-		const std::vector<std::vector<bool>>&    rel,
-		const Index<size_t>&                     stateIndex) const;
+		VATAAdapter&                                 dst,
+		const std::unordered_map<size_t, size_t>&    rel,
+		const Index<size_t>&                         stateIndex) const;
 
     friend std::ostream& operator<<(std::ostream& os, const VATAAdapter& ta);
 };

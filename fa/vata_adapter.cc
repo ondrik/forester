@@ -396,28 +396,12 @@ void VATAAdapter::copyReachableTransitionsFromRoot(
 // collapses states according to a given relation
 // OL: should finish the function in VATA
 VATAAdapter& VATAAdapter::collapsed(
-    VATAAdapter&                             dst,
-    const std::vector<std::vector<bool>>&    rel,
-    const Index<size_t>&                     stateIndex) const
+    VATAAdapter&                              dst,
+    const std::unordered_map<size_t, size_t>& rel,
+    const Index<size_t>&                      stateIndex) const
 {
-	 const std::vector<size_t> usedStates = vataAut_.GetUsedStates();
-	 // relation compatible with the one in VATA
-	 std::unordered_map<size_t, size_t> vataRel(rel.size());
-	 for (size_t state1 : usedStates)
-	 {
-		 size_t i = stateIndex.translate(state1);
-		 for (size_t state2 : usedStates)
-		 {
-			 size_t j = stateIndex.translate(state2);
-			 if (rel[i][j])
-			 {
-				 vataRel[state2] = state1;
-			 }
-		 }
-	 }
-
-    FA_DEBUG_AT(1,"TA collapsed\n");
-    dst.vataAut_ = vataAut_.CollapseStates(vataRel);
+	FA_DEBUG_AT(1,"TA collapsed\n");
+    dst.vataAut_ = vataAut_.CollapseStates(rel);
 
     return dst;
 }

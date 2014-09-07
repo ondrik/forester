@@ -62,6 +62,7 @@ public:   // methods
 		rootTA.buildStateIndex(stateIndex);
 		std::vector<std::vector<bool>> rel(stateIndex.size(),
 			std::vector<bool>(stateIndex.size(), true));
+		std::unordered_map<size_t, size_t> vataRel;
 
 		// compute the abstraction (i.e. which states are to be merged)
 		rootTA.heightAbstraction(rel, height, f, stateIndex);
@@ -72,18 +73,18 @@ public:   // methods
 		{	// go through the matrix
 			for (Index<size_t>::iterator k = stateIndex.begin(); k != stateIndex.end(); ++k)
 			{
-				if (k == j)
-					continue;
+				if (!(k == j || (stateMap[j->first] % stateMap[k->first])))
+					rel[j->second][k->second] = false;
 
-				if (stateMap[j->first] % stateMap[k->first])
-					continue;
-
-				rel[j->second][k->second] = false;
+				if (rel[j->second][k->second])
+				{
+					vataRel[k->first] = j->first;
+				}
 			}
 		}
 
 		TreeAut ta = TreeAut::createTAWithSameTransitions(fae_.ta);
-		rootTA.collapsed(ta, rel, stateIndex);
+		rootTA.collapsed(ta, vataRel, stateIndex);
         assert(areFinalStatesPreserved(rootTA, ta));
 
 		fae_.setRoot(root, std::shared_ptr<TreeAut>(fae_.allocTA()));
@@ -239,7 +240,7 @@ public:   // methods
 		for (size_t i = 0; i < fae_.getRootCount(); ++i)
 		{
 			TreeAut ta = TreeAut::createTAWithSameTransitions(fae_.ta);
-			fae_.getRoot(i)->collapsed(ta, rel, faeStateIndex);
+			//fae_.getRoot(i)->collapsed(ta, rel, faeStateIndex);
 			fae_.setRoot(i, std::shared_ptr<TreeAut>(fae_.allocTA()));
 			ta.uselessAndUnreachableFree(*fae_.getRoot(i));
 		}
