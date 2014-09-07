@@ -62,7 +62,9 @@ public:   // methods
 		rootTA.buildStateIndex(stateIndex);
 		std::vector<std::vector<bool>> rel(stateIndex.size(),
 			std::vector<bool>(stateIndex.size(), true));
+		#ifdef USE_VATA
 		std::unordered_map<size_t, size_t> vataRel;
+		#endif
 
 		// compute the abstraction (i.e. which states are to be merged)
 		rootTA.heightAbstraction(rel, height, f, stateIndex);
@@ -76,15 +78,21 @@ public:   // methods
 				if (!(k == j || (stateMap[j->first] % stateMap[k->first])))
 					rel[j->second][k->second] = false;
 
+				#ifdef USE_VATA
 				if (rel[j->second][k->second])
 				{
 					vataRel[k->first] = j->first;
 				}
+				#endif
 			}
 		}
 
 		TreeAut ta = TreeAut::createTAWithSameTransitions(fae_.ta);
-		rootTA.collapsed(ta, vataRel, stateIndex);
+		#ifdef USE_VATA
+			rootTA.collapsed(ta, vataRel, stateIndex);
+		#else
+			rootTA.collapsed(ta, rel, stateIndex);
+		#endif
         assert(areFinalStatesPreserved(rootTA, ta));
 
 		fae_.setRoot(root, std::shared_ptr<TreeAut>(fae_.allocTA()));
