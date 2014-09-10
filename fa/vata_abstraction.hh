@@ -35,7 +35,7 @@ public:
     // currently erases '1' from the relation
 	template <class A, class F>
 	static void heightAbstraction(
-        const A&                                   aut,
+    const A&                                   aut,
 		std::vector<std::vector<bool>>&            result,
 		size_t                                     height,
 		F                                          f,
@@ -54,12 +54,12 @@ public:
 				for (StateToIndexMap::iterator k = stateIndex.begin(); k != stateIndex.end(); ++k)
 				{
 					const size_t& state2 = k->first;
-				    const size_t& index2 = k->second;
+		    	const size_t& index2 = k->second;
 					if (!VATAAbstraction::areStatesEquivalent(
-                                aut, state1, state2, f, stateIndex, tmp))
-                    {
+                                aut, state1, state2, index1, index2, f, stateIndex, tmp))
+          {
 						result[index1][index2] = false;
-                    }
+          }
 				}
 			}
 		}
@@ -84,14 +84,14 @@ private:
 		const StateToIndexMap&                    stateIndex)
 	{
 		if (!funcMatch(trans1, trans2))
-        {
+    {
 			return false;
-        }
+    }
 
 		if (trans1.GetChildrenSize() != trans2.GetChildrenSize())
-        {
+    {
 			return false;
-        }
+    }
 
 		for (size_t m = 0; m < trans1.GetChildrenSize(); ++m)
 		{
@@ -117,13 +117,12 @@ private:
 		const A&                                 aut,
 		size_t                                   state1,
 		size_t                                   state2,
+		size_t                                   index1,
+		size_t                                   index2,
 		F                                        f,
 		const StateToIndexMap&                   stateIndex,
 		const std::vector<std::vector<bool>>&    tmp)
     {
-        const int index1 = stateIndex[state1];
-        const int index2 = stateIndex[state2];
-
         if (state1 == state2)
         {
             return true;
