@@ -384,7 +384,7 @@ void VATAAdapter::copyReachableTransitionsFromRoot(
         {
             if (visited.count(child) == 0)
             {
-                for (const Transition k : src.vataAut_[child])
+                for (const Transition& k : src.vataAut_[child])
                 {
                     stack.push_back(k);
                 }
