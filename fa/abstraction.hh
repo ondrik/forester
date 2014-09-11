@@ -60,40 +60,22 @@ public:   // methods
         const TreeAut& rootTA = *fae_.getRoot(root);
 		Index<size_t> stateIndex;
 		rootTA.buildStateIndex(stateIndex);
-		std::vector<std::vector<bool>> rel(stateIndex.size(),
-			std::vector<bool>(stateIndex.size(), true));
-		#ifdef USE_VATA
-		std::unordered_map<size_t, size_t> vataRel;
-		#endif
+		std::unordered_map<size_t, size_t> rel;
 
 		// compute the abstraction (i.e. which states are to be merged)
-		rootTA.heightAbstraction(rel, height, f, stateIndex);
-
 		ConnectionGraph::StateToCutpointSignatureMap stateMap;
 		ConnectionGraph::computeSignatures(stateMap, rootTA);
-		for (Index<size_t>::iterator j = stateIndex.begin(); j != stateIndex.end(); ++j)
-		{	// go through the matrix
-			for (Index<size_t>::iterator k = stateIndex.begin(); k != stateIndex.end(); ++k)
-			{
-				if (!(k == j || (stateMap[j->first] % stateMap[k->first])))
-					rel[j->second][k->second] = false;
 
-				#ifdef USE_VATA
-				if (rel[j->second][k->second])
-				{
-					vataRel[k->first] = j->first;
-				}
-				#endif
-			}
-		}
+		auto cutpointCmp = [&stateMap](size_t state1, size_t state2) -> bool {
+			return stateMap[state1] % stateMap[state2];
+		};
+
+		rootTA.heightAbstraction(rel, height, f, cutpointCmp, stateIndex);
+
 
 		TreeAut ta = TreeAut::createTAWithSameTransitions(fae_.ta);
-		#ifdef USE_VATA
-			rootTA.collapsed(ta, vataRel, stateIndex);
-		#else
-			rootTA.collapsed(ta, rel, stateIndex);
-		#endif
-        assert(areFinalStatesPreserved(rootTA, ta));
+		rootTA.collapsed(ta, rel, stateIndex);
+    assert(areFinalStatesPreserved(rootTA, ta));
 
 		fae_.setRoot(root, std::shared_ptr<TreeAut>(fae_.allocTA()));
 		ta.uselessAndUnreachableFree(*fae_.getRoot(root));

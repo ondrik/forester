@@ -33,15 +33,16 @@ private:
     typedef Index<size_t> StateToIndexMap;
 public:
     // currently erases '1' from the relation
-	template <class A, class F>
+	template <class A, class F, class G>
 	static void heightAbstraction(
     const A&                                   aut,
-		std::vector<std::vector<bool>>&            result,
+		std::unordered_map<size_t, size_t>&        result,
 		size_t                                     height,
 		F                                          f,
+		G                                          cutpointMatch,
 		const StateToIndexMap&                     stateIndex)
 	{
-		std::vector<std::vector<bool>> tmp;
+		std::unordered_map<size_t, size_t> tmp;
 
 		while (height--)
 		{
@@ -50,37 +51,35 @@ public:
 			for (StateToIndexMap::iterator i = stateIndex.begin(); i != stateIndex.end(); ++i)
 			{
 				const size_t& state1 = i->first;
-				const size_t& index1 = i->second;
 				for (StateToIndexMap::iterator k = stateIndex.begin(); k != stateIndex.end(); ++k)
 				{
 					const size_t& state2 = k->first;
-		    	const size_t& index2 = k->second;
-					if (!VATAAbstraction::areStatesEquivalent(
-                                aut, state1, state2, index1, index2, f, stateIndex, tmp))
+					if (VATAAbstraction::areStatesEquivalent(
+                                aut, state1, state2, f, cutpointMatch, stateIndex, tmp))
           {
-						result[index1][index2] = false;
+						result[state2] = state1;
           }
 				}
 			}
 		}
 
-        VATAAbstraction::completeSymmetricIndex(result);
+    VATAAbstraction::completeSymmetricIndex(result, stateIndex);
 	}
 
 private:
-    /**
-	 * @brief  Determines whether two transitions_ match
+   /**
+	 * @brief  Determines whether two transitions match
 	 *
 	 * This function determines whether two transitions_ match (and can therefore
 	 * e.g. be merged during abstraction). First, the @p funcMatch functor is used
-	 * to determine whether the transitions_ are to be checked at all.
+	 * to determine whether the transitions are to be checked at all.
 	 */
 	template <class T, class F>
 	static bool transMatch(
 		const T&                                  trans1,
 		const T&                                  trans2,
 		F                                         funcMatch,
-		const std::vector<std::vector<bool>>&     mat,
+		const std::unordered_map<size_t, size_t>& rel,
 		const StateToIndexMap&                    stateIndex)
 	{
 		if (!funcMatch(trans1, trans2))
@@ -92,11 +91,13 @@ private:
     {
 			return false;
     }
-
+		
 		for (size_t m = 0; m < trans1.GetChildrenSize(); ++m)
 		{
-			if (!mat[stateIndex[trans1.GetNthChildren(m)]][stateIndex[trans2.GetNthChildren(m)]])
-			{
+			const size_t ch1 = trans1.GetNthChildren(m);
+			const size_t ch2 = trans2.GetNthChildren(m);
+			if (!statesInRel(ch1, ch2, rel))
+			{ // NOTE A signature of children is not checked here
 				return false;
 			}
 		}
@@ -105,49 +106,57 @@ private:
 	}
 
     /**
-     * @brief Function check whether two states are equivalent in a given automaton
+     * @brief Function check whether two states are in a relation in a given automaton
      *
-     * Checks whether two states are equivalent that means checking if all of 
+     * Checks whether two states are in a relation that means checking if all of 
      * their transitions match.
      *
-     * @return true When states are equivalent, otherwise false
+     * @return true When states are in the relation, otherwise false
      */
-    template <class A, class F>
-    static bool areStatesEquivalent(
+	template <class A, class F, class G>
+	static bool areStatesEquivalent(
 		const A&                                 aut,
 		size_t                                   state1,
 		size_t                                   state2,
-		size_t                                   index1,
-		size_t                                   index2,
 		F                                        f,
+		G                                        cutpointMatch,
 		const StateToIndexMap&                   stateIndex,
-		const std::vector<std::vector<bool>>&    tmp)
-    {
-        if (state1 == state2)
-        {
-            return true;
-        }
-        if(!tmp[index1][index2])
-        {
-            return false;
-        }
+		const std::unordered_map<size_t,size_t>& tmp)
+	{
+		if (state1 == state2)
+		{
+			return true;
+		}
+		if(!cutpointMatch(state1, state2)
+			|| !statesInRel(state1, state2, tmp))
+		{
+			return false;
+		}
 
-        for (const typename A::Transition trans1 : aut[state1])
-        {
-            for (const typename A::Transition trans2 : aut[state2])
-            {
-                if (!VATAAbstraction::transMatch(
-                            trans1, trans2, f, tmp, stateIndex))
-                { // if two transitions does not match, states are not equivalent
-                    return false;
-                }
-            }
-        }
+		for (const typename A::Transition trans1 : aut[state1])
+		{
+			for (const typename A::Transition trans2 : aut[state2])
+			{
+				if (!VATAAbstraction::transMatch(
+										trans1, trans2, f, tmp, stateIndex))
+				{ // if two transitions does not match, states are not equivalent
+						return false;
+				}
+			}
+		}
 
-        return true;
-    }
+		return true;
+	}
 
-    static void completeSymmetricIndex(std::vector<std::vector<bool>>& result);
+	static bool statesInRel(
+		const size_t                             state1,
+		const size_t                             state2,
+		const std::unordered_map<size_t,size_t>& tmp);
+
+
+   static void completeSymmetricIndex(
+		std::unordered_map<size_t,size_t>&         result,
+		const StateToIndexMap&                     stateIndex);
 };
 
 #endif

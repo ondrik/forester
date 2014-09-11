@@ -427,15 +427,16 @@ public: // public methods
     }
 
     // currently erases '1' from the relation
-	template <class F>
+	template <class F, class G>
 	void heightAbstraction(
-		std::vector<std::vector<bool>>&            result,
+		std::unordered_map<size_t,size_t>&         result,
 		size_t                                     height,
 		F                                          f,
+		G                                          g,
 		const Index<size_t>&                       stateIndex) const
 	{
         FA_DEBUG_AT(1,"TA height abstraction\n");
-        VATAAbstraction::heightAbstraction(vataAut_, result, height, f, stateIndex);
+        VATAAbstraction::heightAbstraction(vataAut_, result, height, f, g, stateIndex);
 	}
 
 	// collapses states according to a given relation
