@@ -356,11 +356,18 @@ public: // public methods
 		bool                              addFinalStates = true);
 
     /**
+	 * @brief Returns true if there are no transitions in TA
      * Return true if there are no transitions in automata
-     * @returns True if there are no transitions, otherwise false
+     * @return True if there are no transitions, otherwise false
      */
     bool areTransitionsEmpty();
 
+	/*
+	 * @brief Copies all transtition to @dst
+	 * Function copies all transitions from @vataAut_ to
+	 * @dst and returns newly filled automata
+	 * @return TA with copied transitions 
+	 */
 	VATAAdapter& copyTransitions(VATAAdapter& dst) const;
 
 	template <class TVisitor>
