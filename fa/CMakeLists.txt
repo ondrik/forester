@@ -46,6 +46,8 @@ configure_file( ${PROJECT_SOURCE_DIR}/fagdb.in     ${PROJECT_BINARY_DIR}/fagdb  
 configure_file(${PROJECT_SOURCE_DIR}/register-paths.sh.in
     ${PROJECT_BINARY_DIR}/register-paths.sh                                       @ONLY)
 
+execute_process(COMMAND ./init_vata)
+
 # libfa.so
 add_library(fa SHARED
 	backward_run.cc
