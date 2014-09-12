@@ -385,7 +385,6 @@ VATAAdapter& VATAAdapter::collapsed(
     return dst;
 }
 
-
 std::ostream& operator<<(std::ostream& os, const VATAAdapter& ta)
 {
     os << "TREE AUT " << std::endl;

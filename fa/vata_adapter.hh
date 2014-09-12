@@ -368,7 +368,7 @@ public: // public methods
 		template <class TVisitor>
 		void accept(TVisitor& visitor) const
 		{
- 	       FA_DEBUG_AT(1,"TA accept\n");
+ 	      FA_DEBUG_AT(1,"TA accept\n");
 				visitor(*this);
 		}
 
@@ -412,13 +412,13 @@ public: // public methods
         FA_DEBUG_AT(1,"TA rename\n");
         if (addFinalStates)
         {
-            for (auto state : src.getFinalStates())
+            for (const auto& state : src.getFinalStates())
             {
                 dst.addFinalState(funcRename(state));
             }
         }
 
-        for (const Transition trans : src.vataAut_)
+        for (const Transition& trans : src.vataAut_)
         {
             std::vector<size_t> children;
             for (size_t j : trans.GetChildren())
