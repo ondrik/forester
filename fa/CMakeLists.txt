@@ -77,11 +77,10 @@ add_library(fa SHARED
 	symstate.cc
 	symstate_isect.cc
 	timbuk.cc
-	treeaut.cc
-    ufae.cc
-    unfolding.cc
-    vata_adapter.cc
-    vata_abstraction.cc
+  ufae.cc
+  unfolding.cc
+  vata_adapter.cc
+  vata_abstraction.cc
 	virtualmachine.cc
 )
 set_target_properties(fa PROPERTIES LINK_FLAGS -lrt)

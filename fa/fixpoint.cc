@@ -319,9 +319,9 @@ bool testInclusion(
 
 struct CopyNonZeroRhsF
 {
-	bool operator()(const TT* transition) const
+	bool operator()(const TreeAut::Transition* transition) const
 	{
-		return transition->rhs() != 0;
+		return transition->GetParent() != 0;
 	}
 };
 

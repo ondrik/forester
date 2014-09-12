@@ -27,7 +27,6 @@
 
 // Forester headers
 #include "timbuk.hh"
-#include "treeaut.hh"
 #include "utils.hh"
 
 class TAReader : public TimbukReader

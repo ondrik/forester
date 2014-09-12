@@ -37,7 +37,6 @@ namespace
 /// counter for unique values
 size_t uniqCnt = 0;
 
-typedef TTBase BaseTransition;
 typedef TreeAut::Transition Transition;
 
 std::string stateToString(const size_t state)
