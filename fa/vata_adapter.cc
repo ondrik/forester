@@ -59,7 +59,6 @@ VATAAdapter::iterator VATAAdapter::end() const
 	return vataAut_.end();
 }
 
-// TODO CHECK semantic against original implementation
 typename VATAAdapter::DownAccessor::Iterator VATAAdapter::begin(
         size_t parent) const
 {
@@ -67,7 +66,6 @@ typename VATAAdapter::DownAccessor::Iterator VATAAdapter::begin(
     return vataAut_[parent].begin();
 }
 
-// TODO CHECK semantic against original implementation
 typename VATAAdapter::DownAccessor::Iterator VATAAdapter::end(
         size_t parent) const
 {
@@ -237,16 +235,14 @@ bool VATAAdapter::areTransitionsEmpty()
     return vataAut_.AreTransitionsEmpty();
 }
 
-// TODO: Rewrite to std::move
 VATAAdapter& VATAAdapter::copyTransitions(VATAAdapter& dst) const
 {
     FA_DEBUG_AT(1,"TA copy transitions\n");
     CopyAllFunctor copyAllFunctor;
     dst.vataAut_.CopyTransitionsFrom(vataAut_, copyAllFunctor);
-	return dst;
+		return dst;
 }
 
-// TODO: Rewrite to std::move
 VATAAdapter& VATAAdapter::copyNotAcceptingTransitions(
         VATAAdapter&                       dst,
         const VATAAdapter&                 ta) const
@@ -269,9 +265,8 @@ bool VATAAdapter::subseteq(const VATAAdapter& a, const VATAAdapter& b)
    return TreeAut::CheckInclusion(a.vataAut_, b.vataAut_);
 }
 
-// TODO: Rewrite to std::move
 VATAAdapter& VATAAdapter::unfoldAtRoot(
-    VATAAdapter&                   dst,
+  VATAAdapter&                   dst,
 	size_t                         newState,
 	bool                           registerFinalState) const
 {
@@ -294,7 +289,6 @@ VATAAdapter& VATAAdapter::unfoldAtRoot(
 }
 
 
-// TODO: Rewrite to std::move
 VATAAdapter& VATAAdapter::unfoldAtRoot(
     VATAAdapter&                                  dst,
     const std::unordered_map<size_t, size_t>&     statesTranslator,
@@ -331,7 +325,6 @@ void VATAAdapter::buildStateIndex(Index<size_t>& index) const
     }
 }
 
-// TODO: check this if there will be problems (and they will)
 VATAAdapter::TreeAut::AcceptTrans VATAAdapter::getEmptyRootTransitions() const
 {
     FA_DEBUG_AT(1,"TA get empty root\n");
