@@ -58,8 +58,6 @@ public:   // methods
 		assert(nullptr != fae_.getRoot(root));
         
     const TreeAut& rootTA = *fae_.getRoot(root);
-		Index<size_t> stateIndex;
-		rootTA.buildStateIndex(stateIndex);
 		std::unordered_map<size_t, size_t> rel;
 
 		// compute the abstraction (i.e. which states are to be merged)
@@ -72,7 +70,7 @@ public:   // methods
 			return stateMap[state1] % stateMap[state2];
 		};
 
-		rootTA.heightAbstraction(rel, height, f, cutpointCmp, stateIndex);
+		rootTA.heightAbstraction(rel, height, f, cutpointCmp);
 
 
 		TreeAut ta = TreeAut::createTAWithSameTransitions(fae_.ta);

@@ -21,16 +21,12 @@
 #define VATA_ABSTRACTION_H
 
 // std headers
-#include <vector>
+#include <unordered_map>
+#include <unordered_set>
 #include <iostream>
-
-// Forester header
-#include "utils.hh"
 
 class VATAAbstraction
 {
-private:
-    typedef Index<size_t> StateToIndexMap;
 public:
     // currently erases '1' from the relation
 	template <class A, class F, class G>
@@ -39,23 +35,21 @@ public:
 		std::unordered_map<size_t, size_t>&        result,
 		size_t                                     height,
 		F                                          f,
-		G                                          cutpointMatch,
-		const StateToIndexMap&                     stateIndex)
+		G                                          cutpointMatch)
 	{
 			std::unordered_map<size_t, size_t> tmp;
+			const std::unordered_set<size_t> usedStates(aut.GetUsedStates());
 
 			while (height--)
 			{
 					tmp = result;
 
-					for (StateToIndexMap::iterator i = stateIndex.begin(); i != stateIndex.end(); ++i)
+					for (const size_t state1 : usedStates)
 					{
-							const size_t& state1 = i->first;
-							for (StateToIndexMap::iterator k = stateIndex.begin(); k != stateIndex.end(); ++k)
+							for (const size_t state2 : usedStates)
 							{
-									const size_t& state2 = k->first;
 									if (VATAAbstraction::areStatesEquivalent(
-												aut, state1, state2, f, cutpointMatch, stateIndex, tmp))
+												aut, state1, state2, f, cutpointMatch, tmp))
 									{
 											result[state2] = state1;
 									}
@@ -63,7 +57,7 @@ public:
 					}
 				}
 
-				VATAAbstraction::completeSymmetricIndex(result, stateIndex);
+				VATAAbstraction::completeSymmetricIndex(result, usedStates);
 	}
 
 private:
@@ -78,11 +72,10 @@ private:
 	template <class A, class F, class G>
 	static bool areStatesEquivalent(
 		const A&                                 aut,
-		size_t                                   state1,
-		size_t                                   state2,
+		const size_t                             state1,
+		const size_t                             state2,
 		F                                        f,
 		G                                        cutpointMatch,
-		const StateToIndexMap&                   stateIndex,
 		const std::unordered_map<size_t,size_t>& tmp)
 	{
 			if (state1 == state2)
@@ -156,7 +149,7 @@ private:
 
    static void completeSymmetricIndex(
 		std::unordered_map<size_t,size_t>&         result,
-		const StateToIndexMap&                     stateIndex);
+		const std::unordered_set<size_t>&          usedStates);
 };
 
 #endif

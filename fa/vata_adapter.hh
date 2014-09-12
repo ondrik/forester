@@ -393,6 +393,8 @@ public: // public methods
 				bool                                          registerFinalState = true) const;
 
 		void buildStateIndex(Index<size_t>& index) const;
+		
+		std::unordered_set<size_t> getUsedStates() const;
   
 		TreeAut::AcceptTrans getEmptyRootTransitions() const;
 
@@ -438,11 +440,10 @@ public: // public methods
 				std::unordered_map<size_t,size_t>&         result,
 				size_t                                     height,
 				F                                          f,
-				G                                          g,
-				const Index<size_t>&                       stateIndex) const
+				G                                          g) const
 		{
     		FA_DEBUG_AT(1,"TA height abstraction\n");
-     		VATAAbstraction::heightAbstraction(vataAut_, result, height, f, g, stateIndex);
+     		VATAAbstraction::heightAbstraction(vataAut_, result, height, f, g);
 		}
 
 		// collapses states according to a given relation

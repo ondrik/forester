@@ -325,6 +325,12 @@ void VATAAdapter::buildStateIndex(Index<size_t>& index) const
     }
 }
 
+
+std::unordered_set<size_t> VATAAdapter::getUsedStates() const
+{
+    return vataAut_.GetUsedStates();
+}
+
 VATAAdapter::TreeAut::AcceptTrans VATAAdapter::getEmptyRootTransitions() const
 {
     FA_DEBUG_AT(1,"TA get empty root\n");
