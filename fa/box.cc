@@ -75,7 +75,7 @@ bool Box::checkDownwardCoverage(
 	const std::vector<size_t>&                    v,
 	const TreeAut&                                ta)
 {
-	for (auto i = ta.accBegin(); i != ta.accEnd(i); ++i)
+	for (auto i = ta.accBegin(); i != ta.accEnd(); ++i)
 	{
 		std::vector<size_t> v2;
 
@@ -115,7 +115,7 @@ void Box::getAcceptingLabels(
 {
 	for (auto& state : ta.getFinalStates())
 	{
-		for (auto i = ta.begin(state); i != ta.end(state, i); ++i)
+		for (auto i = ta.begin(state); i != ta.end(state); ++i)
 			labels.push_back(TreeAut::GetSymbol(*i));
 	}
 

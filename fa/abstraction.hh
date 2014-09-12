@@ -57,7 +57,7 @@ public:   // methods
 		assert(root < fae_.getRootCount());
 		assert(nullptr != fae_.getRoot(root));
         
-        const TreeAut& rootTA = *fae_.getRoot(root);
+    const TreeAut& rootTA = *fae_.getRoot(root);
 		Index<size_t> stateIndex;
 		rootTA.buildStateIndex(stateIndex);
 		std::unordered_map<size_t, size_t> rel;
@@ -66,7 +66,9 @@ public:   // methods
 		ConnectionGraph::StateToCutpointSignatureMap stateMap;
 		ConnectionGraph::computeSignatures(stateMap, rootTA);
 
-		auto cutpointCmp = [&stateMap](size_t state1, size_t state2) -> bool {
+		auto cutpointCmp = [&stateMap](
+			const size_t state1,
+			const size_t state2) -> bool {
 			return stateMap[state1] % stateMap[state2];
 		};
 
@@ -74,7 +76,7 @@ public:   // methods
 
 
 		TreeAut ta = TreeAut::createTAWithSameTransitions(fae_.ta);
-		rootTA.collapsed(ta, rel, stateIndex);
+		rootTA.collapsed(ta, rel);
     assert(areFinalStatesPreserved(rootTA, ta));
 
 		fae_.setRoot(root, std::shared_ptr<TreeAut>(fae_.allocTA()));

@@ -516,7 +516,7 @@ void Folding::componentCut(
 	std::unordered_set<const AbstractBox*> boxes;
 
 	// first, we enumerate all boxes that we wish to fold
-	for (auto i = src.begin(state); i != src.end(state, i); ++i)
+	for (auto i = src.begin(state); i != src.end(state); ++i)
 	{	// traverse all transitions from 'state'
 		const Transition& trans = *i;
 
@@ -968,7 +968,7 @@ bool Folding::checkSelectorMap(
 
 	const TreeAut& ta = *fae_.getRoot(root);
 
-	for (auto i = ta.begin(state); i != ta.end(state, i); ++i)
+	for (auto i = ta.begin(state); i != ta.end(state); ++i)
 	{
 		std::unordered_map<size_t, size_t> m;
 

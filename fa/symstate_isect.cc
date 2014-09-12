@@ -476,9 +476,9 @@ void SymState::SubstituteRefs(
 			<< curState.second << ")");
 
 		auto thisIt = thisTA->begin(thisState);
-		auto thisEnd = thisTA->end(thisState, thisIt);
+		auto thisEnd = thisTA->end(thisState);
 		auto srcIt = srcTA->begin(srcState);
-		auto srcEnd = srcTA->end(srcState, srcIt);
+		auto srcEnd = srcTA->end(srcState);
 
 		for (; thisIt != thisEnd; ++thisIt)
 		{
@@ -795,9 +795,9 @@ void SymState::Intersect(
 		const size_t& fwdState = curState.second.state;
 
 		auto thisIt = thisTA->begin(thisState);
-		auto thisEnd = thisTA->end(thisState, thisIt);
+		auto thisEnd = thisTA->end(thisState);
 		auto fwdIt = fwdTA->begin(fwdState);
-		auto fwdEnd = fwdTA->end(fwdState, fwdIt);
+		auto fwdEnd = fwdTA->end(fwdState);
 
 		for (; thisIt != thisEnd; ++thisIt)
 		{
@@ -1076,9 +1076,9 @@ void FAE::makeProduct(
 			<< curState.second << ")");
 
 		auto lhsIt  = lhsTA->begin(lhsState);
-		auto lhsEnd = lhsTA->end(lhsState, lhsIt);
+		auto lhsEnd = lhsTA->end(lhsState);
 		auto rhsIt  = rhsTA->begin(rhsState);
-		auto rhsEnd = rhsTA->end(rhsState, rhsIt);
+		auto rhsEnd = rhsTA->end(rhsState);
 
 		for (; lhsIt != lhsEnd; ++lhsIt)
 		{

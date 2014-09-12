@@ -100,7 +100,7 @@ private:
 					for (const typename A::Transition trans2 : aut[state2])
 					{
 							if (!VATAAbstraction::transMatch(
-										trans1, trans2, f, tmp, stateIndex))
+										trans1, trans2, f, tmp))
 							{ // if two transitions does not match, states are not equivalent
 									return false;
 							}
@@ -122,8 +122,7 @@ private:
 		const T&                                  trans1,
 		const T&                                  trans2,
 		F                                         funcMatch,
-		const std::unordered_map<size_t, size_t>& rel,
-		const StateToIndexMap&                    stateIndex)
+		const std::unordered_map<size_t, size_t>& rel)
 	{
 			if (trans1.GetChildrenSize() != trans2.GetChildrenSize())
 	    {

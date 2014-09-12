@@ -171,9 +171,6 @@ public: // public methods
      * */
     DownAccessor::Iterator begin(size_t parent) const;
     DownAccessor::Iterator end(size_t parent) const;
-    DownAccessor::Iterator end(
-            size_t                       parent,
-            DownAccessor::Iterator       i) const;
 
     /**
      * @brief Returns iterator over a set of the accepting transitions
@@ -181,9 +178,7 @@ public: // public methods
      * @return Iterator over a set of the accpeting transitions of @vataAut_
      */
     AcceptTrans::Iterator accBegin() const;
-	AcceptTrans::Iterator accEnd() const;
-	AcceptTrans::Iterator accEnd(
-            AcceptTrans::Iterator i) const;
+		AcceptTrans::Iterator accEnd() const;
 
     /**
      * @brief Copies TreeAut of @rhs to this @vataAut_
@@ -449,8 +444,7 @@ public: // public methods
 	// collapses states according to a given relation
 	VATAAdapter& collapsed(
 		VATAAdapter&                                 dst,
-		const std::unordered_map<size_t, size_t>&    rel,
-		const Index<size_t>&                         stateIndex) const;
+		const std::unordered_map<size_t, size_t>&    rel) const;
 
     friend std::ostream& operator<<(std::ostream& os, const VATAAdapter& ta);
 };

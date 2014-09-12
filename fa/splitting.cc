@@ -574,7 +574,7 @@ void Splitting::isolateAtRoot(
 	for (size_t state : fae_.getRoot(root)->getFinalStates())
 	{	// for all final states
 		for (auto i = fae_.getRoot(root)->begin(state),
-			end = fae_.getRoot(root)->end(state, i); i != end ; ++i)
+			end = fae_.getRoot(root)->end(state); i != end ; ++i)
 		{	// traverse accepting transitions
 			FAE fae(fae_);
 			Splitting splitting(fae);

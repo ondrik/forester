@@ -17,13 +17,13 @@ void Unfolding::boxMerge(
 
     for (size_t state : src.getFinalStates())
     {
-        for (auto i = src.begin(state); i != src.end(state, i); ++i)
+        for (auto i = src.begin(state); i != src.end(state); ++i)
         {
             std::vector<size_t> lhs;
             std::vector<const AbstractBox*> label;
             getChildrenAndLabelFromBox(box, *i, lhs, label);
           
-            for (auto j = tmp2.accBegin(); j != tmp2.accEnd(j); ++j)
+            for (auto j = tmp2.accBegin(); j != tmp2.accEnd(); ++j)
             {
                 std::vector<size_t> lhs2 = lhs;
                 std::vector<const AbstractBox*> label2 = label;

@@ -75,15 +75,6 @@ typename VATAAdapter::DownAccessor::Iterator VATAAdapter::end(
     return vataAut_[parent].end();
 }
 
-// TODO CHECK semantic against original implementation
-typename VATAAdapter::DownAccessor::Iterator VATAAdapter::end(
-        size_t parent,
-        DownAccessor::Iterator i) const
-{
-    FA_DEBUG_AT(1,"TA Down end 1\n");
-    return vataAut_[parent].end();
-}
-
 typename VATAAdapter::AcceptTrans::Iterator VATAAdapter::accBegin() const
 {
     FA_DEBUG_AT(1,"TA Acc begin\n");
@@ -93,14 +84,6 @@ typename VATAAdapter::AcceptTrans::Iterator VATAAdapter::accBegin() const
 typename VATAAdapter::AcceptTrans::Iterator VATAAdapter::accEnd() const
 {
     FA_DEBUG_AT(1,"TA Acc end\n");
-   return vataAut_.GetAcceptTrans().end();
-}
-
-// TODO CHECK semantic against original implementation
-typename VATAAdapter::AcceptTrans::Iterator VATAAdapter::accEnd(
-        VATAAdapter::AcceptTrans::Iterator i) const
-{
-    FA_DEBUG_AT(1,"TA Acc end 1\n");
    return vataAut_.GetAcceptTrans().end();
 }
 
@@ -397,8 +380,7 @@ void VATAAdapter::copyReachableTransitionsFromRoot(
 // OL: should finish the function in VATA
 VATAAdapter& VATAAdapter::collapsed(
     VATAAdapter&                              dst,
-    const std::unordered_map<size_t, size_t>& rel,
-    const Index<size_t>&                      stateIndex) const
+    const std::unordered_map<size_t, size_t>& rel) const
 {
 	FA_DEBUG_AT(1,"TA collapsed\n");
     dst.vataAut_ = vataAut_.CollapseStates(rel);
