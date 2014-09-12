@@ -37,6 +37,7 @@ ADD_CXX_ONLY_FLAG("W_OLD_STYLE_CAST"     "-Wold-style-cast")
 ADD_CXX_ONLY_FLAG("W_EFFCXX"             "-Weffc++")
 
 # helping scripts
+execute_process(COMMAND ./init_vata)
 configure_file( ${PROJECT_SOURCE_DIR}/fagcc.in     ${PROJECT_BINARY_DIR}/fagcc     @ONLY)
 configure_file( ${PROJECT_SOURCE_DIR}/fagccp.in    ${PROJECT_BINARY_DIR}/fagccp    @ONLY)
 configure_file( ${PROJECT_SOURCE_DIR}/fagccv.in    ${PROJECT_BINARY_DIR}/fagccv    @ONLY)
@@ -45,8 +46,6 @@ configure_file( ${PROJECT_SOURCE_DIR}/fagdb.in     ${PROJECT_BINARY_DIR}/fagdb  
 
 configure_file(${PROJECT_SOURCE_DIR}/register-paths.sh.in
     ${PROJECT_BINARY_DIR}/register-paths.sh                                       @ONLY)
-
-execute_process(COMMAND ./init_vata)
 
 # libfa.so
 add_library(fa SHARED
