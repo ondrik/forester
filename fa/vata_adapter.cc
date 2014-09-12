@@ -40,8 +40,8 @@ VATAAdapter VATAAdapter::createTAWithSameFinalStates(
 }
 
 VATAAdapter* VATAAdapter::allocateTAWithSameFinalStates(
-    const VATAAdapter&         ta,
-    bool                 copyFinalStates)
+    const VATAAdapter&        ta,
+    bool                      copyFinalStates)
 {
     FA_DEBUG_AT(1,"Allocate TA with same final states\n");
     return new VATAAdapter(TreeAut(ta.vataAut_, true, copyFinalStates));
@@ -60,14 +60,14 @@ VATAAdapter::iterator VATAAdapter::end() const
 }
 
 typename VATAAdapter::DownAccessor::Iterator VATAAdapter::begin(
-        size_t parent) const
+        const size_t parent) const
 {
     FA_DEBUG_AT(1,"TA Down begin\n");
     return vataAut_[parent].begin();
 }
 
 typename VATAAdapter::DownAccessor::Iterator VATAAdapter::end(
-        size_t parent) const
+        const size_t parent) const
 {
     FA_DEBUG_AT(1,"TA Down end\n");
     return vataAut_[parent].end();
@@ -100,7 +100,7 @@ VATAAdapter& VATAAdapter::operator=(const VATAAdapter& rhs)
 void VATAAdapter::addTransition(
 		const std::vector<size_t>&          children,
 		const SymbolType&                   symbol,
-		size_t                              parent)
+		const size_t                        parent)
 {
     FA_DEBUG_AT(1,"TA add transition\n");
 
@@ -114,9 +114,9 @@ void VATAAdapter::addTransition(const Transition& transition)
 }
 
 const VATAAdapter::Transition VATAAdapter::getTransition(
-        const std::vector<size_t>&          children,
+    const std::vector<size_t>&          children,
 		const SymbolType&                   symbol,
-		size_t                              parent)
+		const size_t                        parent)
 
 {
     FA_DEBUG_AT(1,"TA get transition\n");
@@ -135,7 +135,7 @@ const label_type VATAAdapter::GetSymbol(const Transition& t)
     return label_type(t.GetSymbol());
 }
 
-void VATAAdapter::addFinalState(size_t state)
+void VATAAdapter::addFinalState(const size_t state)
 {
     FA_DEBUG_AT(1,"TA add final state\n");
     vataAut_.SetStateFinal(state);
@@ -150,13 +150,13 @@ void VATAAdapter::addFinalStates(const std::set<size_t>& states)
 void VATAAdapter::addFinalStates(const std::unordered_set<size_t>& states)
 {
     FA_DEBUG_AT(1,"TA add final states 1\n");
-    for (size_t state : states)
+    for (const size_t state : states)
     {
         vataAut_.SetStateFinal(state);
     }
 }
 
-bool VATAAdapter::isFinalState(size_t state) const
+bool VATAAdapter::isFinalState(const size_t state) const
 {
     FA_DEBUG_AT(1,"TA is final state\n");
     return vataAut_.IsStateFinal(state);
@@ -170,10 +170,10 @@ const std::unordered_set<size_t>& VATAAdapter::getFinalStates() const
 
 size_t VATAAdapter::getFinalState() const
 {
-	FA_DEBUG_AT(1,"TA get final state\n");
+		FA_DEBUG_AT(1,"TA get final state\n");
 
-	const std::unordered_set<size_t>& finalStates = this->getFinalStates();
-	assert(1 == finalStates.size());
+		const std::unordered_set<size_t>& finalStates = this->getFinalStates();
+		assert(1 == finalStates.size());
     return *finalStates.begin();
 }
 
@@ -250,7 +250,7 @@ VATAAdapter& VATAAdapter::copyNotAcceptingTransitions(
     FA_DEBUG_AT(1,"TA copy not accepting transitions\n");
     CopyNonAcceptingFunctor copyFunctor(ta);
     dst.vataAut_.CopyTransitionsFrom(vataAut_, copyFunctor);
-	return dst;
+		return dst;
 }
 
 void VATAAdapter::clear()
@@ -262,12 +262,12 @@ void VATAAdapter::clear()
 bool VATAAdapter::subseteq(const VATAAdapter& a, const VATAAdapter& b)
 {
     FA_DEBUG_AT(1,"TA subseteq\n");
-   return TreeAut::CheckInclusion(a.vataAut_, b.vataAut_);
+   	return TreeAut::CheckInclusion(a.vataAut_, b.vataAut_);
 }
 
 VATAAdapter& VATAAdapter::unfoldAtRoot(
   VATAAdapter&                   dst,
-	size_t                         newState,
+	const size_t                   newState,
 	bool                           registerFinalState) const
 {
     FA_DEBUG_AT(1,"TA unfoldAtRoot\n");
@@ -276,7 +276,7 @@ VATAAdapter& VATAAdapter::unfoldAtRoot(
         dst.addFinalState(newState);
     }
 
-    for (auto trans : vataAut_)
+    for (const Transition& trans : vataAut_)
     {
         dst.addTransition(trans);
         if (isFinalState(trans.GetParent()))
@@ -301,7 +301,7 @@ VATAAdapter& VATAAdapter::unfoldAtRoot(
         std::unordered_map<size_t, size_t>::const_iterator j = statesTranslator.find(state);
         assert(j != statesTranslator.end());
 
-        for (auto trans : vataAut_[state])
+        for (const Transition& trans : vataAut_[state])
         {
             dst.addTransition(trans.GetChildren(), trans.GetSymbol(), j->second);
         }
@@ -375,8 +375,8 @@ VATAAdapter& VATAAdapter::collapsed(
     VATAAdapter&                              dst,
     const std::unordered_map<size_t, size_t>& rel) const
 {
-	FA_DEBUG_AT(1,"TA collapsed\n");
-    dst.vataAut_ = vataAut_.CollapseStates(rel);
+		FA_DEBUG_AT(1,"TA collapsed\n");
+    dst.vataAut_ = std::move(vataAut_.CollapseStates(rel));
 
     return dst;
 }
