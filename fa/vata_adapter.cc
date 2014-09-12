@@ -339,38 +339,31 @@ VATAAdapter::TreeAut::AcceptTrans VATAAdapter::getEmptyRootTransitions() const
     return vataAut_.GetAcceptTrans();
 }
 
-// OL: this should return ALL transitions reachable from rootState, not only
-// where rootState is the parent, but also those under them. So this method
-// should do reachability analysis of the graph of the automaton (remembering
-// already visited states etc.). See treeaut.hh, around the line 360.
 void VATAAdapter::copyReachableTransitionsFromRoot(
     const VATAAdapter&        src,
     const size_t&             rootState)
 {
     FA_DEBUG_AT(1,"TA copy reachable transitions from root\n");
-    std::vector<Transition> stack;
+    std::vector<size_t> stack;
     std::unordered_set<size_t> visited;
 
-    for (const Transition& t : src.vataAut_[rootState])
-    {
-        stack.push_back(t);
-    }
+		stack.push_back(rootState);
 
     while(!stack.empty())
     {
-        const Transition t = stack.back();
+        const size_t state = stack.back();
         stack.pop_back();
-        this->addTransition(t);
-        visited.insert(t.GetParent());
-        for (size_t child : t.GetChildren())
+        visited.insert(state);
+        for (const auto& t : src.vataAut_[state])
         {
-            if (visited.count(child) == 0)
-            {
-                for (const Transition& k : src.vataAut_[child])
-                {
-                    stack.push_back(k);
-                }
-            }
+        		this->addTransition(t);
+						for (const auto& ch : t.GetChildren())
+						{
+									if (visited.count(ch) == 0)
+									{
+											stack.push_back(ch);
+									}
+						}
         }
     }
 }
