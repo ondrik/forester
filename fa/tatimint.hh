@@ -27,7 +27,6 @@
 
 // Forester headers
 #include "timbuk.hh"
-#include "treeaut.hh"
 #include "utils.hh"
 
 class TAReader : public TimbukReader
@@ -94,7 +93,7 @@ public:
 
 class TAMultiReader : public TimbukReader {
 
-	TA<std::string>::Backend& backend;
+	TA<std::string>& ta;
 
 public:
 
@@ -106,7 +105,7 @@ protected:
 	virtual void newLabel(const std::string&, size_t, size_t) {}
 
 	virtual void beginModel(const std::string& name) {
-		this->automata.push_back(TA<std::string>(this->backend));
+		this->automata.push_back(TA<std::string>::createTAWithSameTransitions(ta));
 		this->names.push_back(name);
 	}
 
@@ -126,8 +125,11 @@ protected:
 
 public:
 
-	TAMultiReader(TA<std::string>::Backend& backend, std::istream& input = std::cin, const std::string& name = "")
-		: TimbukReader(input, name), backend(backend), automata{}, names{} {}
+	TAMultiReader(TA<std::string>& ta,
+            std::istream& input = std::cin,
+            const std::string& name = "")
+		: TimbukReader(input, name), ta(ta), automata{}, names{} 
+    {}
 
 	void clear() {
 		this->automata.clear();

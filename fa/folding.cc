@@ -76,7 +76,7 @@ void computeSelectorMapTrans(
 {
 	size_t lhsOffset = 0;
 
-	for (const AbstractBox* absBox : t.label()->getNode())
+	for (const AbstractBox* absBox : TreeAut::GetSymbol(t)->getNode())
 	{	// for all boxes in the transition
 		switch (absBox->getType())
 		{
@@ -85,7 +85,7 @@ void computeSelectorMapTrans(
 
 				// find the cutpoint signature of the state at position 'lhsOffset' in
 				// the transition
-				auto iter = stateMap.find(t.lhs()[lhsOffset]);
+				auto iter = stateMap.find(t.GetNthChildren(lhsOffset));
 
 				assert(iter != stateMap.end());
 
@@ -104,7 +104,7 @@ void computeSelectorMapTrans(
 
 				for (size_t i = 0; i < box->getArity(); ++i)
 				{
-					auto iter = stateMap.find(t.lhs()[lhsOffset + i]);
+					auto iter = stateMap.find(t.GetNthChildren(lhsOffset + i));
 
 					assert(iter != stateMap.end());
 
@@ -516,22 +516,22 @@ void Folding::componentCut(
 	std::unordered_set<const AbstractBox*> boxes;
 
 	// first, we enumerate all boxes that we wish to fold
-	for (auto i = src.begin(state); i != src.end(state, i); ++i)
+	for (auto i = src.begin(state); i != src.end(state); ++i)
 	{	// traverse all transitions from 'state'
 		const Transition& trans = *i;
 
 		size_t lhsOffset = 0;
 
-		for (const AbstractBox* box : trans.label()->getNode())
+		for (const AbstractBox* box : TreeAut::GetSymbol(trans)->getNode())
 		{	// go over all boxes in the transition
 
 			// look for target cutpoint
 			for (size_t j = 0; j < box->getArity(); ++j)
 			{	// try all states outgoing from the box
-				assert(lhsOffset + j < trans.lhs().size());
+				assert(lhsOffset + j < trans.GetChildrenSize());
 
 				if (ConnectionGraph::containsCutpoint(
-					Folding::getSignature(trans.lhs()[lhsOffset + j], signatures), target))
+					Folding::getSignature(trans.GetNthChildren(lhsOffset + j), signatures), target))
 				{	// in case the signature of the box contains the searched cutpoint
 					boxes.insert(box);
 					break;
@@ -544,7 +544,7 @@ void Folding::componentCut(
 
 	for (const Transition& trans : src)
 	{	// now traverse all transitions in the source tree aut
-		if (trans.rhs() != state)
+		if (trans.GetParent() != state)
 		{	// if the transition does not leave 'state', simply copy it
 			res.addTransition(trans);
 			complement.addTransition(trans);
@@ -567,29 +567,29 @@ void Folding::componentCut(
 		size_t lhsOffset = 0;
 
 		// split transition
-		for (const AbstractBox* box : trans.label()->getNode())
+		for (const AbstractBox* box : TreeAut::GetSymbol(trans)->getNode())
 		{	// traverse all boxes in the transition
 			if (boxes.count(box) == 0)
 			{	// in case this box does not lead to the target cutpoint, just copy it
-				Folding::copyBox(lhs, label, box, trans.lhs(), lhsOffset);
+				Folding::copyBox(lhs, label, box, trans.GetChildren(), lhsOffset);
 			}
 			else
 			{	// in case the box _leads_ to the target cutpoint
 				for (size_t j = 0; j < box->getArity(); ++j)
 				{	// for each output of the box
-					assert(lhsOffset + j < trans.lhs().size());
+					assert(lhsOffset + j < trans.GetChildrenSize());
 
 					ConnectionGraph::processStateSignature(
 						tmp,
 						static_cast<const StructuralBox*>(box),
 						j,
-						trans.lhs()[lhsOffset + j],
-						Folding::getSignature(trans.lhs()[lhsOffset + j], signatures)
+						trans.GetNthChildren(lhsOffset + j),
+						Folding::getSignature(trans.GetNthChildren(lhsOffset + j), signatures)
 					);
 				}
 
 				// copy the box into the complement
-				Folding::copyBox(cLhs, cLabel, box, trans.lhs(), lhsOffset);
+				Folding::copyBox(cLhs, cLabel, box, trans.GetChildren(), lhsOffset);
 			}
 
 			lhsOffset += box->getArity();
@@ -916,15 +916,15 @@ Folding::TreeAutShPtr Folding::joinBox(
 
 	for (const Transition& trans : src)
 	{	// for every transition in the source
-		if (trans.rhs() != state)
+		if (trans.GetParent() != state)
 		{	// in the case the state is not important, simply copy the transition
 			ta->addTransition(trans);
 
 			continue;
 		}
 
-		std::vector<const AbstractBox*> label(trans.label()->getNode());
-		std::vector<size_t> lhs(trans.lhs());
+		std::vector<const AbstractBox*> label(TreeAut::GetSymbol(trans)->getNode());
+		std::vector<size_t> lhs(trans.GetChildren());
 
 		// append the box
 		label.push_back(box);
@@ -968,7 +968,7 @@ bool Folding::checkSelectorMap(
 
 	const TreeAut& ta = *fae_.getRoot(root);
 
-	for (TreeAut::iterator i = ta.begin(state); i != ta.end(state, i); ++i)
+	for (auto i = ta.begin(state); i != ta.end(state); ++i)
 	{
 		std::unordered_map<size_t, size_t> m;
 

@@ -44,7 +44,7 @@ protected:
 
 	std::vector<std::shared_ptr<const FAE>> fixpoint_;
 
-	TreeAut::Backend& taBackend_;
+	TreeAut& ta_;
 
 	BoxMan& boxMan_;
 
@@ -75,7 +75,7 @@ public:
 			fwdConfWrapper_.fae2ta(ta, index, *fae);
 		}
 
-		if (!ta.getTransitions().empty())
+		if (!ta.areTransitionsEmpty())
 		{
 			fwdConfWrapper_.adjust(index);
 			ta.minimized(fwdConf_);
@@ -87,14 +87,14 @@ public:
 
 	FixpointBase(
 		const CodeStorage::Insn*           insn,
-		TreeAut::Backend&                  fixpointBackend,
-		TreeAut::Backend&                  taBackend,
+		TreeAut&                           fixpoint,
+		TreeAut&                           ta,
 		BoxMan&                            boxMan) :
 		FixpointInstruction(insn),
-		fwdConf_(fixpointBackend),
+		fwdConf_(fixpoint),
 		fwdConfWrapper_(fwdConf_, boxMan),
 		fixpoint_{},
-		taBackend_(taBackend),
+		ta_(ta),
 		boxMan_(boxMan)
 	{ }
 
@@ -142,10 +142,10 @@ public:   // methods
 
 	FI_abs(
 		const CodeStorage::Insn*       insn,
-		TreeAut::Backend&              fixpointBackend,
-		TreeAut::Backend&              taBackend,
+		TreeAut&                       fixpoint,
+		TreeAut&                       ta,
 		BoxMan&                        boxMan) :
-		FixpointBase(insn, fixpointBackend, taBackend, boxMan),
+		FixpointBase(insn, fixpoint, ta, boxMan),
 		predicates_()
 	{ }
 
@@ -192,10 +192,10 @@ public:
 
 	FI_fix(
 		const CodeStorage::Insn*           insn,
-		TreeAut::Backend&                  fixpointBackend,
-		TreeAut::Backend&                  taBackend,
+		TreeAut&                  fixpoint,
+		TreeAut&                  ta,
 		BoxMan&                            boxMan) :
-		FixpointBase(insn, fixpointBackend, taBackend, boxMan)
+		FixpointBase(insn, fixpoint, ta, boxMan)
 	{ }
 
 	virtual void execute(ExecutionManager& execMan, SymState& state);

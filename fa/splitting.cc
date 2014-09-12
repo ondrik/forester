@@ -81,7 +81,7 @@ struct LeafEnumF
 		for (size_t k = 0; k < box->getArity(); ++k, ++offset)
 		{
 			size_t ref;
-			if (fae.getRef(this->t.lhs()[offset], ref) && ref == this->target)
+			if (fae.getRef(this->t.GetNthChildren(offset), ref) && ref == this->target)
 			{
 				this->selectors.insert(
 					box->inputCoverage(k).begin(),
@@ -146,7 +146,7 @@ struct LeafScanF
 		for (size_t k = 0; k < box->getArity(); ++k, ++offset)
 		{	// traverse the box
 			size_t ref;
-			if (fae.getRef(this->trans.lhs()[offset], ref) &&
+			if (fae.getRef(this->trans.GetNthChildren(offset), ref) &&
 				ref == this->target && box->inputCovers(k, this->selector))
 			{	// if the state at 'offset' is a reference to the 'target' automaton and
 				// the input of the box covers the 'selector'
@@ -252,7 +252,8 @@ void Splitting::enumerateSelectorsAtRoot(
 	// the boxes of the accepting transition (note that there is exactly one
 	// accepting transition in a normalised FA) are traversed and selectors
 	// (even those inside boxes) are collected
-	fae_.getRoot(target)->accBegin()->label()->iterate(RootEnumF(target, selectors));
+    TreeAut::GetSymbol(*fae_.getRoot(target)->accBegin())->
+        iterate(RootEnumF(target, selectors));
 }
 
 
@@ -267,9 +268,10 @@ void Splitting::enumerateSelectorsAtLeaf(
 
 	for (const Transition& trans : *fae_.getRoot(root))
 	{
-		if (trans.label()->isNode())
+        label_type label = TreeAut::GetSymbol(trans);
+		if (label->isNode())
 		{
-			trans.label()->iterate(LeafEnumF(fae_, trans, target, selectors));
+			label->iterate(LeafEnumF(fae_, trans, target, selectors));
 		}
 	}
 }
@@ -286,9 +288,10 @@ void Splitting::enumerateSelectorsAtLeaf(
 
 		for (const Transition& trans : *ta)
 		{
-			if (trans.label()->isNode())
+            label_type label = TreeAut::GetSymbol(trans);
+			if (label->isNode())
 			{
-				trans.label()->iterate(LeafEnumF(fae_, trans, target, selectors));
+				label->iterate(LeafEnumF(fae_, trans, target, selectors));
 			}
 		}
 	}
@@ -322,24 +325,25 @@ void Splitting::isolateAtLeaf(
 	fae_.unreachableFree(fae_.getRoot(root));
 
 	// vector for pairs of transitions and boxes
-	std::vector<std::pair<const Transition*, const Box*>> v;
+	std::vector<std::pair<const Transition, const Box*>> v;
 
 	// create a new blank automaton
-	TreeAut ta(*fae_.backend);
+	TreeAut ta = TreeAut::createTAWithSameTransitions(fae_.ta);
 
-	for (const Transition& trans : *fae_.getRoot(root))
+	for (const Transition trans : *fae_.getRoot(root))
 	{	// traverse accepting transitions
-		if (!trans.label()->isNode())
+        label_type label = TreeAut::GetSymbol(trans);
+		if (!label->isNode())
 		{	// copy non-nodes
 			ta.addTransition(trans);
 			continue;
 		}
 
 		const Box* matched = nullptr;
-		trans.label()->iterate(LeafScanF(fae_, trans, selector, target, matched));
+		label->iterate(LeafScanF(fae_, trans, selector, target, matched));
 		if (matched)
 		{	// in case the selector was found in the label
-			v.push_back(std::make_pair(&trans, matched));
+			v.push_back(std::make_pair(trans, matched));
 		}
 		else
 		{	// in case the label does not contain the selector
@@ -349,23 +353,27 @@ void Splitting::isolateAtLeaf(
 
 	assert(!v.empty());
 
-	for (std::pair<const Transition*, const Box*>& transBox : v)
+	for (std::pair<const Transition, const Box*>& transBox : v)
 	{
 		FAE fae(fae_);
 		Splitting splitting(fae);
 
 		// create an empty automaton
-		TreeAut ta2(*fae.backend);
-		if (fae_.getRoot(root)->isFinalState(transBox.first->rhs()))
+		TreeAut ta2 = TreeAut::createTAWithSameTransitions(fae.ta);
+		if (fae_.getRoot(root)->isFinalState(transBox.first.GetParent()))
 		{	// in case the parent state is a root
 			ta.copyTransitions(ta2);
 			size_t state = fae.freshState();
 			ta2.addFinalState(state);
-			const Transition& t = ta2.addTransition(transBox.first->lhs(), transBox.first->label(), state)->first;
+			ta2.addTransition(transBox.first.GetChildren(), TreeAut::GetSymbol(transBox.first), state);
+            const Transition t = ta2.getTransition(
+                    transBox.first.GetChildren(),
+                    TreeAut::GetSymbol(transBox.first), state);
+
 			fae.setRoot(root, std::shared_ptr<TreeAut>(&ta2.uselessAndUnreachableFree(*fae.allocTA())));
 			fae.connectionGraph.invalidate(root);
 			std::set<const Box*> boxes;
-			splitting.isolateAtRoot(root, t, IsolateBoxF(transBox.second), boxes);
+            splitting.isolateAtRoot(root, t, IsolateBoxF(transBox.second), boxes);
 			assert(boxes.count(transBox.second));
 			Unfolding(fae).unfoldBox(root, transBox.second);
 			splitting.isolateOne(dst, target, selector);
@@ -376,25 +384,27 @@ void Splitting::isolateAtLeaf(
 		// if the parent state is not a root
 
 		ta2.addFinalStates(fae_.getRoot(root)->getFinalStates());
-		for (const Transition& trans : ta)
+		for (const Transition trans : ta)
 		{	// copy the transitions
 			ta2.addTransition(trans);
-			std::vector<size_t> lhs = trans.lhs();
+			std::vector<size_t> lhs = trans.GetChildren();
 			for (std::vector<size_t>::iterator k = lhs.begin(); k != lhs.end(); ++k)
 			{	// alter all transitions to the parent state of the found transition to
 				// become transitions to references of a new FA
-				if (*k == transBox.first->rhs())
+				if (*k == transBox.first.GetParent())
 				{
 					// TODO: several transitions may be added, is it correct??
 					*k = fae.addData(ta2, Data::createRef(fae.getRootCount()));
-					ta2.addTransition(lhs, trans.label(), trans.rhs());
-					*k = transBox.first->rhs();
+					ta2.addTransition(lhs,
+                            TreeAut::GetSymbol(trans),
+                            trans.GetParent());
+					*k = transBox.first.GetParent();
 				}
 			}
 		}
 
 		// create another empty automaton
-		TreeAut ta3(*fae.backend);
+		TreeAut ta3 = TreeAut::createTAWithSameTransitions(fae.ta);
 
 		// ha! we can get inconsistent signatures here
 		size_t offset = fae.nextState();
@@ -413,7 +423,9 @@ void Splitting::isolateAtLeaf(
 		ta2.addFinalState(state);
 
 		// insert a root transition
-		ta2.addTransition(transBox.first->lhs(), transBox.first->label(), state)->first;
+		ta2.addTransition(transBox.first.GetChildren(),
+                TreeAut::GetSymbol(transBox.first),
+                state);
 
 		// copy to 'ta2' transitions from 'ta'
 		ta.copyTransitions(ta2);
@@ -470,7 +482,7 @@ void Splitting::isolateAtRoot(
 
 	size_t newState = fae_.freshState();
 
-	TreeAut ta(
+	TreeAut ta = TreeAut::createTAWithSameFinalStates(
 		/* original TA */ *fae_.getRoot(root),
 		/* copy final states? */ false
 	);
@@ -482,7 +494,7 @@ void Splitting::isolateAtRoot(
 	// pointer to the processed state in the original tuple of children states
 	size_t lhsOffset = 0;
 
-	for (const AbstractBox* aBox : t.label()->getNode())
+	for (const AbstractBox* aBox : TreeAut::GetSymbol(t)->getNode())
 	{	// traverse all boxes in the label
 		assert(nullptr != aBox);
 
@@ -496,7 +508,7 @@ void Splitting::isolateAtRoot(
 		{	// in case this box is not interesting
 			for (size_t k = 0; k < aBox->getArity(); ++k, ++lhsOffset)
 			{	// push all states covered by the selectors
-				lhs.push_back(t.lhs()[lhsOffset]);
+				lhs.push_back(t.GetNthChildren(lhsOffset));
 			}
 			continue;
 		}
@@ -504,9 +516,9 @@ void Splitting::isolateAtRoot(
 		// in case we are interested in the box, we have to isolate here
 		for (size_t k = 0; k < aBox->getArity(); ++k, ++lhsOffset)
 		{	// iterate over the selectors of the box
-			if (FA::isData(t.lhs()[lhsOffset]))
+			if (FA::isData(t.GetNthChildren(lhsOffset)))
 			{	// no need to create a leaf when it's already there
-				lhs.push_back(t.lhs()[lhsOffset]);
+				lhs.push_back(t.GetNthChildren(lhsOffset));
 				continue;
 			}
 
@@ -521,8 +533,8 @@ void Splitting::isolateAtRoot(
 			// update new left-hand side - add reference to the new TA
 			lhs.push_back(fae_.addData(ta, Data::createRef(fae_.getRootCount())));
 			// prepare new root
-			TreeAut tmp(*fae_.getRoot(root), false);
-			tmp.addFinalState(t.lhs()[lhsOffset]);
+			TreeAut tmp = TreeAut::createTAWithSameFinalStates(*fae_.getRoot(root), false);
+			tmp.addFinalState(t.GetNthChildren(lhsOffset));
 			TreeAut* tmp2 = fae_.allocTA();
 			tmp.unreachableFree(*tmp2);
 			fae_.appendRoot(tmp2);
@@ -538,7 +550,7 @@ void Splitting::isolateAtRoot(
 	}
 
 	// insert the new transition
-	ta.addTransition(lhs, t.label(), newState);
+	ta.addTransition(lhs, TreeAut::GetSymbol(t), newState);
 
 	TreeAut* tmp = fae_.allocTA();
 
@@ -561,8 +573,8 @@ void Splitting::isolateAtRoot(
 
 	for (size_t state : fae_.getRoot(root)->getFinalStates())
 	{	// for all final states
-		for (TreeAut::iterator i = fae_.getRoot(root)->begin(state),
-			end = fae_.getRoot(root)->end(state, i); i != end ; ++i)
+		for (auto i = fae_.getRoot(root)->begin(state),
+			end = fae_.getRoot(root)->end(state); i != end ; ++i)
 		{	// traverse accepting transitions
 			FAE fae(fae_);
 			Splitting splitting(fae);

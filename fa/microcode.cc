@@ -71,7 +71,7 @@ void FI_cond::finalize(
 	std::vector<AbstractInstruction*>::const_iterator
 )
 {
-	for (auto i : { 0, 1 })
+	for (size_t i : { 0, 1 })
 	{
 		if (next_[i]->getType() == fi_type_e::fiJump)
 		{
@@ -601,20 +601,27 @@ void FI_pop_greg::execute(ExecutionManager& execMan, SymState& state)
 	execMan.enqueue(tmpState);
 }
 
-struct DumpCtx {
-
+struct DumpCtx
+{
 	const SymCtx& ctx;
 	const FAE& fae;
 
-	DumpCtx(const SymCtx& ctx, const FAE& fae) : ctx(ctx), fae(fae) {}
+	DumpCtx(
+		const SymCtx&       ctx,
+		const FAE&          fae) :
+		ctx(ctx),
+		fae(fae)
+	{ }
 
-	friend std::ostream& operator<<(std::ostream& os, const DumpCtx& cd) {
-
+	friend std::ostream& operator<<(
+		std::ostream&         os,
+		const DumpCtx&        cd)
+	{
 		VirtualMachine vm(cd.fae);
 
 		std::vector<size_t> offs;
 
-		for (auto& selData : cd.ctx.GetStackFrameLayout())
+		for (const SelData& selData : cd.ctx.GetStackFrameLayout())
 		{
 			offs.push_back(selData.offset);
 		}
@@ -624,21 +631,24 @@ struct DumpCtx {
 		vm.nodeLookupMultiple(vm.varGet(ABP_INDEX).d_ref.root, 0, offs, data);
 
 		std::unordered_map<size_t, Data> tmp;
-		for (std::vector<Data::item_info>::const_iterator i = data.d_struct->begin();
-			i != data.d_struct->end(); ++i)
-			tmp.insert(std::make_pair(i->first, i->second));
+		for (auto it = data.d_struct->begin(); it != data.d_struct->end(); ++it)
+		{
+			tmp.insert(std::make_pair(it->first, it->second));
+		}
 
-		for (CodeStorage::TVarSet::const_iterator i = cd.ctx.GetFnc().vars.begin();
-			i != cd.ctx.GetFnc().vars.end(); ++i) {
-
-			const CodeStorage::Var& var = cd.ctx.GetFnc().stor->vars[*i];
+		for (size_t varIdx : cd.ctx.GetFnc().vars)
+		{
+			const CodeStorage::Var& var = cd.ctx.GetFnc().stor->vars[varIdx];
 
 			SymCtx::var_map_type::const_iterator j = cd.ctx.GetVarMap().find(var.uid);
 			assert(j != cd.ctx.GetVarMap().end());
 
-			switch (var.code) {
+			switch (var.code)
+			{
 				case CodeStorage::EVar::VAR_LC:
-					if (SymCtx::isStacked(var)) {
+				{
+					if (SymCtx::isStacked(var))
+					{
 						std::unordered_map<size_t, Data>::iterator k = tmp.find(j->second.getStackOffset());
 						assert(k != tmp.end());
 						os << '#' << var.uid << ':' << var.name << " = " << k->second << std::endl;
@@ -646,16 +656,14 @@ struct DumpCtx {
 //							os << '#' << var.uid << " = " << fae.varGet(j->second.second) << std::endl;
 					}
 					break;
-				default:
-					break;
-			}
+				}
 
+				default: break;
+			}
 		}
 
 		return os;
-
 	}
-
 };
 
 // FI_print_heap

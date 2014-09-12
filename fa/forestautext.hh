@@ -30,7 +30,7 @@
 // Forester headers
 #include "forestaut.hh"
 #include "boxman.hh"
-#include "tatimint.hh"
+//#include "tatimint.hh"
 #include "utils.hh"
 
 class FAE : public FA
@@ -134,7 +134,7 @@ public:
 	 *
 	 * @param[out]  dst          The result vector where the FA will be filled
 	 * @param[in]   src          The wrapping TA which contains the FA
-	 * @param[in]   backend      The TA backend
+	 * @param[in]   ta           The TA sharing its backend
 	 * @param[in]   boxMan       The used box manager
 	 * @param[in]   fae          The FA with which the loaded FA are supposed to
 	 *                           be compatible
@@ -146,46 +146,34 @@ public:
 	static void loadCompatibleFAs(
 		std::vector<FAE*>&              dst,
 		const TreeAut&                  src,
-		TreeAut::Backend&               backend,
+		TreeAut&                        tap,
 		BoxMan&                         boxMan,
 		const FAE&                      fae,
 		size_t                          stateOffset,
 		F                               funcCompat)
 	{
-		// build TD cache and insert empty set of root transitions (if not present)
-		TreeAut::td_cache_type cache = src.buildTDCache();
-		std::vector<const Transition*>& v = cache.insert(
-			std::make_pair(0, std::vector<const Transition*>())).first->second;
-
-		for (const Transition* trans : v)
+		for (auto trans : src.getEmptyRootTransitions())
 		{ // iterate over all "synthetic" transitions and constuct new FAE for each
-			assert(nullptr != trans);
 
-			const size_t& numRoots = trans->lhs().size();
+			const size_t& numRoots = trans.GetChildrenSize();
 			if ((fae.getRootCount() != numRoots) ||
-				(fae.GetVariables() != trans->label()->getVData()))
+				(fae.GetVariables() != TreeAut::GetSymbol(trans)->getVData()))
 			{	// in case the number of components or global variables does not match
 				continue;
 			}
-
-			std::vector<std::shared_ptr<TreeAut>> roots;
+   		std::vector<std::shared_ptr<TreeAut>> roots;
 			size_t j;
 			for (j = 0; j != numRoots; ++j)
 			{	// for all TA in the FA
 				assert(roots.size() == j);
 
-				TreeAut* ta = new TreeAut(backend);
+				TreeAut* ta = TreeAut::allocateTAWithSameTransitions(tap);
 				roots.push_back(std::shared_ptr<TreeAut>(ta));
 
-				const size_t& rootState = trans->lhs()[j];
-
-				for (TreeAut::td_iterator k = src.tdStart(cache, {rootState});
-					k.isValid();
-					k.next())
-				{ // copy reachable transitions
-					ta->addTransition(*k);
-				}
-
+				const size_t& rootState = trans.GetNthChildren(j);
+       	// TODO PERF: If you want this faster provide your td_cache build
+        // out of the inner cycle
+				ta->copyReachableTransitionsFromRoot(src, rootState);
 				ta->addFinalState(rootState);
 
 				// compute signatures
@@ -220,7 +208,7 @@ public:
 			}
 
 			// build the FA
-			FAE* tmp = new FAE(backend, boxMan);
+			FAE* tmp = new FAE(tap, boxMan);
 			dst.push_back(tmp);
 			tmp->loadVars(fae.GetVariables());
 			tmp->roots_ = roots;
@@ -269,6 +257,7 @@ public:
 		}
 	}
 
+    /*
 	void minimizeRootsCombo()
 	{
 		for (std::shared_ptr<TreeAut> ta : roots_)
@@ -279,6 +268,7 @@ public:
 			ta = std::shared_ptr<TreeAut>(&ta->minimizedCombo(*this->allocTA()));
 		}
 	}
+    */
 
 	void unreachableFree(std::shared_ptr<TreeAut>& ta)
 	{
@@ -454,10 +444,10 @@ public:
 
 
 public:
-
-	void buildLTCacheExt(
-		const TreeAut&               ta,
-		TreeAut::lt_cache_type&      cache);
+    label_type getUndefLabel()
+    {
+	    return this->boxMan->lookupLabel(Data::createUndef());
+    }
 
 	const TypeBox* getType(size_t target) const
 	{
@@ -466,9 +456,13 @@ public:
 		assert(nullptr != this->getRoot(target));
 		assert(!this->getRoot(target)->getFinalStates().empty());
 
-		return static_cast<const TypeBox*>(this->getRoot(target)->begin(
+        label_type label = (*this->getRoot(target)->begin(
 			*this->getRoot(target)->getFinalStates().begin()
-		)->label()->boxLookup(static_cast<size_t>(-1)).aBox);
+		)).GetSymbol();
+        size_t offset = static_cast<size_t>(-1);
+        const AbstractBox* abstractBox = label->getBoxFromNode(offset);
+
+		return static_cast<const TypeBox*>(abstractBox);
 	}
 
 
@@ -492,8 +486,8 @@ public:
 public:
 
 	// state 0 should never be allocated by FAE (?)
-	FAE(TreeAut::Backend& backend, BoxMan& boxMan) :
-		FA(backend),
+	FAE(TreeAut& ta, BoxMan& boxMan) :
+		FA(ta),
 		boxMan(&boxMan),
 		stateOffset(1),
 		savedStateOffset()

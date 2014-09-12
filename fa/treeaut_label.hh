@@ -20,13 +20,12 @@
 #ifndef _TREE_AUT_LABEL_HH_
 #define _TREE_AUT_LABEL_HH_
 
-#include "treeaut.hh"
 #include "label.hh"
-
+#include "vata_adapter.hh"
 
 /**
  * @brief  The type used for tree automata
  */
-typedef TA<label_type> TreeAut;
+typedef VATAAdapter TreeAut;
 
 #endif /* _TREE_AUT_LABEL_HH_ */

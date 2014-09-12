@@ -53,7 +53,7 @@ TreeAut* Normalization::mergeRoot(
 	bool hit = false;
 	for (TreeAut::iterator i = dst.begin(); i != dst.end(); ++i)
 	{
-		std::vector<size_t> tmp = i->lhs();
+		std::vector<size_t> tmp = (*i).GetChildren();
 		std::vector<size_t>::iterator j = std::find(tmp.begin(), tmp.end(), refState);
 		if (j != tmp.end())
 		{
@@ -61,7 +61,7 @@ TreeAut* Normalization::mergeRoot(
 				k != joinStates.end(); ++k)
 			{
 				*j = *k;
-				ta->addTransition(tmp, i->label(), i->rhs());
+				ta->addTransition(tmp, TreeAut::GetSymbol(*i), (*i).GetParent());
 			}
 			hit = true;
 		} else ta->addTransition(*i);

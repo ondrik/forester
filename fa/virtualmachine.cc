@@ -31,12 +31,12 @@ void VirtualMachine::transitionLookup(
 	// for every offset, add an item
 	for (size_t off : offsets)
 	{
-		const NodeLabel::NodeItem& ni = transition.label()->boxLookup(off + base);
+		const NodeLabel::NodeItem& ni = TreeAut::GetSymbol(transition)->nodeLookup(off + base);
 		// Assertions
 		assert(VirtualMachine::isSelectorWithOffset(ni.aBox, off + base));
 
 		const Data* tmp = nullptr;
-		if (!fae_.isData(transition.lhs()[ni.offset], tmp))
+		if (!fae_.isData(transition.GetNthChildren(ni.offset), tmp))
 		{
 			throw std::runtime_error("transitionLookup(): destination is not a leaf!");
 		}
@@ -53,12 +53,12 @@ void VirtualMachine::transitionLookup(
 	Data&                       data) const
 {
 	// retrieve the item at given offset
-	const NodeLabel::NodeItem& ni = transition.label()->boxLookup(offset);
+	const NodeLabel::NodeItem& ni = TreeAut::GetSymbol(transition)->nodeLookup(offset);
 	// Assertions
 	assert(VirtualMachine::isSelectorWithOffset(ni.aBox, offset));
 
 	const Data* tmp = nullptr;
-	if (!fae_.isData(transition.lhs()[ni.offset], tmp))
+	if (!fae_.isData(transition.GetNthChildren(ni.offset), tmp))
 	{
 		throw std::runtime_error("transitionLookup(): destination is not a leaf!");
 	}
@@ -79,16 +79,16 @@ void VirtualMachine::transitionModify(
 	size_t state = fae_.freshState();
 	dst.addFinalState(state);
 
-	std::vector<size_t> lhs = transition.lhs();
+	std::vector<size_t> lhs = transition.GetChildren();
 
 	// Retrieve the item with given offset from the transition
-	std::vector<const AbstractBox*> label = transition.label()->getNode();
-	const NodeLabel::NodeItem& ni = transition.label()->boxLookup(offset);
+	std::vector<const AbstractBox*> label = TreeAut::GetSymbol(transition)->getNode();
+	const NodeLabel::NodeItem& ni = TreeAut::GetSymbol(transition)->nodeLookup(offset);
 	// Assertions
 	assert(VirtualMachine::isSelectorWithOffset(ni.aBox, offset));
 
 	const Data* tmp = nullptr;
-	if (!fae_.isData(transition.lhs()[ni.offset], tmp))
+	if (!fae_.isData(transition.GetNthChildren(ni.offset), tmp))
 	{
 		throw std::runtime_error("transitionModify(): destination is not a leaf!");
 	}
@@ -116,21 +116,23 @@ void VirtualMachine::transitionModify(
 	size_t state = fae_.freshState();
 	dst.addFinalState(state);
 
-	std::vector<size_t> lhs = transition.lhs();
+	std::vector<size_t> lhs = transition.GetChildren();
 
 	// Get the label
-	std::vector<const AbstractBox*> label = transition.label()->getNode();
+	std::vector<const AbstractBox*> label =
+        TreeAut::GetSymbol(transition)->getNode();
 
 	out = Data::createStruct();
 	for (const std::pair<size_t, Data>& sel : in)
 	{
 		// Retrieve the item with the given offset
-		const NodeLabel::NodeItem& ni = transition.label()->boxLookup(sel.first + base);
+		const NodeLabel::NodeItem& ni = TreeAut::GetSymbol(transition)->
+                nodeLookup(sel.first + base);
 		// Assertions
 		assert(VirtualMachine::isSelectorWithOffset(ni.aBox, sel.first + base));
 
 		const Data* tmp = nullptr;
-		if (!fae_.isData(transition.lhs()[ni.offset], tmp))
+		if (!fae_.isData(transition.GetNthChildren(ni.offset), tmp))
 		{
 			throw std::runtime_error("transitionModify(): destination is not a leaf!");
 		}
@@ -236,7 +238,7 @@ void VirtualMachine::nodeModify(
 	assert(root < fae_.getRootCount());
 	assert(nullptr != fae_.getRoot(root));
 
-	TreeAut ta(*fae_.backend);
+	TreeAut ta = TreeAut::createTAWithSameTransitions(fae_.ta);
 	this->transitionModify(
 		ta,
 		fae_.getRoot(root)->getAcceptingTransition(),
@@ -263,7 +265,7 @@ void VirtualMachine::nodeModifyMultiple(
 	assert(nullptr != fae_.getRoot(root));
 	assert(in.isStruct());
 
-	TreeAut ta(*fae_.backend);
+	TreeAut ta = TreeAut::createTAWithSameTransitions(fae_.ta);
 	this->transitionModify(ta, fae_.getRoot(root)->getAcceptingTransition(),
 		offset, *in.d_struct, out);
 	fae_.getRoot(root)->copyTransitions(ta);
@@ -283,7 +285,7 @@ void VirtualMachine::getNearbyReferences(
 	assert(nullptr != fae_.getRoot(root));
 
 	const Transition& t = fae_.getRoot(root)->getAcceptingTransition();
-	for (size_t state : t.lhs())
+	for (size_t state : t.GetChildren())
 	{
 		const Data* data = nullptr;
 		if (fae_.isData(state, data) && data->isRef())

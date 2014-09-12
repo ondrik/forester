@@ -56,36 +56,43 @@ public:   // methods
 		// Preconditions
 		assert(root < fae_.getRootCount());
 		assert(nullptr != fae_.getRoot(root));
-
-		Index<size_t> stateIndex;
-		fae_.getRoot(root)->buildStateIndex(stateIndex);
-		std::vector<std::vector<bool>> rel(stateIndex.size(),
-			std::vector<bool>(stateIndex.size(), true));
+        
+    const TreeAut& rootTA = *fae_.getRoot(root);
+		std::unordered_map<size_t, size_t> rel;
 
 		// compute the abstraction (i.e. which states are to be merged)
-		fae_.getRoot(root)->heightAbstraction(rel, height, f, stateIndex);
-
 		ConnectionGraph::StateToCutpointSignatureMap stateMap;
-		ConnectionGraph::computeSignatures(stateMap, *fae_.getRoot(root));
-		for (Index<size_t>::iterator j = stateIndex.begin(); j != stateIndex.end(); ++j)
-		{	// go through the matrix
-			for (Index<size_t>::iterator k = stateIndex.begin(); k != stateIndex.end(); ++k)
-			{
-				if (k == j)
-					continue;
+		ConnectionGraph::computeSignatures(stateMap, rootTA);
 
-				if (stateMap[j->first] % stateMap[k->first])
-					continue;
+		auto cutpointCmp = [&stateMap](
+			const size_t state1,
+			const size_t state2) -> bool {
+			return stateMap[state1] % stateMap[state2];
+		};
 
-				rel[j->second][k->second] = false;
-			}
-		}
+		rootTA.heightAbstraction(rel, height, f, cutpointCmp);
 
-		TreeAut ta(*fae_.backend);
-		fae_.getRoot(root)->collapsed(ta, rel, stateIndex);
+
+		TreeAut ta = TreeAut::createTAWithSameTransitions(fae_.ta);
+		rootTA.collapsed(ta, rel);
+    assert(areFinalStatesPreserved(rootTA, ta));
+
 		fae_.setRoot(root, std::shared_ptr<TreeAut>(fae_.allocTA()));
 		ta.uselessAndUnreachableFree(*fae_.getRoot(root));
 	}
+
+    bool areFinalStatesPreserved(const TreeAut& old, const TreeAut& reduced)
+    {
+        bool res = true;
+        Index<size_t> reducedAutIndex;
+        reduced.buildStateIndex(reducedAutIndex);
+        for (size_t state : old.getFinalStates())
+        { // does it really hold?
+            res &= !reducedAutIndex.find(state).second || reduced.isFinalState(state);
+        }
+
+        return res;
+    }
 
 
 	/**
@@ -222,8 +229,8 @@ public:   // methods
 
 		for (size_t i = 0; i < fae_.getRootCount(); ++i)
 		{
-			TreeAut ta(*fae_.backend);
-			fae_.getRoot(i)->collapsed(ta, rel, faeStateIndex);
+			TreeAut ta = TreeAut::createTAWithSameTransitions(fae_.ta);
+			//fae_.getRoot(i)->collapsed(ta, rel, faeStateIndex);
 			fae_.setRoot(i, std::shared_ptr<TreeAut>(fae_.allocTA()));
 			ta.uselessAndUnreachableFree(*fae_.getRoot(i));
 		}

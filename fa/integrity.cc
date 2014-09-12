@@ -50,7 +50,7 @@ struct LeafEnumF
 		const Box* box = static_cast<const Box*>(aBox);
 		for (size_t k = 0; k < box->getArity(); ++k, ++offset) {
 			size_t ref;
-			if (fae.getRef(this->t.lhs()[offset], ref) && ref == this->target)
+			if (fae.getRef(this->t.GetNthChildren(offset), ref) && ref == this->target)
 				this->selectors.insert(box->inputCoverage(k).begin(), box->inputCoverage(k).end());
 		}
 		return true;
@@ -70,7 +70,7 @@ struct Integrity::CheckIntegrityF
 	const TreeAut& ta;
 
 	/// the transition that is checked
-	const TT<label_type>& t;
+	const TreeAut::Transition& t;
 
 	/// the set of states which can only appear as cover in a structural box
 	std::set<size_t>* required;
@@ -85,7 +85,7 @@ struct Integrity::CheckIntegrityF
 	CheckIntegrityF(
 		const Integrity& integrity,
 		const TreeAut& ta,
-		const TT<label_type>& t,
+		const TreeAut::Transition& t,
 		std::set<size_t>* required,
 		std::vector<bool>& bitmap,
 		std::map<std::pair<const TreeAut*, size_t>, std::set<size_t>>& states
@@ -109,14 +109,19 @@ struct Integrity::CheckIntegrityF
 
 				for (size_t i = 0; i < tmp->getArity(); ++i)
 				{
-					assert(offset + i < this->t.lhs().size());
+					assert(offset + i < this->t.GetChildrenSize());
 
 					const Data* data;
 
-					if (this->integrity.fae_.isData(this->t.lhs()[offset + i], data) && !data->isRef() && !data->isUndef())
+					if (this->integrity.fae_.isData(this->t.GetNthChildren(offset + i), data)
+                            && !data->isRef() && !data->isUndef())
 						return false;
 
-					if (!this->integrity.checkState(this->ta, this->t.lhs()[offset + i], tmp->inputCoverage(i), this->bitmap, states))
+					if (!this->integrity.checkState(this->ta,
+                                this->t.GetNthChildren(offset + i),
+                                tmp->inputCoverage(i),
+                                this->bitmap,
+                                states))
 						return false;
 				}
 
@@ -125,9 +130,13 @@ struct Integrity::CheckIntegrityF
 
 			case  box_type_e::bSel:
 			{
-				assert(offset < this->t.lhs().size());
+				assert(offset < this->t.GetChildrenSize());
 
-				if (!this->integrity.checkState(this->ta, this->t.lhs()[offset], std::set<size_t>(), this->bitmap, states))
+				if (!this->integrity.checkState(this->ta,
+                            this->t.GetNthChildren(offset),
+                            std::set<size_t>(),
+                            this->bitmap,
+                            states))
 					return false;
 
 				break;
@@ -162,8 +171,10 @@ void Integrity::enumerateSelectorsAtLeaf(
 
 		for (auto rule : *p_ta)
 		{
-			if (rule.label()->isNode())
-				rule.label()->iterate(LeafEnumF(fae_, rule, target, selectors));
+			if (TreeAut::GetSymbol(rule)->isNode())
+            {
+				TreeAut::GetSymbol(rule)->iterate(LeafEnumF(fae_, rule, target, selectors));
+            }
 		}
 	}
 }
@@ -191,9 +202,11 @@ bool Integrity::checkState(
 	if (!p.second)
 		return (defined == p.first->second);
 
-	for (TreeAut::iterator i = ta.begin(state); i != ta.end(state); ++i)
+	for (auto i = ta.begin(state); i != ta.end(state); ++i)
 	{
-		const TypeBox* typeBox = static_cast<const TypeBox*>(i->label()->boxLookup(static_cast<size_t>(-1), nullptr));
+		const TypeBox* typeBox = static_cast<const TypeBox*>(
+                TreeAut::GetSymbol(*i)->boxLookup(
+                    static_cast<size_t>(-1), nullptr));
 
 		assert(typeBox);
 
@@ -207,7 +220,8 @@ bool Integrity::checkState(
 				return false;
 		}
 
-		if (!i->label()->iterate(CheckIntegrityF(*this, ta, *i, &tmp, bitmap, states)))
+		if (!TreeAut::GetSymbol(*i)->iterate(
+                    CheckIntegrityF(*this, ta, *i, &tmp, bitmap, states)))
 			return false;
 
 		if (!tmp.empty())

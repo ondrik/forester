@@ -161,13 +161,20 @@ public:   // methods
 		return i->second.aBox;
 	}
 
-	const NodeItem& boxLookup(size_t offset) const
+	const NodeItem& nodeLookup(size_t offset) const
 	{
 		assert(node_type::n_node == type_);
 		auto i = this->node.m->find(offset);
 		assert(i != this->node.m->end());
 		return i->second;
 	}
+
+    const AbstractBox* getBoxFromNode(size_t offset) const
+    {
+        const NodeItem& node = nodeLookup(offset);
+
+        return node.aBox;
+    }
 
 	node_type GetType() const
 	{
@@ -247,40 +254,46 @@ public:   // methods
 
 struct label_type
 {
-	const NodeLabel* _obj;
+	const NodeLabel* obj_;
 
-	label_type() : _obj(nullptr) {}
-	label_type(const label_type& label) : _obj(label._obj) {}
-	label_type(const NodeLabel* obj) : _obj(obj) {}
+	label_type() : obj_(nullptr) {}
+	label_type(const label_type& label) : obj_(label.obj_) {}
+	label_type(const NodeLabel* obj) : obj_(obj) {}
+	label_type(uintptr_t obj) : label_type(reinterpret_cast<NodeLabel *>(obj)) {}
 
 	const NodeLabel& operator*() const {
-		assert(this->_obj);
-		return *this->_obj;
+		assert(this->obj_);
+		return *this->obj_;
 	}
 
 	const NodeLabel* operator->() const {
-		assert(this->_obj);
-		return this->_obj;
+		assert(this->obj_);
+		return this->obj_;
 	}
 
+    operator uintptr_t() const {
+        assert(this->obj_);
+        return reinterpret_cast<uintptr_t>(obj_);
+    }
+
 	bool operator<(const label_type& rhs) const {
-		return this->_obj < rhs._obj;
+		return this->obj_ < rhs.obj_;
 	}
 
 	bool operator==(const label_type& rhs) const {
-		return this->_obj == rhs._obj;
+		return this->obj_ == rhs.obj_;
 	}
 
 	bool operator!=(const label_type& rhs) const {
-		return this->_obj != rhs._obj;
+		return this->obj_ != rhs.obj_;
 	}
 
 	friend size_t hash_value(const label_type& label) {
-		return boost::hash_value(label._obj);
+		return boost::hash_value(label.obj_);
 	}
 
 	friend std::ostream& operator<<(std::ostream& os, const label_type& label) {
-		return os << *label._obj;
+		return os << *label.obj_;
 	}
 };
 
@@ -288,11 +301,14 @@ struct label_type
 namespace std
 {
 template <>
-struct hash<label_type> {
-	size_t operator()(const label_type& label) const {
-		return boost::hash_value(label._obj);
+struct hash<label_type>
+{
+	size_t operator()(const label_type& label) const
+	{
+		return boost::hash_value(label.obj_);
 	}
 };
+
 } // namespace
 
 #endif

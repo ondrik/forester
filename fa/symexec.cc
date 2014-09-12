@@ -190,8 +190,8 @@ class SymExec::Engine
 {
 private:  // data members
 
-	TreeAut::Backend taBackend_;
-	TreeAut::Backend fixpointBackend_;
+	TreeAut ta_;
+	TreeAut fixpoint_;
 	BoxMan boxMan_;
 
 	Compiler compiler_;
@@ -298,7 +298,7 @@ protected:
 
 		// create an empty heap
 		std::shared_ptr<FAE> fae = std::shared_ptr<FAE>(
-			new FAE(taBackend_, boxMan_));
+			new FAE(ta_, boxMan_));
 
 		FA_DEBUG_AT(2, "scheduling initial state ...");
 
@@ -444,10 +444,10 @@ public:   // methods
 	 * The default constructor.
 	 */
 	explicit Engine(const ProgramConfig& conf) :
-		taBackend_{},
-		fixpointBackend_{},
+		ta_{},
+		fixpoint_{},
 		boxMan_{},
-		compiler_(fixpointBackend_, taBackend_, boxMan_),
+		compiler_(fixpoint_, ta_, boxMan_),
 		assembly_{},
 		execMan_{},
 		conf_(conf),

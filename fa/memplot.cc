@@ -37,7 +37,6 @@ namespace
 /// counter for unique values
 size_t uniqCnt = 0;
 
-typedef TTBase<label_type> BaseTransition;
 typedef TreeAut::Transition Transition;
 
 std::string stateToString(const size_t state)
@@ -289,7 +288,7 @@ inline size_t getRandomID()
 	return static_cast<size_t>(rand() - std::numeric_limits<int>::min());
 }
 
-inline size_t getTransID(const BaseTransition& trans)
+inline size_t getTransID(const TreeAut::Transition& trans)
 {
 	return reinterpret_cast<size_t>(&trans);
 }
@@ -432,13 +431,13 @@ public:   // methods
 	{
 		for (const Transition& trans : ta)
 		{
-			trans.accept(*this);
+			(*this)(trans);
 		}
 	}
 
-	void operator()(const BaseTransition& trans)
+	void operator()(const TreeAut::Transition& trans)
 	{
-		const NodeLabel& label = *trans.label();
+		const NodeLabel& label = *TreeAut::GetSymbol(trans);
 
 		switch (label.GetType())
 		{
@@ -468,7 +467,7 @@ public:   // methods
 				for (size_t i = 1; i < boxes.size(); ++i)
 				{	// go over all selectors (and boxes)
 					// Assertions
-					assert(i <= trans.lhs().size());
+					assert(i <= trans.GetChildrenSize());
 					assert((nullptr == sels) || (i-1 < sels->size()));
 					assert(nullptr != boxes[i]);
 					assert(boxes[i]->isStructural());
@@ -478,14 +477,14 @@ public:   // methods
 						if (nullptr != sels)
 						{	// if the selectors are nicely named
 							// FIXME: this is not correct
-							MemNode::SelectorData sel((*sels)[i-1].name, trans.lhs()[i-1]);
+							MemNode::SelectorData sel((*sels)[i-1].name, trans.GetNthChildren(i-1));
 							node.block_.selVec.push_back(std::make_pair((*sels)[i-1], sel));
 						}
 						else
 						{	// otherwise we need to manage somehow else
 							const SelBox* selBox = static_cast<const SelBox*>(boxes[i]);
 
-							MemNode::SelectorData sel(selBox->getData().name, trans.lhs()[i-1]);
+							MemNode::SelectorData sel(selBox->getData().name, trans.GetNthChildren(i-1));
 							node.block_.selVec.push_back(std::make_pair(selBox->getData(), sel));
 						}
 					}
@@ -496,7 +495,7 @@ public:   // methods
 						std::ostringstream osBox;
 						box.toStream(osBox);
 						// FIXME: this is also not correct
-						MemNode::SelectorData sel(osBox.str(), trans.lhs()[i-1]);
+						MemNode::SelectorData sel(osBox.str(), trans.GetNthChildren(i-1));
 
 						// get the lowest output selector offset in the box
 						assert(!box.outputCoverage().empty());
@@ -512,7 +511,7 @@ public:   // methods
 					}
 				}
 
-				this->addStateToMemNodeLink(trans.rhs(), node);
+				this->addStateToMemNodeLink(trans.GetParent(), node);
 				break;
 			}
 
@@ -520,11 +519,11 @@ public:   // methods
 			{
 				// Assertions
 				assert(nullptr != label.data.data);
-				assert(trans.lhs().empty());
+				assert(trans.GetChildren().empty());
 
 				const Data& data = *label.data.data;
 
-				this->addStateToMemNodeLink(trans.rhs(),
+				this->addStateToMemNodeLink(trans.GetParent(),
 					dataToMemNode(getRandomID(), data));
 				break;
 			}

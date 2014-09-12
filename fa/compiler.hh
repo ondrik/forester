@@ -110,8 +110,10 @@ public:
 		 */
 		void clear()
 		{
-			for (auto instr : code_)
+			for (AbstractInstruction* instr : code_)
+			{
 				delete instr;
+			}
 
 			code_.clear();
 			functionIndex_.clear();
@@ -129,7 +131,8 @@ public:
 		 *
 		 * @returns  The instruction that is the entry point of @p f
 		 */
-		AbstractInstruction* getEntry(const struct CodeStorage::Fnc* f) const
+		AbstractInstruction* getEntry(
+			const CodeStorage::Fnc*          f) const
 		{
 			auto iter = functionIndex_.find(f);
 			// Assertions
@@ -150,71 +153,7 @@ public:
 		 */
 		static std::ostream& printUcode(
 			std::ostream&         os,
-			const CodeList&       code)
-		{
-			const AbstractInstruction* prev = nullptr;
-			const CodeStorage::Insn* lastInsn = nullptr;
-			size_t cnt = 0;
-
-			for (const AbstractInstruction* instr : code)
-			{
-				if ((instr->getType() == fi_type_e::fiJump) && prev)
-				{
-					switch (prev->getType())
-					{
-						case fi_type_e::fiBranch:
-						case fi_type_e::fiJump:
-							prev = instr;
-							continue;
-						default:
-							break;
-					}
-				}
-
-				const CodeStorage::Insn* clInsn = instr->insn();
-
-				prev = instr;
-
-				os << std::setw(18);
-				if (instr->isTarget())
-				{
-					std::ostringstream addrStream;
-					addrStream << instr;
-
-					if ((nullptr != clInsn) && (clInsn != lastInsn)
-						&& (clInsn->bb->front() == clInsn))
-					{
-						addrStream << " (" << clInsn->bb->name() << ")";
-					}
-
-					addrStream << ":";
-
-					os << std::left << addrStream.str();
-				}
-				else
-				{
-					os << "";
-				}
-
-				std::ostringstream instrStream;
-				instrStream << *instr;
-
-				os << std::setw(24) << std::left << instrStream.str();
-
-				if ((nullptr != clInsn) && (clInsn != lastInsn))
-				{
-					os << "; " << clInsn->loc << ' ' << *clInsn;
-
-					lastInsn = clInsn;
-				}
-
-				os << std::endl;
-
-				++cnt;
-			}
-
-			return os << std::endl << "; code size: " << cnt << " instructions" << std::endl;
-		}
+			const CodeList&       code);
 
 
 		/**
@@ -227,26 +166,8 @@ public:
 		 *
 		 * @returns  String with the instruction
 		 */
-		static std::string insnToString(const CodeStorage::Insn& clInsn)
-		{
-			std::ostringstream os;
-			os << std::setw(8);
-			if (clInsn.bb->front() == &clInsn)
-			{
-				std::ostringstream addrStream;
-				addrStream << clInsn.bb->name() << ":";
-
-				os << std::left << addrStream.str();
-			}
-			else
-			{
-				os << "";
-			}
-
-			os << clInsn;
-
-			return os.str();
-		}
+		static std::string insnToString(
+			const CodeStorage::Insn&          clInsn);
 
 
 		/**
@@ -261,23 +182,8 @@ public:
 		 */
 		static std::ostream& printOrigCode(
 			std::ostream&         os,
-			const CodeList&       ucode)
-		{
-			const CodeStorage::Insn* lastInsn = nullptr;
+			const CodeList&       ucode);
 
-			for (const AbstractInstruction* instr : ucode)
-			{
-				const CodeStorage::Insn* clInsn = instr->insn();
-
-				if (clInsn && (clInsn != lastInsn))
-				{
-					os << insnToString(*clInsn) << "\n";
-					lastInsn = clInsn;
-				}
-			}
-
-			return os << std::endl;
-		}
 
 		/**
 		 * @brief  The output stream operator
@@ -289,7 +195,9 @@ public:
 		 *
 		 * @returns  The modified output stream
 		 */
-		friend std::ostream& operator<<(std::ostream& os, const Assembly& as)
+		friend std::ostream& operator<<(
+			std::ostream&              os,
+			const Assembly&            as)
 		{
 			return printUcode(os, as.code_);
 		}
@@ -298,9 +206,9 @@ public:
 private:  // methods
 
 	Compiler(const Compiler&);
-	Compiler& operator=(const Compiler&);
 
 public:
+	Compiler& operator=(const Compiler&);
 
 	/**
 	 * @brief  The constructor
@@ -308,12 +216,14 @@ public:
 	 * Constructs the compiler object with given backends for fixpoints, tree
 	 * automata, and given box manager.
 	 *
-	 * @param[in]  fixpointBackend  The backend for fixpoints
-	 * @param[in]  taBackend        The backend for tree automata
+	 * @param[in]  fixpoint         The backend for fixpoints
+	 * @param[in]  ta               The backend for tree automata
 	 * @param[in]  boxMan           The box manager
 	 */
-	Compiler(TreeAut::Backend& fixpointBackend,
-		TreeAut::Backend& taBackend, class BoxMan& boxMan);
+	Compiler(
+		TreeAut&         fixpoint,
+		TreeAut&         ta,
+		class BoxMan&             boxMan);
 
 	/**
 	 * @brief  The destructor
@@ -327,8 +237,11 @@ public:
 	 * @param[in]   stor      The code storage to be compiled
 	 * @param[in]   entry     The entry point of the program
 	 */
-	void compile(Assembly& assembly, const CodeStorage::Storage &stor,
-		const CodeStorage::Fnc& entry);
+	void compile(
+		Assembly&                     assembly,
+		const CodeStorage::Storage&   stor,
+		const CodeStorage::Fnc&       entry);
+
 
 private:
 

@@ -10,6 +10,7 @@ topdir="`dirname "$self"`/.."
 # basic setup
 FA_BUILD="$topdir/fa_build"
 FA_PLUG="$FA_BUILD/libfa.so"
+export GCC_OPTS="-S -o $SINK -O0 -m32 -I$topdir/include/forester-builtins -DFORESTER"
 
 # filled in by CMake
 GCC=@GCC_HOST@
@@ -41,8 +42,8 @@ if [ "$2" != "" ]; then
 fi
 
 # run the gcc
-valgrind --trace-children=yes "$GCC" -c "$1" -o /dev/null -O0 -m32 \
-    -DFORESTER \
+valgrind --trace-children=yes "$GCC" ${GCC_OPTS} \
+		$1 \
     -fplugin="$FA_PLUG" \
     -fplugin-arg-libfa-verbose="$FA_VERBOSE" \
     $BOXDB \

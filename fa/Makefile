@@ -21,6 +21,7 @@ CTEST ?= ctest
 .PHONY: all check clean distclean distcheck version.h
 
 all:
+	./init_vata.sh
 	$(MAKE) -C ../cl_build # make sure that libcl.a is up2date
 	mkdir -p ../fa_build
 	cd ../fa_build && $(CMAKE) ../fa
@@ -39,6 +40,7 @@ version.h:
 		fi
 
 clean:
+	cd libvata && make clean
 	if test -e ../fa_build/Makefile; then \
 		$(MAKE) clean -C ../fa_build; \
 	fi

@@ -103,15 +103,13 @@ public:
 				this->fae.roots[i] = fae.roots[i];
 				continue;
 			}
-			TreeAut::lt_cache_type cache1, cache2;
-			tmp.buildLTCacheExt(*tmp.roots[i], cache1);
-			tmp.buildLTCacheExt(*fae.roots[i], cache2);
 
 			this->fae.roots[i] = std::shared_ptr<TreeAut>(this->fae.allocTA());
 
 			size_t stateCount = TreeAut::buProduct(
-				cache1,
-				cache2,
+				*tmp.roots[i]//cache1,
+				*fae.roots[i]//cache2,
+                tmp.getUndefLabel(),
 				CustomIntersectF(this->fae, *this->fae.roots[i], *tmp.roots[i], *fae.roots[i]),
 				this->fae.nextState()
 			);

@@ -29,7 +29,7 @@
 #include <unordered_map>
 
 // Forester headers
-#include "tatimint.hh"
+//#include "tatimint.hh"
 #include "types.hh"
 #include "treeaut_label.hh"
 #include "abstractbox.hh"
@@ -256,14 +256,14 @@ protected:
 	{
 		std::vector<std::set<size_t>>& selectors;
 		const TreeAut& ta;
-		const TT<label_type>& t;
+		const TreeAut::Transition& t;
 
 		bool getRef(size_t state, size_t& ref) const;
 
 		LeafEnumF(
 			std::vector<std::set<size_t>>& selectors,
 			const TreeAut& ta,
-			const TT<label_type>& t
+			const TreeAut::Transition& t
 		) :
 			selectors(selectors),
 			ta(ta),

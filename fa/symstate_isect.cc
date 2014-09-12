@@ -475,10 +475,10 @@ void SymState::SubstituteRefs(
 		FA_NOTE("Processing product state (" <<  curState.first << ", "
 			<< curState.second << ")");
 
-		TreeAut::iterator thisIt = thisTA->begin(thisState);
-		TreeAut::iterator thisEnd = thisTA->end(thisState, thisIt);
-		TreeAut::iterator srcIt = srcTA->begin(srcState);
-		TreeAut::iterator srcEnd = srcTA->end(srcState, srcIt);
+		auto thisIt = thisTA->begin(thisState);
+		auto thisEnd = thisTA->end(thisState);
+		auto srcIt = srcTA->begin(srcState);
+		auto srcEnd = srcTA->end(srcState);
 
 		for (; thisIt != thisEnd; ++thisIt)
 		{
@@ -488,20 +488,25 @@ void SymState::SubstituteRefs(
 				const Transition& srcTrans = *srcIt;
 
 				// we handle data one level up
-				assert(!thisTrans.label()->isData() && !srcTrans.label()->isData());
-				assert(!thisTrans.lhs().empty() && !srcTrans.lhs().empty());
+				assert(!TreeAut::GetSymbol(thisTrans)->isData() 
+                        && !TreeAut::GetSymbol(srcTrans)->isData());
+				assert(!thisTrans.GetChildren().empty() && !srcTrans.GetChildren().empty());
 
 				// TODO: so far, we are not doing unfolding!
-				if (thisTrans.label() == srcTrans.label())
+				if (TreeAut::GetSymbol(thisTrans) == TreeAut::GetSymbol(srcTrans))
 				{
-					FA_NOTE("Transition: " << thisTrans.label() << ", thisState = " << thisState << ", srcState = " << srcState);
+					FA_NOTE("Transition: " << 
+                            TreeAut::GetSymbol(thisTrans) <<
+                            ", thisState = " <<
+                            thisState <<
+                            ", srcState = " << srcState);
 
-					assert(thisTrans.lhs().size() == srcTrans.lhs().size());
-					const size_t& transArity = thisTrans.lhs().size();
+					assert(thisTrans.GetChildrenSize() == srcTrans.GetChildrenSize());
+					const size_t& transArity = thisTrans.GetChildrenSize();
 
-					if (thisTrans.label()->isData())
+					if (TreeAut::GetSymbol(thisTrans)->isData())
 					{	// data are processed one level up
-						assert(srcTrans.label()->isData());
+						assert(TreeAut::GetSymbol(srcTrans)->isData());
 						continue;
 					}
 
@@ -510,8 +515,8 @@ void SymState::SubstituteRefs(
 					for (i = 0; i < transArity; ++i)
 					{	// for each pair of states that map to each other
 						const Data* srcData = nullptr, *thisData = nullptr;
-						bool  srcIsData =  srcFAE->isData( srcTrans.lhs()[i],  srcData);
-						bool thisIsData = thisFAE->isData(thisTrans.lhs()[i], thisData);
+						bool  srcIsData =  srcFAE->isData(srcTrans.GetNthChildren(i),  srcData);
+						bool thisIsData = thisFAE->isData(thisTrans.GetNthChildren(i), thisData);
 
 						//  srcIsData <-> nullptr != srcData
 						assert((!srcIsData || (nullptr != srcData))
@@ -525,10 +530,10 @@ void SymState::SubstituteRefs(
 							// This is the easiest case, when both states in the product are
 							// internal.
 							engine.makeProductState(
-								thisRoot, thisTrans.lhs()[i],
-								srcRoot, srcTrans.lhs()[i]);
+								thisRoot, thisTrans.GetNthChildren(i),
+								srcRoot, srcTrans.GetNthChildren(i));
 
-							lhs.push_back(thisTrans.lhs()[i]);
+							lhs.push_back(thisTrans.GetNthChildren(i));
 						}
 						else if (srcIsData && (*srcData == oldValue))
 						{ // ************* perform substitution of reference *************
@@ -604,10 +609,10 @@ void SymState::SubstituteRefs(
 								assert(nullptr != srcNewTA);
 
 								engine.makeProductState(
-									thisRoot, thisTrans.lhs()[i],
+									thisRoot, thisTrans.GetNthChildren(i),
 									srcNewRoot, srcNewTA->getFinalState());
 
-								lhs.push_back(thisTrans.lhs()[i]);
+								lhs.push_back(thisTrans.GetNthChildren(i));
 							}
 							else
 							{
@@ -619,7 +624,7 @@ void SymState::SubstituteRefs(
 
 								engine.makeProductState(
 									thisNewRoot, thisNewTA->getFinalState(),
-									srcRoot, srcTrans.lhs()[i]);
+									srcRoot, srcTrans.GetNthChildren(i));
 
 								lhs.push_back(fae->addData(*fae->getRoot(thisRoot).get(),
 									Data::createRef(thisNewRoot)));
@@ -644,9 +649,11 @@ void SymState::SubstituteRefs(
 
 						FA_NOTE("TA " << thisRoot << ": adding transition "
 							<< FA::writeState(thisState) << " -> "
-							<< thisTrans.label() << "(" << osLhs.str() << ")");
+							<< TreeAut::GetSymbol(thisTrans) << "(" << osLhs.str() << ")");
 
-						fae->getRoot(thisRoot)->addTransition(lhs, thisTrans.label(), thisTrans.rhs());
+						fae->getRoot(thisRoot)->addTransition(lhs,
+                                TreeAut::GetSymbol(thisTrans),
+                                thisTrans.GetParent());
 					}
 				}
 				else
@@ -787,10 +794,10 @@ void SymState::Intersect(
 		const size_t& thisState = curState.first.state;
 		const size_t& fwdState = curState.second.state;
 
-		TreeAut::iterator thisIt = thisTA->begin(thisState);
-		TreeAut::iterator thisEnd = thisTA->end(thisState, thisIt);
-		TreeAut::iterator fwdIt = fwdTA->begin(fwdState);
-		TreeAut::iterator fwdEnd = fwdTA->end(fwdState, fwdIt);
+		auto thisIt = thisTA->begin(thisState);
+		auto thisEnd = thisTA->end(thisState);
+		auto fwdIt = fwdTA->begin(fwdState);
+		auto fwdEnd = fwdTA->end(fwdState);
 
 		for (; thisIt != thisEnd; ++thisIt)
 		{
@@ -800,20 +807,23 @@ void SymState::Intersect(
 				const Transition& fwdTrans = *fwdIt;
 
 				// we handle data one level up
-				assert(!thisTrans.label()->isData() && !fwdTrans.label()->isData());
-				assert(!thisTrans.lhs().empty() && !fwdTrans.lhs().empty());
+				assert(!TreeAut::GetSymbol(thisTrans)->isData()
+                        && !TreeAut::GetSymbol(fwdTrans)->isData());
+				assert(!thisTrans.GetChildren().empty()
+                        && !fwdTrans.GetChildren().empty());
 
 				// TODO: so far, we are not doing unfolding!
-				if (thisTrans.label() == fwdTrans.label())
+				if (TreeAut::GetSymbol(thisTrans) == TreeAut::GetSymbol(fwdTrans))
 				{
-					FA_NOTE("Transition: " << thisTrans.label() << ", thisState = " << thisState << ", srcState = " << fwdState);
+					FA_NOTE("Transition: " << TreeAut::GetSymbol(thisTrans) <<
+                            ", thisState = " << thisState << ", srcState = " << fwdState);
 
-					assert(thisTrans.lhs().size() == fwdTrans.lhs().size());
-					const size_t& transArity = thisTrans.lhs().size();
+					assert(thisTrans.GetChildrenSize() == fwdTrans.GetChildrenSize());
+					const size_t& transArity = thisTrans.GetChildrenSize();
 
-					if (thisTrans.label()->isData())
+					if (TreeAut::GetSymbol(thisTrans)->isData())
 					{	// data are processed one level up
-						assert(fwdTrans.label()->isData());
+						assert(TreeAut::GetSymbol(fwdTrans)->isData());
 						continue;
 					}
 
@@ -823,8 +833,8 @@ void SymState::Intersect(
 					for (i = 0; i < transArity; ++i)
 					{	// for each pair of states that map to each other
 						const Data* fwdData = nullptr, *thisData = nullptr;
-						bool  fwdIsData =  fwdFAE->isData( fwdTrans.lhs()[i],  fwdData);
-						bool thisIsData = thisFAE->isData(thisTrans.lhs()[i], thisData);
+						bool  fwdIsData =  fwdFAE->isData( fwdTrans.GetNthChildren(i),  fwdData);
+						bool thisIsData = thisFAE->isData(thisTrans.GetNthChildren(i), thisData);
 
 						if (!fwdIsData && !thisIsData)
 						{	// ************* process internal states *************
@@ -833,8 +843,8 @@ void SymState::Intersect(
 							assert((nullptr == fwdData) && (nullptr == thisData));
 
 							RootState rootState = engine.makeProductState(
-								thisRoot, thisTrans.lhs()[i],
-								fwdRoot, fwdTrans.lhs()[i]);
+								thisRoot, thisTrans.GetNthChildren(i),
+								fwdRoot, fwdTrans.GetNthChildren(i));
 
 							// check that we have not created a new automaton
 							assert(rootState.root == curNewState.root);
@@ -905,7 +915,7 @@ void SymState::Intersect(
 								assert(nullptr != fwdNewTA);
 
 								rootState = engine.makeProductState(
-									thisRoot, thisTrans.lhs()[i],
+									thisRoot, thisTrans.GetNthChildren(i),
 									fwdNewRoot, fwdNewTA->getFinalState());
 							}
 							else
@@ -918,7 +928,7 @@ void SymState::Intersect(
 
 								rootState = engine.makeProductState(
 									thisNewRoot, thisNewTA->getFinalState(),
-									fwdRoot, fwdTrans.lhs()[i]);
+									fwdRoot, fwdTrans.GetNthChildren(i));
 							}
 
 							lhs.push_back(fae->addData(*fae->getRoot(curNewState.root).get(),
@@ -943,10 +953,10 @@ void SymState::Intersect(
 
 						FA_NOTE("TA " << curNewState.root << ": adding transition "
 							<< FA::writeState(curNewState.state) << " -> "
-							<< thisTrans.label() << "(" << osLhs.str() << ")");
+							<< TreeAut::GetSymbol(thisTrans) << "(" << osLhs.str() << ")");
 
 						fae->getRoot(curNewState.root)->addTransition(
-							lhs, thisTrans.label(), curNewState.state);
+							lhs, TreeAut::GetSymbol(thisTrans), curNewState.state);
 					}
 				}
 			}
@@ -1065,10 +1075,10 @@ void FAE::makeProduct(
 		FA_NOTE("Processing product state (" <<  curState.first << ", "
 			<< curState.second << ")");
 
-		TreeAut::iterator lhsIt  = lhsTA->begin(lhsState);
-		TreeAut::iterator lhsEnd = lhsTA->end(lhsState, lhsIt);
-		TreeAut::iterator rhsIt  = rhsTA->begin(rhsState);
-		TreeAut::iterator rhsEnd = rhsTA->end(rhsState, rhsIt);
+		auto lhsIt  = lhsTA->begin(lhsState);
+		auto lhsEnd = lhsTA->end(lhsState);
+		auto rhsIt  = rhsTA->begin(rhsState);
+		auto rhsEnd = rhsTA->end(rhsState);
 
 		for (; lhsIt != lhsEnd; ++lhsIt)
 		{
@@ -1078,27 +1088,31 @@ void FAE::makeProduct(
 				const Transition& rhsTrans = *rhsIt;
 
 				// we handle data one level up
-				assert(!lhsTrans.label()->isData() && !rhsTrans.label()->isData());
-				assert(!lhsTrans.lhs().empty() && !rhsTrans.lhs().empty());
+				assert(!TreeAut::GetSymbol(lhsTrans)->isData()
+                        && !TreeAut::GetSymbol(rhsTrans)->isData());
+				assert(!lhsTrans.GetChildren().empty() && !rhsTrans.GetChildren().empty());
 
 				// TODO: so far, we are not doing unfolding!
-				if (lhsTrans.label() == rhsTrans.label())
+				if (TreeAut::GetSymbol(lhsTrans) == TreeAut::GetSymbol(rhsTrans))
 				{
-					FA_NOTE("Transition: " << lhsTrans.label() << ", thisState = " << lhsState << ", srcState = " << rhsState);
+					FA_NOTE("Transition: " << TreeAut::GetSymbol(lhsTrans)
+                            << ", thisState = " << lhsState << ", srcState = " << rhsState);
 
-					assert(lhsTrans.lhs().size() == rhsTrans.lhs().size());
+					assert(lhsTrans.GetChildrenSize() == rhsTrans.GetChildrenSize());
 
-					if (lhsTrans.label()->isData())
+					if (TreeAut::GetSymbol(lhsTrans)->isData())
 					{	// data are processed one level up
-						assert(rhsTrans.label()->isData());
+						assert(TreeAut::GetSymbol(rhsTrans)->isData());
 						continue;
 					}
 
-					for (size_t i = 0; i < lhsTrans.lhs().size(); ++i)
+					for (size_t i = 0; i < lhsTrans.GetChildrenSize(); ++i)
 					{	// for each pair of states that map to each other
 						const Data* lhsData = nullptr, *rhsData = nullptr;
-						bool lhsIsData = lhs.isData(lhsTrans.lhs()[i], lhsData);
-						bool rhsIsData = rhs.isData(rhsTrans.lhs()[i], rhsData);
+						bool lhsIsData = lhs.isData(
+                                lhsTrans.GetNthChildren(i), lhsData);
+						bool rhsIsData = rhs.isData(
+                                rhsTrans.GetNthChildren(i), rhsData);
 
 						//  lhsIsData <-> nullptr != lrcData
 						assert((!lhsIsData || (nullptr != lhsData))
@@ -1112,8 +1126,8 @@ void FAE::makeProduct(
 							// This is the easiest case, when both states in the product are
 							// internal.
 							engine.makeProductState(
-								lhsRoot, lhsTrans.lhs()[i],
-								rhsRoot, rhsTrans.lhs()[i]);
+								lhsRoot, lhsTrans.GetNthChildren(i),
+								rhsRoot, rhsTrans.GetNthChildren(i));
 						}
 						else if (lhsIsData && rhsIsData &&
 							!lhsData->isRef() && !rhsData->isRef())
@@ -1175,7 +1189,7 @@ void FAE::makeProduct(
 
 								engine.makeProductState(
 									lhsNewRoot, lhsNewTA->getFinalState(),
-									rhsRoot, rhsTrans.lhs()[i]);
+									rhsRoot, rhsTrans.GetNthChildren(i));
 							}
 							else
 							{
@@ -1186,7 +1200,7 @@ void FAE::makeProduct(
 								assert(nullptr != rhsNewTA);
 
 								engine.makeProductState(
-									lhsRoot, lhsTrans.lhs()[i],
+									lhsRoot, lhsTrans.GetNthChildren(i),
 									rhsNewRoot, rhsNewTA->getFinalState());
 							}
 						}
