@@ -375,8 +375,6 @@ void VATAAdapter::copyReachableTransitionsFromRoot(
     }
 }
 
-// collapses states according to a given relation
-// OL: should finish the function in VATA
 VATAAdapter& VATAAdapter::collapsed(
     VATAAdapter&                              dst,
     const std::unordered_map<size_t, size_t>& rel) const
