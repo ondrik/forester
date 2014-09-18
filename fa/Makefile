@@ -40,7 +40,9 @@ version.h:
 		fi
 
 clean:
-	cd libvata && make clean
+	if [ "$(ls -A $DIR)" ]; then \
+		cd libvata && make clean; \
+	fi
 	if test -e ../fa_build/Makefile; then \
 		$(MAKE) clean -C ../fa_build; \
 	fi
