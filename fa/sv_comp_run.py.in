@@ -1,0 +1,84 @@
+#! /usr/bin/python
+
+import argparse
+import sys
+import os
+import re
+import subprocess
+import resource
+
+TRACE_PARAM = 'trace'
+FILE_PARAM = 'file'
+PROPERS_PARAM = 'properties'
+
+PROP_SUFFIX = '.prp'
+ALL_PRP = 'ALL'+PROP_SUFFIX
+PROP_REGEXP = 'CHECK\s*\(\s*init\s*\(([^\)]*\))\s*\),\s*LTL\s*\((.*)\s*\)\s*\)'
+INIT_IND = 1
+PROP_IND = 2
+
+GCC_HOST='@GCC_HOST@'
+GCC_PLUG='@GCC_PLUG@'
+TOP_DIR=os.path.dirname(os.path.dirname('@GCC_PLUG@'))
+GCC_OPT=os.path.join(TOP_DIR, 'include', "forester-builtins")
+
+TIME_REGEXP = '.*clEasyRun\(\)\ took\ ([^s]*)s'
+
+def parseParams(params):
+    parser = argparse.ArgumentParser(description='SV-Comp options: Task file, properties and output trace')
+    parser.add_argument('--'+TRACE_PARAM, type=str, required=True,
+                       help='Path to a file where output file will be stored')
+
+    parser.add_argument(FILE_PARAM, type=str,
+                       help='File with program for verification')
+
+    parser.add_argument('--'+PROPERS_PARAM, type=str,
+                       help='Path to a file with properties to be verified. Default is defined by the rules of the competition')
+
+    return vars(parser.parse_args(params))
+
+def getPropertyFile(filePath):
+    if os.path.isfile(filePath+PROP_SUFFIX):
+        return filePath+PROP_SUFFIX
+    else:
+        dirname = os.path.dirname(filePath)
+        if not os.path.isfile(os.path.join(dirname, ALL_PRP)):
+                raise Exception('Properties file does not exists')
+        else:
+            return os.path.join(dirname, ALL_PRP)
+
+
+#MAIN
+
+args = parseParams(sys.argv[1:])
+assert (args.has_key(TRACE_PARAM) and args.has_key(FILE_PARAM))
+
+# Parse properties
+if args[PROPERS_PARAM] == None:
+    args[PROPERS_PARAM] = getPropertyFile(args[FILE_PARAM])
+reg = re.compile(PROP_REGEXP)
+with open(args[PROPERS_PARAM], 'r') as f:
+    props = [(x.group(INIT_IND), x.group(PROP_IND)) for x in [reg.match(y) for y in  f.readlines()]]
+inits = [x[0] for x in props]
+formulas = [x[1] for x in props]
+
+with open(args[TRACE_PARAM], 'w+') as f:
+    #p = subprocess.Popen([GCC_HOST, "-I",GCC_OPT,"-fplugin="+GCC_PLUG,"-fplugin-arg-libfa-args= ", args[FILE_PARAM]], stderr=f)
+    p = subprocess.Popen([GCC_HOST, "-I",GCC_OPT,"-fplugin="+GCC_PLUG, args[FILE_PARAM]], stderr=f)
+    p.wait()
+with open(args[TRACE_PARAM], 'r') as f:
+    if p.returncode == 0:
+        print "TRUE"
+    else:
+        ff = lambda acc,x : acc or "Aborted" in x or "abort" in x or "fault" in x or "not found" in x
+        f.seek(0)
+        if reduce(ff, f.readlines(), False):
+            print "UNKNOWN"
+        else:
+            print "FALSE"
+
+reg = re.compile(TIME_REGEXP)
+
+with open(args[TRACE_PARAM], 'r') as f:
+    time = next(i for i in [reg.match(x) for x in f.readlines()] if i != None)
+    print time.group(1)
