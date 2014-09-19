@@ -22,6 +22,7 @@
 #include <cstring>
 #include <fcntl.h>
 #include <iostream>
+#include <fstream>
 #include <unistd.h>
 
 // Code Listener headers
@@ -194,6 +195,16 @@ void Streams::trace(
 	const char*        traceStr)
 {
 	writeToFD(FD_TRACE, traceStr);
+}
+
+void Streams::traceFile(
+	const char* traceStr,
+	const char* file)
+{
+	std::ofstream out;
+	out.open(file);
+	out << traceStr;
+	out.close();
 }
 
 void Streams::traceUcode(

@@ -62,23 +62,20 @@ with open(args[PROPERS_PARAM], 'r') as f:
 inits = [x[0] for x in props]
 formulas = [x[1] for x in props]
 
-with open(args[TRACE_PARAM], 'w+') as f:
-    #p = subprocess.Popen([GCC_HOST, "-I",GCC_OPT,"-fplugin="+GCC_PLUG,"-fplugin-arg-libfa-args= ", args[FILE_PARAM]], stderr=f)
-    p = subprocess.Popen([GCC_HOST, "-I",GCC_OPT,"-fplugin="+GCC_PLUG, args[FILE_PARAM]], stderr=f)
-    p.wait()
-with open(args[TRACE_PARAM], 'r') as f:
+# execute Forester
+p = subprocess.Popen([GCC_HOST, "-I",GCC_OPT,"-fplugin="+GCC_PLUG,
+    '-fplugin-arg-libfa-args="print-trace;trace-file="'+args[TRACE_PARAM],
+    args[FILE_PARAM]], stderr=subprocess.PIPE)
+p.wait()
+
+with p.stderr as f:
     if p.returncode == 0:
         print "TRUE"
     else:
         ff = lambda acc,x : acc or "Aborted" in x or "abort" in x or "fault" in x or "not found" in x
-        f.seek(0)
         if reduce(ff, f.readlines(), False):
             print "UNKNOWN"
         else:
             print "FALSE"
 
-reg = re.compile(TIME_REGEXP)
-
-with open(args[TRACE_PARAM], 'r') as f:
-    time = next(i for i in [reg.match(x) for x in f.readlines()] if i != None)
-    print time.group(1)
+print resource.getrusage(resource.RUSAGE_CHILDREN)[0]

@@ -360,10 +360,16 @@ protected:
 			if (conf_.printTrace)
 			{
 				FA_LOG_MSG(e.location(), "Printing trace");
-
 				std::ostringstream oss;
 				printTrace(oss, e.state()->getTrace());
-				Streams::trace(oss.str().c_str());
+				if (conf_.traceFile.length() == 0)
+				{
+					Streams::trace(oss.str().c_str());
+				}
+				else
+				{
+					Streams::traceFile(oss.str().c_str(), conf_.traceFile.c_str());
+				}
 			}
 
 			if (conf_.printUcodeTrace)

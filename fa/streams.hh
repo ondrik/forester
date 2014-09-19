@@ -242,6 +242,14 @@ public:   // methods
 	static void trace(const char* traceStr);
 
 	/**
+	 * @brief Prints trace to a file
+	 *
+	 * @param[in] traceStr A string with a trace
+	 * @param[in] file     A file for trace printing
+	 */
+	static void traceFile(const char* traceStr, const char* file);
+
+	/**
 	 * @brief  Prints to the microcode trace output
 	 *
 	 * @param[in]  traceStr  A string with a microcode trace

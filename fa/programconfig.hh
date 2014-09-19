@@ -20,6 +20,9 @@
 #ifndef _PROGRAMCONFIG_HH_
 #define _PROGRAMCONFIG_HH_
 
+// Std headers
+#include <string>
+
 // Boost headers
 #include <boost/algorithm/string.hpp>
 
@@ -36,6 +39,7 @@ public:   // data members
 	bool        onlyCompile;        ///< only compiling?
 	bool        printTrace;         ///< printing trace for errors?
 	bool        printUcodeTrace;    ///< printing microcode trace for errors?
+	std::string traceFile;          ///< file where trace will be print
 
 private:  // methods
 
@@ -49,7 +53,8 @@ public:   // methods
 		printOrigCode(false),
 		onlyCompile(false),
 		printTrace(false),
-		printUcodeTrace(false)
+		printUcodeTrace(false),
+		traceFile()
 	{
 		std::vector<std::string> args;
 		boost::split(args, confStr, boost::is_any_of(";"));
