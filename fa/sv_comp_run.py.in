@@ -30,9 +30,9 @@ VALID_MEMTRACK = 'valid-memtrack'
 IGNORED        = 'ignored' # ignored Forester warnings
 
 PROPS_DICT                 = {}
-PROPS_DICT[VALID_FREE]     = []
+PROPS_DICT[VALID_FREE]     = [] # TODO invalid free
 PROPS_DICT[VALID_DEREF]    = ['dereferenced value is not a valid reference']
-PROPS_DICT[VALID_MEMTRACK] = ['error: garbage detected']
+PROPS_DICT[VALID_MEMTRACK] = ['garbage detected']
 
 def parseParams(params):
     parser = argparse.ArgumentParser(description='SV-Comp options: Task file, properties and output trace')
