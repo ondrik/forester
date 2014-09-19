@@ -49,7 +49,6 @@ def getPropertyFile(filePath):
 
 
 #MAIN
-
 args = parseParams(sys.argv[1:])
 assert (args.has_key(TRACE_PARAM) and args.has_key(FILE_PARAM))
 
@@ -64,7 +63,6 @@ formulas = [x[1] for x in props]
 
 # execute Forester
 plugin_ops = '-fplugin-arg-libfa-args=print-trace;trace-file='+args[TRACE_PARAM]+' ' # Note options has to end with space
-print plugin_ops
 p = subprocess.Popen([GCC_HOST, "-I",GCC_OPT,"-fplugin="+GCC_PLUG, plugin_ops,
     args[FILE_PARAM]], stderr=subprocess.PIPE)
 p.wait()
