@@ -24,6 +24,16 @@ GCC_OPT=os.path.join(TOP_DIR, 'include', "forester-builtins")
 
 TIME_REGEXP = '.*clEasyRun\(\)\ took\ ([^s]*)s'
 
+VALID_FREE     = 'valid-free'
+VALID_DEREF    = 'valid-deref'
+VALID_MEMTRACK = 'valid-memtrack'
+IGNORED        = 'ignored' # ignored Forester warnings
+
+PROPS_DICT                 = {}
+PROPS_DICT[VALID_FREE]     = []
+PROPS_DICT[VALID_DEREF]    = ['dereferenced value is not a valid reference']
+PROPS_DICT[VALID_MEMTRACK] = ['error: garbage detected']
+
 def parseParams(params):
     parser = argparse.ArgumentParser(description='SV-Comp options: Task file, properties and output trace')
     parser.add_argument('--'+TRACE_PARAM, type=str, required=True,
@@ -47,34 +57,49 @@ def getPropertyFile(filePath):
         else:
             return os.path.join(dirname, ALL_PRP)
 
+def checkProperty(prop, lines):
+    ff = lambda acc, line: acc + (1 if any(i in line for i in PROPS_DICT[prop]) else 0)
+    return reduce(ff, lines, 0) > 0
 
-#MAIN
-args = parseParams(sys.argv[1:])
-assert (args.has_key(TRACE_PARAM) and args.has_key(FILE_PARAM))
 
-# Parse properties
-if args[PROPERS_PARAM] == None:
-    args[PROPERS_PARAM] = getPropertyFile(args[FILE_PARAM])
-reg = re.compile(PROP_REGEXP)
-with open(args[PROPERS_PARAM], 'r') as f:
-    props = [(x.group(INIT_IND), x.group(PROP_IND)) for x in [reg.match(y) for y in  f.readlines()]]
-inits = [x[0] for x in props]
-formulas = [x[1] for x in props]
+def propersHold(props, lines):
+    ff = lambda acc, prop: acc or checkProperty(prop, lines)
+    return not reduce(ff, props, False)
 
-# execute Forester
-plugin_ops = '-fplugin-arg-libfa-args=print-trace;trace-file='+args[TRACE_PARAM]+' ' # Note options has to end with space
-p = subprocess.Popen([GCC_HOST, "-I",GCC_OPT,"-fplugin="+GCC_PLUG, plugin_ops,
-    args[FILE_PARAM]], stderr=subprocess.PIPE)
-p.wait()
+def execute(args):
+    # Parse properties
+    if args[PROPERS_PARAM] == None:
+        args[PROPERS_PARAM] = getPropertyFile(args[FILE_PARAM])
+    reg = re.compile(PROP_REGEXP)
+    with open(args[PROPERS_PARAM], 'r') as f:
+        props = [(x.group(INIT_IND), x.group(PROP_IND)) for x in [reg.match(y) for y in  f.readlines()]]
+    inits = [x[0] for x in props]
+    formulas = [x[1] for x in props]
+    # execute Forester
+    plugin_ops = '-fplugin-arg-libfa-args=print-trace;trace-file='+args[TRACE_PARAM]+' ' # Note options has to end with space
+    p = subprocess.Popen([GCC_HOST, "-I",GCC_OPT,"-fplugin="+GCC_PLUG, plugin_ops,
+        args[FILE_PARAM]], stderr=subprocess.PIPE)
+    p.wait()
 
-with p.stderr as f:
-    if p.returncode == 0:
-        print "TRUE"
-    else:
-        ff = lambda acc,x : acc or "FORESTER INTERNAL ERROR" in x or "abort" in x or "Segmentation fault" in x
-        if reduce(ff, f.readlines(), False):
-            print "UNKNOWN"
+    res=0
+    with p.stderr as f:
+        lines = f.readlines()
+        if p.returncode == 0:
+            print "TRUE"
         else:
-            print "FALSE"
+            ff = lambda acc,x : acc or "FORESTER INTERNAL ERROR" in x or "abort" in x or "Segmentation fault" in x
+            if reduce(ff, lines, False) or propersHold(map(lambda x: x.split()[1], formulas), lines):
+                res=2
+                print "UNKNOWN"
+            else:
+                res=1
+                print "FALSE"
 
-print resource.getrusage(resource.RUSAGE_CHILDREN)[0]
+    print resource.getrusage(resource.RUSAGE_CHILDREN)[0]
+    return res
+
+def run():
+    args = parseParams(sys.argv[1:])
+    assert (args.has_key(TRACE_PARAM) and args.has_key(FILE_PARAM))
+    execute(args)
+run()
