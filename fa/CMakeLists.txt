@@ -46,6 +46,7 @@ add_library(forester STATIC
 	comparison.cc
 	compiler.cc
 	connection_graph.cc
+	error_messages.cc
 	fixpoint.cc
 	folding.cc
 	forestaut.cc
@@ -67,10 +68,10 @@ add_library(forester STATIC
 	symstate.cc
 	symstate_isect.cc
 	timbuk.cc
-  ufae.cc
-  unfolding.cc
-  vata_adapter.cc
-  vata_abstraction.cc
+	ufae.cc
+	unfolding.cc
+	vata_adapter.cc
+	vata_abstraction.cc
 	virtualmachine.cc
 )
 

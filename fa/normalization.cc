@@ -22,6 +22,7 @@
 
 // Forester headers
 #include "abstractinstruction.hh"
+#include "error_messages.hh"
 #include "normalization.hh"
 #include "programerror.hh"
 #include "regdef.hh"
@@ -154,7 +155,7 @@ void Normalization::checkGarbage(
 			loc = &state_->GetInstr()->insn()->loc;
 		}
 
-		throw ProgramError("garbage detected", state_, loc);
+		throw ProgramError(ErrorMessages::GARBAGE_DETECTED, state_, loc);
 	}
 }
 

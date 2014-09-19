@@ -25,6 +25,7 @@
 #include <cl/cldebug.hh>
 
 // Forester headers
+#include "error_messages.hh"
 #include "executionmanager.hh"
 #include "jump.hh"
 #include "memplot.hh"
@@ -93,7 +94,7 @@ void FI_acc_sel::execute(ExecutionManager& execMan, SymState& state)
 	if (!data.isRef())
 	{
 		std::stringstream ss;
-		ss << "dereferenced value is not a valid reference [" << data << ']';
+		ss << ErrorMessages::DEREFERENCED << " [" << data << ']';
 		throw ProgramError(ss.str(), &state, getLoc(state));
 	}
 
@@ -121,7 +122,7 @@ void FI_acc_set::execute(ExecutionManager& execMan, SymState& state)
 	if (!data.isRef())
 	{
 		std::stringstream ss;
-		ss << "dereferenced value is not a valid reference [" << data << ']';
+		ss << ErrorMessages::DEREFERENCED << " [" << data << ']';
 		throw ProgramError(ss.str(), &state, getLoc(state));
 	}
 
@@ -222,7 +223,7 @@ void FI_move_reg_offs::execute(ExecutionManager& execMan, SymState& state)
 	if (!data.isRef())
 	{
 		std::stringstream ss;
-		ss << "dereferenced value is not a valid reference [" << data << ']';
+		ss << ErrorMessages::DEREFERENCED << " [" << data << ']';
 		throw ProgramError(ss.str(), &state, getLoc(state));
 	}
 
@@ -242,7 +243,7 @@ void FI_move_reg_inc::execute(ExecutionManager& execMan, SymState& state)
 	if (!data.isRef())
 	{
 		std::stringstream ss;
-		ss << "dereferenced value is not a valid reference [" << data << ']';
+		ss << ErrorMessages::DEREFERENCED << " [" << data << ']';
 		throw ProgramError(ss.str(), &state, getLoc(state));
 	}
 
@@ -471,7 +472,7 @@ void FI_node_create::execute(ExecutionManager& execMan, SymState& state)
 
 	if (srcData.d_void_ptr_size != size_)
 	{	// in case the type size differs from the allocated size
-		throw ProgramError("allocated block size mismatch", &state, getLoc(state));
+		throw ProgramError(ErrorMessages::ALLOCATE_MISMATCH , &state, getLoc(state));
 	}
 
 	// create a new forest automaton
@@ -503,7 +504,7 @@ void FI_node_free::execute(ExecutionManager& execMan, SymState& state)
 	if (data.d_ref.displ != 0)
 	{
 		throw ProgramError(
-			"releasing a pointer which points inside an allocated block",
+			ErrorMessages::INVALID_RELEASE,
 			&state,
 			getLoc(state));
 	}
