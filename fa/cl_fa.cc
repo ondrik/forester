@@ -159,12 +159,14 @@ void clEasyRun(const CodeStorage::Storage& stor, const char* configString)
 	}
 	catch (const NotImplementedException& e)
 	{
+		FA_ERROR("FORESTER INTERNAL ERROR\n");
 		if (nullptr != e.location())
 			FA_ERROR_MSG(e.location(), "not implemented: " << e.what());
 		else
 			FA_ERROR("not implemented: " + std::string(e.what()));
 	} catch (const std::exception& e)
 	{
+		FA_ERROR("FORESTER INTERNAL ERROR\n");
 		FA_ERROR(e.what());
 	}
 

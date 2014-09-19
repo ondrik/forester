@@ -67,12 +67,11 @@ p = subprocess.Popen([GCC_HOST, "-I",GCC_OPT,"-fplugin="+GCC_PLUG, plugin_ops,
     args[FILE_PARAM]], stderr=subprocess.PIPE)
 p.wait()
 
-print p.stderr.readlines()
 with p.stderr as f:
     if p.returncode == 0:
         print "TRUE"
     else:
-        ff = lambda acc,x : acc or "Aborted" in x or "abort" in x or "fault" in x or "not found" in x
+        ff = lambda acc,x : acc or "FORESTER INTERNAL ERROR" in x or "abort" in x or "Segmentation fault" in x
         if reduce(ff, f.readlines(), False):
             print "UNKNOWN"
         else:
