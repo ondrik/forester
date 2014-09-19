@@ -472,7 +472,7 @@ std::string Compiler::Assembly::insnToString(
 {
 	std::ostringstream os;
 	os << std::setw(8);
-	if (clInsn.bb->front() == &clInsn)
+	if (clInsn.bb != nullptr && clInsn.bb->front() == &clInsn)
 	{
 		std::ostringstream addrStream;
 		addrStream << clInsn.bb->name() << ":";
