@@ -151,7 +151,7 @@ void FI_acc_all::execute(ExecutionManager& execMan, SymState& state)
 	if (!data.isRef())
 	{
 		std::stringstream ss;
-		ss << "dereferenced value is not a valid reference [" << data << ']';
+		ss << ErrorMessages::DEREFERENCED << " [" << data << ']';
 		throw ProgramError(ss.str(), &state, getLoc(state));
 	}
 
