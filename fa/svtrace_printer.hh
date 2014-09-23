@@ -40,7 +40,7 @@ private: // private methods
 	static struct token* getNext(
 			struct token*                            begin,
 			struct token*                            next,
-			const struct CodeStorage::Insn*          instr);
+			const int                                line);
 
 
 	void printNode(
@@ -49,14 +49,16 @@ private: // private methods
 			struct token*                            act,
 			const struct token*                      end);
 
+
 	std::string getToken(
 			const struct token*                      token,
 			const std::string&                       line);
 
+
 	static struct token* findToken(
 			struct token*                            next,
 			const struct token*                      end,
-			const struct CodeStorage::Insn*          instr);
+			const int                                line);
 
 
 };

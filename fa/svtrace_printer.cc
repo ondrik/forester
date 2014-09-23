@@ -60,10 +60,11 @@ void SVTracePrinter::printTrace(
 	
 	for (const auto instr : instrs)
 	{
-		next = getNext(begin, next, instr);
+		const int lineNumber = instr->loc.line;
+		next = getNext(begin, next, lineNumber);
 		std::string line;
 		std::getline(in, line);
-		printNode(out, line, findToken(next, &end, instr), &end);
+		printNode(out, line, findToken(next, &end, lineNumber), &end);
 		++nodeNumber_;
 	}
 
@@ -103,22 +104,19 @@ void SVTracePrinter::printNode(
 struct token* SVTracePrinter::getNext(
 			struct token*                     begin,
 			struct token*                     next,
-			const struct CodeStorage::Insn*   instr)
+			const int                         line)
 {
-	const int actLine = instr->loc.line;
-
-	return ((actLine < next->pos.line) ? begin : next);
+	return ((line < next->pos.line) ? begin : next);
 }
 
 
 struct token* SVTracePrinter::findToken(
 			struct token*                            next,
 			const struct token*                      end,
-			const struct CodeStorage::Insn*          instr)
+			const int                                line)
 {
-	const int line = instr->loc.line;
 	struct token* i = next;
-	for (; i != end || i->pos.line; i = i->next);
+	for (; i != end || i->pos.line != line; i = i->next);
 
 	return i;
 }
