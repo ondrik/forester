@@ -67,6 +67,7 @@ add_library(forester STATIC
 	symexec.cc
 	symstate.cc
 	symstate_isect.cc
+	svtrace_printer.cc
 	timbuk.cc
 	ufae.cc
 	unfolding.cc
@@ -82,7 +83,11 @@ target_link_libraries(fa rt)
 find_library(CL_LIB cl ../cl_build)
 # link with vata
 find_library(VATA_LIB vata libvata/build/src)
-target_link_libraries(fa ${CL_LIB} ${VATA_LIB})
+
+#link with sparse
+find_library(SPARSE_LIB sparse sparse/)
+
+target_link_libraries(fa ${CL_LIB} ${VATA_LIB} ${SPARSE_LIB})
 
 # add vata include directories
 include_directories (libvata/include)
