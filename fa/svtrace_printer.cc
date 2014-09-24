@@ -49,10 +49,8 @@ const std::string SVTracePrinter::START = "<?xml version=\"1.0\" encoding=\"UTF-
 	<graph edgedefault=\"directed\">\n\
         <data key=\"sourcecodelang\">C</data>\n";
 
-
-
-const std::string SVTracePrinter::END = "\t</graph>\n</graphml>";
-const std::string SVTracePrinter::DATA_START = "\t\t\t<data key=";
+const std::string SVTracePrinter::END = "</graph>\n</graphml>";
+const std::string SVTracePrinter::DATA_START = "<data key=";
 const std::string SVTracePrinter::DATA_END = "</data>\n";
 const std::string SVTracePrinter::NODE_START = "<node id=";
 const std::string SVTracePrinter::NODE_END = "</node>";
@@ -95,7 +93,8 @@ void SVTracePrinter::printTrace(
 
 		if (nodeNumber_ == 1)
 		{
-			out << "\t" << NODE_START << "\"" << NODE_NAME << nodeNumber_ << "\">\n\t" << NODE_ENTRY << "\n\t" << NODE_END <<"\n";
+			out << "\t" << NODE_START << "\"" << NODE_NAME << nodeNumber_ << "\">\n\t"
+				<< NODE_ENTRY << "\n\t" << NODE_END <<"\n";
 		}
 		else
 		{
@@ -114,7 +113,7 @@ void SVTracePrinter::printTrace(
     out << "\t" << VIOLATION << DATA_END;
     out << "\t" << NODE_END << "\n";
 
-	out << END;
+	out << "\t" << END;
 	in.close();
 	return;
 }
@@ -144,26 +143,31 @@ void SVTracePrinter::printTokensOfLine(
 		code += "\n";
 	}
 
-	out << "\t\t" << EDGE_START << "\"" << NODE_NAME << nodeNumber_ << "\"" << EDGE_TARGET << "\""<<  NODE_NAME << nodeNumber_+1 << "\">\n";
-	out << DATA_START << "\"sourcecode\">" << code << "\t\t\t" << DATA_END;
+	const std::string indent("\t\t\t");
+	out << "\t\t" << EDGE_START << "\"" << NODE_NAME << nodeNumber_ << "\"" <<
+		EDGE_TARGET << "\""<<  NODE_NAME << nodeNumber_+1 << "\">\n";
+	out << indent << DATA_START << "\"sourcecode\">" << code << "\t\t\t" << DATA_END;
 	if (startTokenNumber == tokenNumber_)
 	{
-		out << DATA_START <<"\"tokens\">" << tokenNumber_ << DATA_END;
+		out << indent << DATA_START <<"\"tokens\">" << tokenNumber_ << DATA_END;
 	}
 	else
 	{
-		out << DATA_START << "\"tokens\">" << startTokenNumber << "," << tokenNumber_ << DATA_END;
+		out << indent << DATA_START << "\"tokens\">" << startTokenNumber << "," <<
+			tokenNumber_ << DATA_END;
 	}
-	out << DATA_START << "\"originfile\">\""<< filename << "\"" << DATA_END;
+	out << indent << DATA_START << "\"originfile\">\""<< filename << "\"" << DATA_END;
 	if (startTokenNumber == tokenNumber_)
 	{
-		out << DATA_START << "\"origintokens\">" << tokenNumber_ << DATA_END;
+		out << indent << DATA_START << "\"origintokens\">" <<
+			tokenNumber_ << DATA_END;
 	}
 	else
 	{
-		out << DATA_START << "\"tokens\">" << startTokenNumber << "," << tokenNumber_ << DATA_END;
+		out << indent << DATA_START << "\"tokens\">" << startTokenNumber
+			<< "," << tokenNumber_ << DATA_END;
 	}
-    out << DATA_START << "\"originline\">"<< lineNumber << DATA_END;
+    out << indent << DATA_START << "\"originline\">"<< lineNumber << DATA_END;
 	out << "\t" << EDGE_END << "\n";
 
 	return;
