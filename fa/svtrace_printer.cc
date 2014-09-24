@@ -56,9 +56,10 @@ const std::string SVTracePrinter::DATA_START = "\t\t\t<data key=";
 const std::string SVTracePrinter::DATA_END = "</data>\n";
 const std::string SVTracePrinter::NODE_START = "<node id=";
 const std::string SVTracePrinter::NODE_END = "</node>";
-const std::string SVTracePrinter::ENTRY = "<data key=\"entry\">true</data>";
+const std::string SVTracePrinter::NODE_ENTRY = "<data key=\"entry\">true</data>";
+const std::string SVTracePrinter::NODE_NAME = "A";
 const std::string SVTracePrinter::VIOLATION = "<data key=\"violation\">true";
-const std::string SVTracePrinter::EDGE_START = "edge source=";
+const std::string SVTracePrinter::EDGE_START = "<edge source=";
 const std::string SVTracePrinter::EDGE_END = "</edge>";
 const std::string SVTracePrinter::EDGE_TARGET = " target=";
 
@@ -70,8 +71,7 @@ void SVTracePrinter::printTrace(
 {
 	out << START;
 		
-	std::ifstream in;
-	in.open(filename, std::ifstream::in);
+	std::ifstream in(filename, std::ifstream::in);
 	struct token end;
 	struct token* begin = letTokenize(filename, &end);
 	struct token* next = begin;
@@ -95,11 +95,11 @@ void SVTracePrinter::printTrace(
 
 		if (nodeNumber_ == 1)
 		{
-			out << "\t" << NODE_START << "A" << nodeNumber_ << "\">\n\t" << ENTRY << "\n\t" << NODE_END <<"\n";
+			out << "\t" << NODE_START << "\"" << NODE_NAME << nodeNumber_ << "\">\n\t" << NODE_ENTRY << "\n\t" << NODE_END <<"\n";
 		}
 		else
 		{
-			out << "\t" << NODE_START << "A" << nodeNumber_ << "/>\n";
+			out << "\t" << NODE_START << "\"" << NODE_NAME << nodeNumber_ << "/>\n";
 		}
 		printTokensOfLine(
 				out,
@@ -110,11 +110,12 @@ void SVTracePrinter::printTrace(
 		++nodeNumber_;
 	}
 
-	out << "\t" << NODE_START << "A" << nodeNumber_ << "\">\n";
+	out << "\t" << NODE_START << "\"" << NODE_NAME << nodeNumber_ << "\">\n";
     out << "\t" << VIOLATION << DATA_END;
     out << "\t" << NODE_END << "\n";
 
 	out << END;
+	in.close();
 	return;
 }
 
@@ -143,7 +144,7 @@ void SVTracePrinter::printTokensOfLine(
 		code += "\n";
 	}
 
-	out << "\t\t" << EDGE_START << "A" << nodeNumber_ << EDGE_TARGET << "A" << nodeNumber_+1 << "\">\n";
+	out << "\t\t" << EDGE_START << "\"" << NODE_NAME << nodeNumber_ << "\"" << EDGE_TARGET << "\""<<  NODE_NAME << nodeNumber_+1 << "\">\n";
 	out << DATA_START << "\"sourcecode\">" << code << "\t\t\t" << DATA_END;
 	if (startTokenNumber == tokenNumber_)
 	{
