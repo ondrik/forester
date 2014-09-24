@@ -37,6 +37,7 @@ void reportErrorNoLocation(const char* errMsg)
 
 // Standard library headers
 #include <sstream>
+#include <fstream>
 #include <vector>
 #include <list>
 #include <set>
@@ -62,6 +63,7 @@ void reportErrorNoLocation(const char* errMsg)
 #include "restart_request.hh"
 #include "symctx.hh"
 #include "symexec.hh"
+#include "svtrace_printer.hh"
 
 using namespace ssd;
 
@@ -111,7 +113,7 @@ std::ostream& printTrace(
 			std::string filename = MemPlotter::plotHeap(state, "trace", &origInsn->loc);
 			lastInsn = origInsn;
 			os << std::setw(50) << std::left
-				<< Compiler::Assembly::insnToString(*origInsn) << " // "
+				<< Compiler::Assembly::insnToString(*origInsn) << " " << origInsn->loc.line << " // "
 				<< origInsn->loc.file << ":" << std::setw(4) << std::left
 				<< origInsn->loc.line << "|  " << filename << "\n";
 		}
@@ -370,6 +372,43 @@ protected:
 				{
 					Streams::traceFile(oss.str().c_str(), conf_.traceFile.c_str());
 				}
+			}
+
+			if (conf_.printSVTrace)
+			{
+				FA_LOG_MSG(e.location(), "Printing SV-Comp trace");
+				
+				// preprocess trace
+				std::vector<const CodeStorage::Insn*> trace;
+				for (const auto& state : e.state()->getTrace())
+				{
+					const CodeStorage::Insn *s = state->GetInstr()->insn();
+					if (s != NULL)
+					{
+						trace.push_back(s);
+					}
+				}
+
+				// prepare output
+				std::streambuf* buf;
+				std::ofstream of;
+				if (conf_.traceFile.length() > 0)
+				{
+					of.open(conf_.traceFile, std::ofstream::out);
+					buf = of.rdbuf();
+				}
+				else
+				{
+					buf = std::cerr.rdbuf();
+				}
+				std::ostream out(buf);
+
+				// get file name from a instruction. it is not neccessary to read it
+				// from the first instruction but it is needed to read the filename
+				const char* filename = (trace.size() > 0) ? trace[0]->loc.file : NULL;
+				
+				SVTracePrinter svPrinter;
+				svPrinter.printTrace(trace, out, filename);
 			}
 
 			if (conf_.printUcodeTrace)

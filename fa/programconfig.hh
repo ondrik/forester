@@ -39,6 +39,7 @@ public:   // data members
 	bool        onlyCompile;        ///< only compiling?
 	bool        printTrace;         ///< printing trace for errors?
 	bool        printUcodeTrace;    ///< printing microcode trace for errors?
+	bool        printSVTrace;       ///< printing trace for errors in sv-comp format?
 	std::string traceFile;          ///< file where trace will be print
 
 private:  // methods
@@ -54,6 +55,7 @@ public:   // methods
 		onlyCompile(false),
 		printTrace(false),
 		printUcodeTrace(false),
+		printSVTrace(false),
 		traceFile()
 	{
 		std::vector<std::string> args;

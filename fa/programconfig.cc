@@ -71,6 +71,13 @@ void ProgramConfig::processArg(const std::string& arg)
 		return;
 	}
 
+	if (std::string("print-trace-svcomp") == key)
+	{
+		this->printSVTrace = true;
+		FA_LOG("Config::processArg: \"print-trace-svcomp\" mode requested");
+		return;
+	}
+
 	//      ***************  binary arguments ****************
 	if (std::string("db-root") == key)
 	{

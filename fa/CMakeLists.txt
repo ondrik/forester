@@ -85,9 +85,9 @@ find_library(CL_LIB cl ../cl_build)
 find_library(VATA_LIB vata libvata/build/src)
 
 #link with sparse
-find_library(SPARSE_LIB sparse sparse/)
+find_library(SPARSE1_LIB sparse1 sparse/)
 
-target_link_libraries(fa ${CL_LIB} ${VATA_LIB} ${SPARSE_LIB})
+target_link_libraries(fa ${CL_LIB} ${VATA_LIB} ${SPARSE1_LIB})
 
 # add vata include directories
 include_directories (libvata/include)
