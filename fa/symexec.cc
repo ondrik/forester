@@ -409,6 +409,11 @@ protected:
 				
 				SVTracePrinter svPrinter;
 				svPrinter.printTrace(trace, out, filename);
+				
+				if (conf_.traceFile.length() > 0)
+				{
+					of.close();
+				}
 			}
 
 			if (conf_.printUcodeTrace)
