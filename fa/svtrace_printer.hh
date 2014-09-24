@@ -45,9 +45,9 @@ public: // public methods
 	 * This methods tokenize program in @filename. Then it iterates over
 	 * @instrs which contains the instructions of a error trace. It gradually
 	 * creates trace graph using tokenized program and print it to @out.
-	 * @param[in]  instrs   Instruction included in error trace.
-	 * @param[out] out      Output stream where the graph is printed
-	 * @param[in]  filename File with program which has been analyzed
+	 * @param[in]  instrs     Instruction included in error trace.
+	 * @param[out] out        Output stream where the graph is printed
+	 * @param[in]  filename   File with program which has been analyzed
 	 */
 	void printTrace(
 			const std::vector<const CodeStorage::Insn*>&   instrs,
