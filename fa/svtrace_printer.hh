@@ -13,6 +13,9 @@ extern "C" {
 	struct token;
 }
 
+/**
+ * @brief Class provides method for printing trace compatible with SV-Comp format.
+ */
 class SVTracePrinter
 {
 private:
@@ -22,7 +25,8 @@ private:
 	const static std::string DATA_END;
 	const static std::string NODE_START;
 	const static std::string NODE_END;
-	const static std::string ENTRY;
+	const static std::string NODE_ENTRY;
+	const static std::string NODE_NAME;
 	const static std::string VIOLATION;
 	const static std::string EDGE_START;
 	const static std::string EDGE_END;
@@ -36,6 +40,15 @@ public: // public methods
 	{}
 
 
+	/*
+	 * @brief Method prints trace from @instrs to the @out using @filename to get tokens.
+	 * This methods tokenize program in @filename. Then it iterates over
+	 * @instrs which contains the instructions of a error trace. It gradually
+	 * creates trace graph using tokenized program and print it to @out.
+	 * @param[in]  instrs   Instruction included in error trace.
+	 * @param[out] out      Output stream where the graph is printed
+	 * @param[in]  filename File with program which has been analyzed
+	 */
 	void printTrace(
 			const std::vector<const CodeStorage::Insn*>&   instrs,
 			std::ostream&                                  out,
