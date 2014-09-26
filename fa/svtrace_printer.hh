@@ -18,7 +18,7 @@ extern "C" {
  */
 class SVTracePrinter
 {
-private:
+private: // XML marks
 	const static std::string START;
 	const static std::string END;
 	const static std::string DATA_START;
@@ -31,6 +31,8 @@ private:
 	const static std::string EDGE_START;
 	const static std::string EDGE_END;
 	const static std::string EDGE_TARGET;
+
+private: // private members
 	int nodeNumber_;
 	int tokenNumber_;
 
@@ -84,6 +86,7 @@ private: // private methods
 			struct token*                                  next,
 			const struct token*                            end,
 			const int                                      line);
+
 
 	static void jumpToLine(
 			std::ifstream&                                 in,
