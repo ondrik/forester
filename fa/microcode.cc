@@ -700,3 +700,12 @@ void FI_error::execute(ExecutionManager& execMan, SymState& state)
 		<< std::endl << *(state.GetFAE()));
 	throw ProgramError(msg_, &state, getLoc(state));
 }
+
+void FI_noret::execute(ExecutionManager& execMan, SymState& state)
+{
+	(void) execMan;
+
+	std::stringstream ss;
+	ss << ErrorMessages::NORET;
+	throw ProgramError(ss.str(), &state, getLoc(state));
+}

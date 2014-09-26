@@ -1010,6 +1010,24 @@ public:
 	{
 		return os << "error";
 	}
+};
 
+/**
+ * @brief  Assertion on the value of a register
+ *
+ * Checks whether the value of a register is equal to the desired value.
+ */
+class FI_noret : public VoidInstruction
+{
+public:
+	FI_noret(const CodeStorage::Insn* insn)
+		: VoidInstruction(insn) {}
+
+	virtual void execute(ExecutionManager& execMan, SymState& state);
+
+	virtual std::ostream& toStream(std::ostream& os) const
+	{
+		return os << "abort no return";
+	}
 };
 #endif

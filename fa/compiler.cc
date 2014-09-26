@@ -2043,6 +2043,16 @@ protected:
 		}
 	}
 
+	/**
+	 * @brief Compiles an abort caused by no_return attribute of a function
+	 * 
+	 * This method compiles an abort instruction that is caused by an occurence of
+	 * no return attribute in a function declaration.
+	 */
+	void compileNoret(const CodeStorage::Insn& insn)
+	{
+		this->append(new FI_noret(&insn));
+	}
 
 	/**
 	 * @brief  Compiles an instruction
@@ -2120,6 +2130,10 @@ protected:
 
 			case cl_insn_e::CL_INSN_LABEL:
 				// safe to ignore unless we support checking for error label reachability
+				break;
+
+			case cl_insn_e::CL_INSN_ABORT: // abort cause by noreturn attribute
+				compileNoret(insn);
 				break;
 
 			default:
