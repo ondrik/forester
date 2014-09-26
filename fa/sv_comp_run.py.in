@@ -24,12 +24,15 @@ GCC_OPT=os.path.join(TOP_DIR, 'include', "forester-builtins")
 
 TIME_REGEXP = '.*clEasyRun\(\)\ took\ ([^s]*)s'
 
+# these constants are used only as the keys for PROPS_DICT
+VALID_CALL     = 'call'
 VALID_FREE     = 'valid-free'
 VALID_DEREF    = 'valid-deref'
 VALID_MEMTRACK = 'valid-memtrack'
 IGNORED        = 'ignored' # ignored Forester warnings
 
 PROPS_DICT                 = {}
+PROPS_DICT[VALID_CALL]     = ['error called']
 PROPS_DICT[VALID_FREE]     = [] # TODO invalid free
 PROPS_DICT[VALID_DEREF]    = ['dereferenced value is not a valid reference']
 PROPS_DICT[VALID_MEMTRACK] = ['garbage detected']
@@ -88,7 +91,7 @@ def execute(args):
             print "TRUE"
         else:
             ff = lambda acc,x : acc or "FORESTER INTERNAL ERROR" in x or "abort" in x or "Segmentation fault" in x
-            if reduce(ff, lines, False) or propersHold(map(lambda x: x.split()[1], formulas), lines):
+            if reduce(ff, lines, False) or propersHold(map(lambda x: x.split()[1] if VALID_CALL not in x else VALID_CALL, formulas), lines):
                 res=2
                 print "UNKNOWN"
             else:
