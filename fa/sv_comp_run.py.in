@@ -64,10 +64,18 @@ def checkProperty(prop, lines):
     ff = lambda acc, line: acc + (1 if any(i in line for i in PROPS_DICT[prop]) else 0)
     return reduce(ff, lines, 0) > 0
 
-
 def propersHold(props, lines):
     ff = lambda acc, prop: acc or checkProperty(prop, lines)
     return not reduce(ff, props, False)
+
+def getProperty(props, lines):
+    for prop in props:
+        if checkProperty(prop, lines):
+            return prop
+    return None
+
+def parseProps(formulas):
+    return map(lambda x: x.split()[1] if VALID_CALL not in x else VALID_CALL, formulas)
 
 def execute(args):
     # Parse properties
@@ -91,12 +99,17 @@ def execute(args):
             print "TRUE"
         else:
             ff = lambda acc,x : acc or "FORESTER INTERNAL ERROR" in x or "abort" in x or "Segmentation fault" in x
-            if reduce(ff, lines, False) or propersHold(map(lambda x: x.split()[1] if VALID_CALL not in x else VALID_CALL, formulas), lines):
+            if reduce(ff, lines, False) or propersHold(parseProps(formulas), lines):
                 res=2
                 print "UNKNOWN"
             else:
                 res=1
-                print "FALSE"
+                prop = getProperty(parseProps(formulas), lines)
+                if prop is None or prop not in [VALID_FREE, VALID_DEREF, VALID_MEMTRACK]:
+                    print "FALSE"
+                else:
+                    print "FALSE("+prop+")"
+
 
     print resource.getrusage(resource.RUSAGE_CHILDREN)[0]
     return res
