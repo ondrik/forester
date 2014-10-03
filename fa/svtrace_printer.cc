@@ -7,6 +7,7 @@
 #include <iostream>
 #include <fcntl.h>
 #include <unistd.h>
+#include <exception>
 
 extern "C"
 {
@@ -70,8 +71,7 @@ void SVTracePrinter::printTrace(
 	out << START;
 		
 	std::ifstream in(filename, std::ifstream::in);
-	struct token end;
-	struct token* begin = letTokenize(filename, &end);
+	struct token* begin = letTokenize(filename);
 	struct token* next = begin;
 	int lastLine = 0;
 
@@ -82,10 +82,13 @@ void SVTracePrinter::printTrace(
 		{
 			continue;
 		}
+
 		next = getNext(begin, next, lineNumber);
+
 		std::string line;
 		jumpToLine(in, lastLine, lineNumber, line);
 		lastLine = lineNumber;
+		
 		if (line.length() == 0)
 		{
 			continue;
@@ -100,12 +103,11 @@ void SVTracePrinter::printTrace(
 		{
 			out << "\t" << NODE_START << "\"" << NODE_NAME << nodeNumber_ << "/>\n";
 		}
+
 		printTokensOfLine(
 				out,
 				filename,
-				line,
-				findToken(next, &end, lineNumber+1),
-				&end);
+				findToken(next, lineNumber+1));
 		++nodeNumber_;
 	}
 
@@ -119,15 +121,12 @@ void SVTracePrinter::printTrace(
 }
 
 
-
 void SVTracePrinter::printTokensOfLine(
 			std::ostream&                                 out,
 			const char*                                   filename,
-			const std::string&                            line,
-			struct token*                                 act,
-			const struct token*                           end)
+			struct token*                                 act)
 {
-	if (act == end || line.length() == 0)
+	if (eof_token(act))
 	{
 		return;
 	}
@@ -136,13 +135,14 @@ void SVTracePrinter::printTokensOfLine(
 	const int startTokenNumber = tokenNumber_;
 	std::string code = "";
 
-	for (struct token* i = act; i->pos.line == lineNumber && i != end; i = i->next)
+	for (struct token* i = act; i->pos.line == lineNumber && !eof_token(i); i = i->next)
 	{
 		++tokenNumber_;
-		code += getToken(i, line);
-		code += "\n";
+		code += std::string(show_token(i)) + '\n';
 	}
+	code += "\n";
 
+	// Printing XML
 	const std::string indent("\t\t\t");
 	out << "\t\t" << EDGE_START << "\"" << NODE_NAME << nodeNumber_ << "\"" <<
 		EDGE_TARGET << "\""<<  NODE_NAME << nodeNumber_+1 << "\">\n";
@@ -164,7 +164,7 @@ void SVTracePrinter::printTokensOfLine(
 	}
 	else
 	{
-		out << indent << DATA_START << "\"tokens\">" << startTokenNumber
+		out << indent << DATA_START << "\"origintokens\">" << startTokenNumber
 			<< "," << tokenNumber_ << DATA_END;
 	}
     out << indent << DATA_START << "\"originline\">"<< lineNumber << DATA_END;
@@ -185,47 +185,36 @@ struct token* SVTracePrinter::getNext(
 
 struct token* SVTracePrinter::findToken(
 			struct token*                               next,
-			const struct token*                         end,
 			const int                                   line)
 {
 	struct token* i = next;
-	for (; i != end && i->pos.line != line; i = i->next);
+	struct token* j = i;
+	for (; !eof_token(i) && i->pos.line != line; j=i, i = i->next);
 
 	return i;
 }
 
 
 struct token* SVTracePrinter::letTokenize(
-		const char*                                     filename,
-		struct token*                                   end)
+		const char*                                     filename)
 {
 	const char *next_path[2] = {
 		"",
 		NULL
 	};
+	struct token end;
+
 	int fd = open(filename, O_RDONLY);
-	struct token* begin = tokenize(filename, fd, end, next_path);
+	if (fd < 0)
+	{
+		throw std::runtime_error("Cannot open file \"" + std::string(filename) + "\" for tokenizing\n");
+	}
+	struct token* begin = tokenize(filename, fd, &end, next_path);
 	close(fd);
 
 	return begin;
 }
 
-
-std::string SVTracePrinter::getToken(
-		const struct token*                            token,
-		const std::string&                             line)
-{
-	const int end = (token->pos.line != token->next->pos.line) ? line.length() : token->next->pos.pos;
-	std::string res = "";
-
-	for (int i = token->pos.pos+1; i < end && line[i-1] != '\n'; ++i)
-	{
-		res += line[i-1];
-	}
-	res += "\0";
-
-	return res;
-}
 
 void SVTracePrinter::jumpToLine(
 			std::ifstream&                                 in,

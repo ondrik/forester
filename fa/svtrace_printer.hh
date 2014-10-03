@@ -59,8 +59,7 @@ public: // public methods
 
 private: // private methods
 	struct token* letTokenize(
-			const char*                                    filename,
-			struct token*                                  end);
+			const char*                                    filename);
 
 
 	static struct token* getNext(
@@ -72,19 +71,11 @@ private: // private methods
 	void printTokensOfLine(
 			std::ostream&                                  out,
 			const char*                                    filename,
-			const std::string&                             line,
-			struct token*                                  act,
-			const struct token*                            end);
-
-
-	std::string getToken(
-			const struct token*                            token,
-			const std::string&                             line);
+			struct token*                                  act);
 
 
 	static struct token* findToken(
 			struct token*                                  next,
-			const struct token*                            end,
 			const int                                      line);
 
 
