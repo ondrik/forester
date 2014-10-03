@@ -198,21 +198,21 @@ struct token* SVTracePrinter::findToken(
 struct token* SVTracePrinter::letTokenize(
 		const char*                                     filename)
 {
-	const char *next_path[2] = {
+	const char *includepath[4] = {
 		"",
+		"/usr/include",
+		"/usr/local/include",
 		NULL
 	};
-	struct token end;
-
+	
 	int fd = open(filename, O_RDONLY);
 	if (fd < 0)
 	{
 		throw std::runtime_error("Cannot open file \"" + std::string(filename) + "\" for tokenizing\n");
 	}
-	struct token* begin = tokenize(filename, fd, &end, next_path);
+	struct token* begin = tokenize(filename, fd, NULL, includepath);
 	close(fd);
-
-	return begin;
+	return preprocess(begin);
 }
 
 
