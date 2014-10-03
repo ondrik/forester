@@ -385,7 +385,7 @@ protected:
 					const CodeStorage::Insn *s = state->GetInstr()->insn();
 					if (s != NULL)
 					{
-						trace.push_back(s);
+						trace.insert(trace.begin()+0,s);
 					}
 				}
 
