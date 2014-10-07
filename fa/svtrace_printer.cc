@@ -63,6 +63,10 @@ const std::string SVTracePrinter::EDGE_END = "</edge>";
 const std::string SVTracePrinter::EDGE_TARGET = " target=";
 
 
+// private constants
+const int SVTracePrinter::TO_EOL = -1;
+
+
 void SVTracePrinter::printTrace(
 			const std::vector<const CodeStorage::Insn*>&   instrs,
 			std::ostream&                                  out,
@@ -70,32 +74,23 @@ void SVTracePrinter::printTrace(
 {
 	out << START;
 		
-	std::ifstream in(filename, std::ifstream::in);
 	struct token* begin = letTokenize(filename);
 	struct token* next = begin;
-	int lastLine = 0;
 
-	for (const auto instr : instrs)
+	for (size_t i = 0; i < instrs.size(); ++i)
 	{
+		const auto instr = instrs.at(i);
 		const int lineNumber = instr->loc.line;
-		if (lineNumber == lastLine)
-		{
-			continue;
-		}
 
 		next = getNext(begin, next, lineNumber);
-
-		std::string line;
-		jumpToLine(in, lastLine, lineNumber, line);
-		lastLine = lineNumber;
 		
-		if (line.length() == 0)
+		if (i+1 < instrs.size() && instrsEq(instr, instrs.at(i+1)))
 		{
 			continue;
 		}
 
 		if (nodeNumber_ == 1)
-		{
+		{ // TODO this should be refactored
 			out << "\t" << NODE_START << "\"" << NODE_NAME << nodeNumber_ << "\">\n\t"
 				<< NODE_ENTRY << "\n\t" << NODE_END <<"\n";
 		}
@@ -104,10 +99,18 @@ void SVTracePrinter::printTrace(
 			out << "\t" << NODE_START << "\"" << NODE_NAME << nodeNumber_ << "/>\n";
 		}
 
-		printTokensOfLine(
+		size_t to = TO_EOL;
+		if (i+1 < instrs.size() && instr->loc.line == instrs.at(i+1)->loc.line)
+		{
+			to = instrs.at(i+1)->loc.column-1;
+		}
+
+		printTokens(
 				out,
 				filename,
-				findToken(next, lineNumber+1));
+				findToken(next, instr->loc.column-1, lineNumber),
+				to);
+
 		++nodeNumber_;
 	}
 
@@ -116,26 +119,28 @@ void SVTracePrinter::printTrace(
     out << "\t" << NODE_END << "\n";
 
 	out << "\t" << END;
-	in.close();
-	return;
 }
 
-
-void SVTracePrinter::printTokensOfLine(
+void SVTracePrinter::printTokens(
 			std::ostream&                                 out,
 			const char*                                   filename,
-			struct token*                                 act)
+			struct token*                                 act,
+			const int                                     to)
 {
-	if (eof_token(act))
+	if (eof_token(act) || act == NULL)
 	{
-		return;
+		throw std::invalid_argument("SVTracePrinter: act is invalid token");
 	}
 
 	const int lineNumber = act->pos.line;
 	const int startTokenNumber = tokenNumber_;
 	std::string code = "";
 
-	for (struct token* i = act; i->pos.line == lineNumber && !eof_token(i); i = i->next)
+	struct token* i;
+	for (
+			i = act;
+			i->pos.line == lineNumber && !allRead(i->pos.pos, to) && !eof_token(i);
+			i = i->next)
 	{
 		++tokenNumber_;
 		code += std::string(show_token(i)) + '\n';
@@ -147,6 +152,7 @@ void SVTracePrinter::printTokensOfLine(
 	out << "\t\t" << EDGE_START << "\"" << NODE_NAME << nodeNumber_ << "\"" <<
 		EDGE_TARGET << "\""<<  NODE_NAME << nodeNumber_+1 << "\">\n";
 	out << indent << DATA_START << "\"sourcecode\">" << code << "\t\t\t" << DATA_END;
+
 	if (startTokenNumber == tokenNumber_)
 	{
 		out << indent << DATA_START <<"\"tokens\">" << tokenNumber_ << DATA_END;
@@ -156,7 +162,9 @@ void SVTracePrinter::printTokensOfLine(
 		out << indent << DATA_START << "\"tokens\">" << startTokenNumber << "," <<
 			tokenNumber_ << DATA_END;
 	}
+
 	out << indent << DATA_START << "\"originfile\">\""<< filename << "\"" << DATA_END;
+	
 	if (startTokenNumber == tokenNumber_)
 	{
 		out << indent << DATA_START << "\"origintokens\">" <<
@@ -167,12 +175,10 @@ void SVTracePrinter::printTokensOfLine(
 		out << indent << DATA_START << "\"origintokens\">" << startTokenNumber
 			<< "," << tokenNumber_ << DATA_END;
 	}
+
     out << indent << DATA_START << "\"originline\">"<< lineNumber << DATA_END;
 	out << "\t" << EDGE_END << "\n";
-
-	return;
 }
-
 
 struct token* SVTracePrinter::getNext(
 			struct token*                               begin,
@@ -185,13 +191,28 @@ struct token* SVTracePrinter::getNext(
 
 struct token* SVTracePrinter::findToken(
 			struct token*                               next,
+			const int                                   from,
 			const int                                   line)
 {
 	struct token* i = next;
-	struct token* j = i;
-	for (; !eof_token(i) && i->pos.line != line; j=i, i = i->next);
+	bool first = false;
+	for (; !eof_token(i) && i->pos.line != line; i = i->next) first = true; // jump to line
+	if (first)
+	{
+		return i;
+	}
 
-	return i;
+	// jump to token
+	for (; !eof_token(i) && i->pos.line == line && i->pos.pos < from; i = i->next);
+
+	if (!(i->pos.line == line && i->pos.pos >= from))
+	{
+		return NULL;
+	}
+	else
+	{
+		return i;
+	}
 }
 
 
@@ -212,19 +233,23 @@ struct token* SVTracePrinter::letTokenize(
 	}
 	struct token* begin = tokenize(filename, fd, NULL, includepath);
 	close(fd);
+
 	return preprocess(begin);
 }
 
 
-void SVTracePrinter::jumpToLine(
-			std::ifstream&                                 in,
-			const int                                      actLine,
-			const int                                      nextLine,
-			std::string&                                   line)
+bool SVTracePrinter::allRead(
+			const int                                      current,
+			const int                                      to)
 {
-	for (int i = actLine; i < nextLine; ++i)
-	{
-		std::getline(in, line);
-	}
+	return current > to && to != TO_EOL;
 }
 
+bool SVTracePrinter::instrsEq(
+			const CodeStorage::Insn*                       instr1,
+			const CodeStorage::Insn*                       instr2)
+{
+	return instr1->loc.line == instr2->loc.line &&
+		instr1->loc.column >= instr2->loc.column &&
+		instr1->code == instr2->code;
+}

@@ -32,6 +32,9 @@ private: // XML marks
 	const static std::string EDGE_END;
 	const static std::string EDGE_TARGET;
 
+private: // constats
+	const static int TO_EOL;
+
 private: // private members
 	int nodeNumber_;
 	int tokenNumber_;
@@ -58,6 +61,7 @@ public: // public methods
 
 
 private: // private methods
+
 	struct token* letTokenize(
 			const char*                                    filename);
 
@@ -68,14 +72,16 @@ private: // private methods
 			const int                                      line);
 
 
-	void printTokensOfLine(
+	void printTokens(
 			std::ostream&                                  out,
 			const char*                                    filename,
-			struct token*                                  act);
+			struct token*                                  act,
+			const int                                      to);
 
 
 	static struct token* findToken(
 			struct token*                                  next,
+			const int                                      from,
 			const int                                      line);
 
 
@@ -85,6 +91,15 @@ private: // private methods
 			const int                                      nextLine,
 			std::string&                                   line);
 
+
+	static inline bool allRead(
+			const int                                      current,
+			const int                                      to);
+
+
+	static inline bool instrsEq(
+			const CodeStorage::Insn*                       instr1,
+			const CodeStorage::Insn*                       instr2);
 
 };
 
