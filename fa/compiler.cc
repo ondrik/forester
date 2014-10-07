@@ -2039,13 +2039,6 @@ protected:
 				cPlotHeap(insn);
 				return;
 			case builtin_e::biAbort:
-				// abort() is not supported... anyway, if abort() is used, Code Listener
-				// gives a special instruction as the last instruction (as there is
-				// no return): CL_INSN_ABORT
-				throw NotImplementedException(
-					insn.operands[1].data.cst.data.cst_fnc.name, &insn.loc);
-				// TODO: this does not look very nice either... where is checking for
-				// garbage?
 				this->append(new FI_abort(&insn));
 				return;
 			case builtin_e::biError:
@@ -2181,7 +2174,7 @@ protected:
 				// safe to ignore unless we support checking for error label reachability
 				break;
 
-			case cl_insn_e::CL_INSN_ABORT: // abort cause by noreturn attribute
+			case cl_insn_e::CL_INSN_ABORT: // abort caused by noreturn attribute
 				compileNoret(insn);
 				break;
 

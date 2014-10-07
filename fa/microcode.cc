@@ -573,6 +573,8 @@ void FI_assert::execute(ExecutionManager& execMan, SymState& state)
 // FI_abort
 void FI_abort::execute(ExecutionManager& execMan, SymState& state)
 {
+	// Check for garbage before finishing path
+	GarbageChecker::check(const_cast<FAE&>(*(state.GetFAE())), &state);
 	execMan.pathFinished(&state);
 }
 
