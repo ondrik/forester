@@ -137,6 +137,31 @@ public:
 };
 
 /**
+ * @brief  Comparison for less-equeal
+ *
+ * This instruction compares its operands for the less-equal relation.
+ */
+class FI_le : public FI_cmp_base
+{
+public:
+
+	FI_le(
+		const CodeStorage::Insn*          insn,
+		size_t                            dst,
+		size_t                            src1,
+		size_t                            src2) :
+		FI_cmp_base(insn, dst, src1, src2)
+	{ }
+
+	virtual void execute(ExecutionManager& execMan, SymState& state);
+
+	virtual std::ostream& toStream(std::ostream& os) const {
+		return os << "le    \tr" << this->dstReg_ << ", r" << this->src1_ << ", r"
+			<< this->src2_;
+	}
+};
+
+/**
  * @brief  Comparison for greater-than
  *
  * This instruction compares its operands for the greater-than relation.
@@ -157,6 +182,31 @@ public:
 
 	virtual std::ostream& toStream(std::ostream& os) const {
 		return os << "gt    \tr" << this->dstReg_ << ", r" << this->src1_ << ", r"
+			<< this->src2_;
+	}
+};
+
+/**
+ * @brief  Comparison for greater-equal
+ *
+ * This instruction compares its operands for the greater-equal relation.
+ */
+class FI_ge : public FI_cmp_base
+{
+public:
+
+	FI_ge(
+		const CodeStorage::Insn*          insn,
+		size_t                            dst,
+		size_t                            src1,
+		size_t                            src2) :
+		FI_cmp_base(insn, dst, src1, src2)
+	{ }
+
+	virtual void execute(ExecutionManager& execMan, SymState& state);
+
+	virtual std::ostream& toStream(std::ostream& os) const {
+		return os << "ge    \tr" << this->dstReg_ << ", r" << this->src1_ << ", r"
 			<< this->src2_;
 	}
 };

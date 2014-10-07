@@ -1670,6 +1670,46 @@ protected:
 		cKillDeadVariables(insn.varsToKill, insn);
 	}
 
+
+	/**
+	 * @brief  Compiles integer binary operation
+	 *
+	 * This method compiles operation of two integer operands.
+	 * The operation is defined by type F.
+	 *
+	 * @param[in]  insn       The corresponding instruction in the code storage
+	 */
+	template<class F>
+	void compileIntBinOp(const CodeStorage::Insn& insn)
+	{
+		const cl_operand& dst = insn.operands[0];
+		const cl_operand& src1 = insn.operands[1];
+		const cl_operand& src2 = insn.operands[2];
+
+		// assert that all operands are integer
+		assert(dst.type->code == cl_type_e::CL_TYPE_INT);
+		assert(src1.type->code == cl_type_e::CL_TYPE_INT);
+		assert(src2.type->code == cl_type_e::CL_TYPE_INT);
+
+		// get registers for the sources and the target
+		size_t dstReg = lookupStoreReg(dst, 0);
+		size_t src1Reg = cLoadOperand(0, src1, insn);
+		size_t src2Reg = cLoadOperand(1, src2, insn);
+
+		// append the instruction for integer addition
+		append(new F(&insn, dstReg, src1Reg, src2Reg));
+
+		cStoreOperand(
+			/* target operand */ dst,
+			/* reg with src value */ dstReg,
+			/* reg pointing to memory location with the value to be stored */ 1,
+			insn
+		);
+		// kill dead variables
+		cKillDeadVariables(insn.varsToKill, insn);
+	}
+
+
 	/**
 	 * @brief  Compile pointer arithmetics
 	 *
@@ -2097,11 +2137,20 @@ protected:
 					case cl_binop_e::CL_BINOP_LT:
 						compileCmp<FI_lt>(insn);
 						break;
+					case cl_binop_e::CL_BINOP_LE:
+						compileCmp<FI_le>(insn);
+						break;
 					case cl_binop_e::CL_BINOP_GT:
 						compileCmp<FI_gt>(insn);
 						break;
+					case cl_binop_e::CL_BINOP_GE:
+						compileCmp<FI_ge>(insn);
+						break;
 					case cl_binop_e::CL_BINOP_PLUS:
-						compilePlus(insn);
+						compileIntBinOp<FI_iadd>(insn);
+						break;
+					case cl_binop_e::CL_BINOP_MULT:
+						compileIntBinOp<FI_imul>(insn);
 						break;
 					case cl_binop_e::CL_BINOP_POINTER_PLUS:
 						compilePointerPlus(insn);

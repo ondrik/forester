@@ -529,6 +529,20 @@ void FI_iadd::execute(ExecutionManager& execMan, SymState& state)
 	execMan.enqueue(tmpState);
 }
 
+// FI_mul
+void FI_imul::execute(ExecutionManager& execMan, SymState& state)
+{
+	// Assertions
+	assert(state.GetReg(src1_).isInt() && state.GetReg(src2_).isInt());
+
+	SymState* tmpState = execMan.createChildStateWithNewRegs(state, next_);
+
+	int prod = tmpState->GetReg(src1_).d_int * tmpState->GetReg(src2_).d_int;
+	tmpState->SetReg(dstReg_, Data::createInt((prod > 0)? 1 : 0));
+
+	execMan.enqueue(tmpState);
+}
+
 // FI_check
 void FI_check::execute(ExecutionManager& execMan, SymState& state)
 {

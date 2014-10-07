@@ -25,6 +25,23 @@
 // anonymous namespace
 namespace
 {
+
+struct Eq
+{
+	bool operator()(const Data& x, const Data& y) const
+	{
+		return x == y;
+	}
+};
+
+struct Neq
+{
+	bool operator()(const Data& x, const Data& y) const
+	{
+		return x != y;
+	}
+};
+
 struct Lt
 {
 	bool operator()(const Data& x, const Data& y) const
@@ -102,14 +119,12 @@ inline void executeGeneric(
 
 void FI_eq::execute(ExecutionManager& execMan, SymState& state)
 {
-	executeGeneric(*this, execMan, state,
-		[](const Data& x, const Data& y){return x == y;});
+	executeGeneric(*this, execMan, state, Eq());
 }
 
 void FI_neq::execute(ExecutionManager& execMan, SymState& state)
 {
-	executeGeneric(*this, execMan, state,
-		[](const Data& x, const Data& y){return x != y;});
+	executeGeneric(*this, execMan, state, Neq());
 }
 
 void FI_lt::execute(ExecutionManager& execMan, SymState& state)
@@ -117,7 +132,27 @@ void FI_lt::execute(ExecutionManager& execMan, SymState& state)
 	executeGeneric(*this, execMan, state, Lt());
 }
 
+void FI_le::execute(ExecutionManager& execMan, SymState& state)
+{
+	auto le = [](const Data& x, const Data& y){
+		Eq eq;
+		Lt lt;
+		return (eq(x,y) || lt(x,y));
+	};
+	executeGeneric(*this, execMan, state, le);
+}
+
 void FI_gt::execute(ExecutionManager& execMan, SymState& state)
 {
 	executeGeneric(*this, execMan, state, Gt());
+}
+
+void FI_ge::execute(ExecutionManager& execMan, SymState& state)
+{
+	auto ge = [](const Data& x, const Data& y){
+		Eq eq;
+		Lt gt;
+		return (eq(x,y) || gt(x,y));
+	};
+	executeGeneric(*this, execMan, state, ge);
 }

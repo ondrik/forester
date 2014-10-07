@@ -768,6 +768,32 @@ public:
 };
 
 /**
+ * @brief  Computes integer multiplication
+ */
+class FI_imul : public RegisterAssignment
+{
+	/// Index of the register with the first operand
+	size_t src1_;
+
+	/// Index of the register with the other operand
+	size_t src2_;
+
+public:
+
+	FI_imul(const CodeStorage::Insn* insn, size_t dst, size_t src1, size_t src2)
+		: RegisterAssignment(insn, dst), src1_(src1), src2_(src2)
+	{ }
+
+	virtual void execute(ExecutionManager& execMan, SymState& state);
+
+	virtual std::ostream& toStream(std::ostream& os) const {
+		return os << "imul  \tr" << this->dstReg_ << ", r" << this->src1_
+			<< ", r" << this->src2_;
+	}
+
+};
+
+/**
  * @brief  Checks for the absence of garbage
  */
 class FI_check : public VoidInstruction
