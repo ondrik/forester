@@ -95,7 +95,8 @@ def execute(args):
     res=0
     with p.stderr as f:
         lines = f.readlines()
-        if p.returncode == 0:
+        okf = lambda acc,x : acc or "The program is SAFE." in x
+        if reduce(okf, lines, False):
             print "TRUE"
         else:
             ff = lambda acc,x : acc or "FORESTER INTERNAL ERROR" in x or "abort" in x or "Segmentation fault" in x
