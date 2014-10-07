@@ -90,8 +90,12 @@ protected:
 		const std::vector<bool>&          marked);
 
 
-public:
+	bool selfReachable(
+		size_t                            root,
+		size_t                            self,
+		const std::vector<bool>&          marked);
 
+public:
 
 	/**
 	 * @brief  Checks for garbage
@@ -101,12 +105,6 @@ public:
 	 * @todo  This method fails for backward-only reachable components
 	 */
 	void check() const;
-
-
-	bool selfReachable(
-		size_t                            root,
-		size_t                            self,
-		const std::vector<bool>&          marked);
 
 
 	void scan(
