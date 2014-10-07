@@ -51,6 +51,7 @@ add_library(forester STATIC
 	folding.cc
 	forestaut.cc
 	forestautext.cc
+	garbage_checker.cc
 	integrity.cc
 	jump.cc
 	label.cc

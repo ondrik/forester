@@ -23,6 +23,7 @@
 // Forester headers
 #include "abstractinstruction.hh"
 #include "error_messages.hh"
+#include "garbage_checker.hh"
 #include "normalization.hh"
 #include "programerror.hh"
 #include "regdef.hh"
@@ -101,73 +102,6 @@ void Normalization::traverse(
 
 		this->fae.connectionGraph.visit(root, visited, order, marked);
 	}
-}
-
-
-void Normalization::traverse(
-	std::vector<bool>&                visited) const
-{
-	visited = std::vector<bool>(this->fae.getRootCount(), false);
-
-	for (const Data& var : this->fae.GetVariables())
-	{
-		// skip everything what is not a root reference
-		if (!var.isRef())
-			continue;
-
-		size_t root = var.d_ref.root;
-
-		// check whether we traversed this one before
-		if (visited[root])
-			continue;
-
-		this->fae.connectionGraph.visit(root, visited);
-	}
-}
-
-
-void Normalization::checkGarbage(
-	const std::vector<bool>&          visited) const
-{
-	bool garbage = false;
-
-	for (size_t i = 0; i < this->fae.getRootCount(); ++i)
-	{
-		if (!this->fae.getRoot(i))
-			continue;
-
-		if (!visited[i])
-		{
-			FA_DEBUG_AT(1, "the root " << i << " is not referenced anymore ... "
-				<< this->fae.connectionGraph.data[i]);
-
-			garbage = true;
-		}
-	}
-
-	if (garbage)
-	{
-		const cl_loc* loc = nullptr;
-		if (nullptr != state_ &&
-			nullptr != state_->GetInstr() &&
-			nullptr != state_->GetInstr()->insn())
-		{
-			loc = &state_->GetInstr()->insn()->loc;
-		}
-
-		throw ProgramError(ErrorMessages::GARBAGE_DETECTED, state_, loc);
-	}
-}
-
-
-void Normalization::check() const
-{
-	// compute reachable roots
-	std::vector<bool> visited(this->fae.getRootCount(), false);
-	this->traverse(visited);
-
-	// check garbage
-	this->checkGarbage(visited);
 }
 
 
@@ -250,7 +184,7 @@ void Normalization::scan(
 	this->traverse(visited, order, marked);
 
 	// check garbage
-	this->checkGarbage(visited);
+	GarbageChecker::checkGarbage(this->fae, this->state_, visited);
 
 	if (!extended)
 	{

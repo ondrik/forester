@@ -27,6 +27,7 @@
 // Forester headers
 #include "error_messages.hh"
 #include "executionmanager.hh"
+#include "garbage_checker.hh"
 #include "jump.hh"
 #include "memplot.hh"
 #include "microcode.hh"
@@ -548,7 +549,7 @@ void FI_check::execute(ExecutionManager& execMan, SymState& state)
 {
 	state.GetFAE()->updateConnectionGraph();
 
-	Normalization(const_cast<FAE&>(*(state.GetFAE())), &state).check();
+	GarbageChecker::check(const_cast<FAE&>(*(state.GetFAE())), &state);
 
 	SymState* tmpState = execMan.createChildState(state, next_);
 	execMan.enqueue(tmpState);

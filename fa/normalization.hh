@@ -56,22 +56,6 @@ protected:
 
 
 	/**
-	 * @brief  Traverse the forest automaton and mark visited components
-	 *
-	 * This method traverses the forest automaton and marks visited components
-	 * in the passed bitmap.
-	 *
-	 * @param[out]  visited  Bitmap into which visited components are marked
-	 */
-	void traverse(
-		std::vector<bool>&                visited) const;
-
-
-	void checkGarbage(
-		const std::vector<bool>&          visited) const;
-
-
-	/**
 	 * @brief  Normalizes given root recursively
 	 *
 	 * This method performs recursively normalization of all components reachable
@@ -96,16 +80,6 @@ protected:
 		const std::vector<bool>&          marked);
 
 public:
-
-	/**
-	 * @brief  Checks for garbage
-	 *
-	 * Checks for garbage, i.e. components unreachable from program variables.
-	 *
-	 * @todo  This method fails for backward-only reachable components
-	 */
-	void check() const;
-
 
 	void scan(
 		std::vector<bool>&                marked,
