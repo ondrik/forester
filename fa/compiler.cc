@@ -999,7 +999,7 @@ protected:
 
 						if (acc != nullptr && acc->code == CL_ACCESSOR_DEREF_ARRAY)
 						{
-							throw NotImplementedException("cLoadOperand(): access of an array");
+							throw NotImplementedException("cLoadOperand(): array access");
 						}
 						// assert there are no more accessors
 						assert(acc == nullptr);
