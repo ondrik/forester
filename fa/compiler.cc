@@ -1252,6 +1252,10 @@ protected:
 						acc = Core::computeOffset(offset, acc);
 					}
 
+					if (acc != nullptr && acc->code == CL_ACCESSOR_DEREF_ARRAY)
+					{
+						throw NotImplementedException("cStoreOperand(): array access");
+					}
 					// assert there are no more accessors
 					assert(acc == nullptr);
 
