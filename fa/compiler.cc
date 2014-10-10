@@ -1407,7 +1407,10 @@ protected:
 		// Assertions
 		assert(src.type != nullptr);
 		assert(dst.type != nullptr);
-		assert(src.type->code == dst.type->code);
+
+		if (src.type->code != dst.type->code) {
+			throw NotImplementedException("compileAssignment: Type conversion is not supported.");
+		}
 
 		// get registers for the source and the target
 		size_t dstReg = lookupStoreReg(dst, 0);
