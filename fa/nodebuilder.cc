@@ -2,9 +2,9 @@
 
 void NodeBuilder::buildNode(
 	std::vector<SelData>& nodeInfo,
-	const cl_type* type,
-	int offset,
-	const std::string& name)
+	const cl_type*                          type,
+	int                                     offset,
+	const std::string&                      name)
 {
 	// Assertions
 	assert(type != nullptr);
@@ -47,9 +47,9 @@ void NodeBuilder::buildNode(
 
 
 void NodeBuilder::buildNode(
-	std::vector<size_t>& nodeInfo,
-	const cl_type* type,
-	int offset)
+	std::vector<size_t>&                      nodeInfo,
+	const cl_type*                            type,
+	int                                       offset)
 {
 	// Assertions
 	assert(type != nullptr);
@@ -76,9 +76,9 @@ void NodeBuilder::buildNode(
 }
 
 void NodeBuilder::buildNodes(
-	std::vector<size_t>& nodeInfo,
-	const std::vector<const cl_type*>& components,
-	int offset)
+	std::vector<size_t>&                      nodeInfo,
+	const std::vector<const cl_type*>&        components,
+	int                                       offset)
 {
 	for (const cl_type* elem : components)
 	{

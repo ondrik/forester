@@ -50,9 +50,9 @@ struct NodeBuilder {
 	 */
 	static void buildNode(
 		std::vector<SelData>& nodeInfo,
-		const cl_type* type,
-		int offset = 0,
-		const std::string& name = "");
+		const cl_type*                           type,
+		int                                      offset = 0,
+		const std::string&                       name = "");
 
 
 	/**
@@ -68,9 +68,9 @@ struct NodeBuilder {
 	 * @param[in]   offset    Offset of the node in the flat offset space
 	 */
 	static void buildNode(
-		std::vector<size_t>& nodeInfo,
-		const cl_type* type,
-		int offset = 0);
+		std::vector<size_t>&                     nodeInfo,
+		const cl_type*                           type,
+		int                                      offset = 0);
 
 
 	/**
@@ -86,9 +86,9 @@ struct NodeBuilder {
 	 * @param[in]   offset      The initial offset
 	 */
 	static void buildNodes(
-		std::vector<size_t>& nodeInfo,
-		const std::vector<const cl_type*>& components,
-		int offset = 0);
+		std::vector<size_t>&                     nodeInfo,
+		const std::vector<const cl_type*>&       components,
+		int                                      offset = 0);
 };
 
 #endif
