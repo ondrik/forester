@@ -586,7 +586,7 @@ public:   // methods
 		std::vector<size_t> v;
 		if (!components.empty())
 		{ // in case the are some global variables
-			NodeBuilder::buildNode(v, components, 0);
+			NodeBuilder::buildNodes(v, components, 0);
 		}
 		else
 		{	// in case there are no global variables, make one fake
