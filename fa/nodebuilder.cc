@@ -75,7 +75,7 @@ void NodeBuilder::buildNode(
 	}
 }
 
-void NodeBuilder::buildNode(
+void NodeBuilder::buildNodes(
 	std::vector<size_t>& nodeInfo,
 	const std::vector<const cl_type*>& components,
 	int offset)

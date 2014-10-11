@@ -85,7 +85,7 @@ struct NodeBuilder {
 	 * @param[in]   components  The array of components
 	 * @param[in]   offset      The initial offset
 	 */
-	static void buildNode(
+	static void buildNodes(
 		std::vector<size_t>& nodeInfo,
 		const std::vector<const cl_type*>& components,
 		int offset = 0);
