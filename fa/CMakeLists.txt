@@ -58,6 +58,7 @@ add_library(forester STATIC
 	memplot.cc
 	microcode.cc
 	microcode_rev.cc
+	nodebuilder.cc
 	normalization.cc
 	plotenum.cc
 	programconfig.cc
