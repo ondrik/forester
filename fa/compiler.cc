@@ -685,6 +685,7 @@ protected:
 		// Assertions
 		assert(op.code == cl_operand_e::CL_OPERAND_CST);
 		assert(op.type != nullptr);
+		isTypeImplemented(op.type->code);
 
 		switch (op.type->code)
 		{
@@ -872,6 +873,8 @@ protected:
 		size_t                      tmp,
 		const CodeStorage::Insn&    insn)
 	{
+		isTypeImplemented(op.type->code);
+		
 		const cl_accessor* acc = op.accessor;    // the initial accessor
 		int offset = 0;                          // the initial offset
 
@@ -1458,6 +1461,7 @@ protected:
 			/* reg pointing to memory location with the value to be stored */ 1,
 			insn
 		);
+
 		// kill dead variables
 		cKillDeadVariables(insn.varsToKill, insn);
 	}
@@ -2424,6 +2428,8 @@ protected:
 
 		for (const CodeStorage::Var& var : stor.vars)
 		{
+			isTypeImplemented(var.type->code);
+
 			if (CodeStorage::EVar::VAR_GL == var.code)
 			{	// for each global variable
 				if (!var.isExtern)
@@ -2506,6 +2512,20 @@ protected:
 
 		delete curCtx_;
 		curCtx_ = nullptr;
+	}
+
+	/**
+	 * This is the place where forester dies on unimplemented operands types
+	 */
+	void isTypeImplemented(const enum cl_type_e& op)
+	{
+		switch(op)
+		{
+			case(CL_TYPE_UNION):
+				throw NotImplementedException("Union type is not supported");
+			default:
+				break;
+		}
 	}
 
 public:
