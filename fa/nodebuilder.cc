@@ -1,5 +1,12 @@
 #include "nodebuilder.hh"
 
+#include "notimpl_except.hh"
+
+namespace {
+	const std::string zeroExceptionMssg =
+		"Zero size node is not supported. A type is not probably well defined";
+}
+
 void NodeBuilder::buildNode(
 	std::vector<SelData>& nodeInfo,
 	const cl_type*                          type,
@@ -8,7 +15,10 @@ void NodeBuilder::buildNode(
 {
 	// Assertions
 	assert(type != nullptr);
-	assert(type->size > 0);
+	if (type->size > 0)
+	{
+		throw NotImplementedException(zeroExceptionMssg);
+	}
 
 	// according to the type
 	switch (type->code)
@@ -53,7 +63,10 @@ void NodeBuilder::buildNode(
 {
 	// Assertions
 	assert(type != nullptr);
-	assert(type->size > 0);
+	if (type->size > 0)
+	{
+		throw NotImplementedException(zeroExceptionMssg);
+	}
 
 	// according to the type
 	switch (type->code)
