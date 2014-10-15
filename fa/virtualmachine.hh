@@ -49,12 +49,43 @@ public:   // data types
 	/// Transition
 	typedef TreeAut::Transition Transition;
 
+
+	/**
+	 * @brief Functor for manipulation with output data
+	 * Functor providing functions for saving to output data and getting an
+	 * information from such a object. It is used when transition is modified.
+	 * The methods differs when there are only one input object or a vector
+	 * of the input objects
+	 */
+	struct OutDataFunctor
+	{
+		/**
+		 * Saves data from \p temp to \p out using sel.
+		 * @param[out] out Output object where data will be stored
+		 * @param[in]  sel Selector of processed transition
+		 * @param[in]  temp Object whose data will be loaded
+		 */
+		virtual void save(Data& out, const size_t sel, const Data& temp) = 0;
+
+
+		/**
+		 * Gets data from \p out
+		 * @param[in] out Data of this object are going to be returned
+		 * @return data from @out
+		 */
+		virtual Data& get(Data& out) = 0;
+
+
+		virtual ~OutDataFunctor() {};
+	};
+
+
 private:   // data members
 
 	/// Reference to the forest automaton representing the environment
 	FAE& fae_;
 
-protected:// methods
+private:// methods
 
 	/**
 	 * @brief  Sets displacement of type and value information
@@ -70,6 +101,7 @@ protected:// methods
 		if (data.isRef())
 			data.d_ref.displ = sel.displ;
 	}
+
 
 	/**
 	 * @brief  Sets displacement of selector information
@@ -90,6 +122,7 @@ protected:// methods
 		}
 	}
 
+
 	/**
 	 * @brief  Is the box a selector?
 	 *
@@ -108,6 +141,7 @@ protected:// methods
 
 		return box->isType(box_type_e::bSel);
 	}
+
 
 	/**
 	 * @brief  Reads selector data from a SelBox
@@ -129,6 +163,7 @@ protected:// methods
 
 		return static_cast<const SelBox*>(box)->getData();
 	}
+
 
 	/**
 	 * @brief  Is the box a selector with given offset?
@@ -155,6 +190,7 @@ protected:// methods
 
 		return VirtualMachine::readSelector(box).offset == offset;
 	}
+
 
 	/**
 	 * @brief  Retrieve data from given transition
@@ -209,6 +245,15 @@ protected:// methods
 		size_t                                        base,
 		const std::vector<std::pair<size_t, Data>>&   in,
 		Data&                                         out);
+
+
+	void transitionModifyInternal(
+		TreeAut&                                      dst,
+		const Transition&                             transition,
+		size_t                                        base,
+		const std::vector<std::pair<size_t, Data>>&   in,
+		Data&                                         out,
+		OutDataFunctor&                               outFunctor);
 
 
 public:

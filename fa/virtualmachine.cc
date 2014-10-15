@@ -20,6 +20,7 @@
 // Forester headers
 #include "virtualmachine.hh"
 
+
 void VirtualMachine::transitionLookup(
 	const Transition&              transition,
 	size_t                         base,
@@ -75,33 +76,31 @@ void VirtualMachine::transitionModify(
 	const Data&                         in,
 	Data&                               out)
 {
-	// Create a new final state
-	size_t state = fae_.freshState();
-	dst.addFinalState(state);
-
-	std::vector<size_t> lhs = transition.GetChildren();
-
-	// Retrieve the item with given offset from the transition
-	std::vector<const AbstractBox*> label = TreeAut::GetSymbol(transition)->getNode();
-	const NodeLabel::NodeItem& ni = TreeAut::GetSymbol(transition)->nodeLookup(offset);
-	// Assertions
-	assert(VirtualMachine::isSelectorWithOffset(ni.aBox, offset));
-
-	const Data* tmp = nullptr;
-	if (!fae_.isData(transition.GetNthChildren(ni.offset), tmp))
+	struct SingleData : public OutDataFunctor
 	{
-		throw std::runtime_error("transitionModify(): destination is not a leaf!");
-	}
+		virtual void save(Data& out, const size_t sel, const Data& temp)
+		{
+			out = temp;
+		}
 
-	out = *tmp;
-	SelData s = VirtualMachine::readSelector(ni.aBox);
-	VirtualMachine::displToData(s, out);
-	Data d = in;
-	VirtualMachine::displToSel(s, d);
-	lhs[ni.offset] = fae_.addData(dst, d);
-	label[ni.index] = fae_.boxMan->getSelector(s);
-	FAE::reorderBoxes(label, lhs);
-	dst.addTransition(lhs, fae_.boxMan->lookupLabel(label), state);
+
+		virtual Data& get(Data& out)
+		{
+			return out;
+		}
+	};
+
+	SingleData functor;
+	/// In with key zero pushed because zero is neutral to addition
+	/// so it will be possible to use general function for transition modification
+	std::vector<std::pair<size_t, Data>> tempVector = {std::pair<size_t, Data>(0, in)};
+	transitionModifyInternal(
+			dst,
+			transition,
+			offset,
+			tempVector,
+			out,
+			functor);
 }
 
 
@@ -111,6 +110,40 @@ void VirtualMachine::transitionModify(
 	size_t                                          base,
 	const std::vector<std::pair<size_t, Data>>&     in,
 	Data&                                           out)
+{
+	struct MultiData : public OutDataFunctor
+	{
+		virtual void save(Data& out, const size_t sel, const Data& temp)
+		{
+			out.d_struct->push_back(Data::item_info(sel, temp));
+		}
+
+
+		virtual Data& get(Data& out)
+		{
+			return out.d_struct->back().second;
+		}
+	};
+
+	MultiData functor;
+	out = Data::createStruct();
+	transitionModifyInternal(
+			dst,
+			transition,
+			base,
+			in,
+			out,
+			functor);
+}
+
+
+void VirtualMachine::transitionModifyInternal(
+		TreeAut&                                        dst,
+		const Transition&                               transition,
+		size_t                                          base,
+		const std::vector<std::pair<size_t, Data>>&     in,
+		Data&                                           out,
+		OutDataFunctor&                                 outFunc)
 {
 	// Create a new final state
 	size_t state = fae_.freshState();
@@ -137,9 +170,9 @@ void VirtualMachine::transitionModify(
 			throw std::runtime_error("transitionModify(): destination is not a leaf!");
 		}
 
-		out.d_struct->push_back(Data::item_info(sel.first, *tmp));
+		outFunc.save(out, sel.first, *tmp);
 		SelData s = VirtualMachine::readSelector(ni.aBox);
-		VirtualMachine::displToData(s, out.d_struct->back().second);
+		VirtualMachine::displToData(s, outFunc.get(out));
 		Data d = sel.second;
 		VirtualMachine::displToSel(s, d);
 		lhs[ni.offset] = fae_.addData(dst, d);
