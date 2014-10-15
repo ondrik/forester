@@ -15,7 +15,7 @@ void NodeBuilder::buildNode(
 {
 	// Assertions
 	assert(type != nullptr);
-	if (type->size > 0)
+	if (type->size <= 0)
 	{
 		throw NotImplementedException(zeroExceptionMssg);
 	}
@@ -63,7 +63,7 @@ void NodeBuilder::buildNode(
 {
 	// Assertions
 	assert(type != nullptr);
-	if (type->size > 0)
+	if (type->size <= 0)
 	{
 		throw NotImplementedException(zeroExceptionMssg);
 	}
