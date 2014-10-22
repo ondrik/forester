@@ -18,36 +18,24 @@ extern "C" {
  */
 class SVTracePrinter
 {
-private: // XML marks
-	const static std::string START;
-	const static std::string END;
-	const static std::string DATA_START;
-	const static std::string DATA_END;
-	const static std::string NODE_START;
-	const static std::string NODE_END;
-	const static std::string NODE_ENTRY;
-	const static std::string NODE_NAME;
-	const static std::string VIOLATION;
-	const static std::string EDGE_START;
-	const static std::string EDGE_END;
-	const static std::string EDGE_TARGET;
-
-private: // constats
-	const static int TO_EOL;
 
 private: // private members
+
 	int nodeNumber_;
 	int tokenNumber_;
+	struct token* next_;
 
 public: // public methods
 
-	SVTracePrinter() : nodeNumber_(1), tokenNumber_(0)
+	SVTracePrinter() : nodeNumber_(1), tokenNumber_(0), next_(nullptr)
 	{}
 
 
 	/*
 	 * @brief Method prints trace from @instrs to the @out using @filename to get tokens.
+	 *
 	 * This methods tokenize program in @filename. Then it iterates over
+	 * 
 	 * @instrs which contains the instructions of a error trace. It gradually
 	 * creates trace graph using tokenized program and print it to @out.
 	 * @param[in]  instrs     Instruction included in error trace.
@@ -66,41 +54,15 @@ private: // private methods
 			const char*                                    filename);
 
 
-	static struct token* getNext(
-			struct token*                                  begin,
-			struct token*                                  next,
-			const int                                      line);
-
-
 	void printTokens(
 			std::ostream&                                  out,
 			const char*                                    filename,
-			struct token*                                  act,
 			const int                                      to);
 
 
-	static struct token* findToken(
-			struct token*                                  next,
+	void findToken(
 			const int                                      from,
 			const int                                      line);
-
-
-	static void jumpToLine(
-			std::ifstream&                                 in,
-			const int                                      actLine,
-			const int                                      nextLine,
-			std::string&                                   line);
-
-
-	static inline bool allRead(
-			const int                                      current,
-			const int                                      to);
-
-
-	static inline bool instrsEq(
-			const CodeStorage::Insn*                       instr1,
-			const CodeStorage::Insn*                       instr2);
-
 };
 
 #endif
