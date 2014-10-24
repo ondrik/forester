@@ -32,7 +32,7 @@ VALID_MEMTRACK = 'valid-memtrack'
 IGNORED        = 'ignored' # ignored Forester warnings
 
 PROPS_DICT                 = {}
-PROPS_DICT[VALID_CALL]     = ['error called']
+PROPS_DICT[VALID_CALL]     = ['error called', 'noreturn function called']
 PROPS_DICT[VALID_FREE]     = [] # TODO invalid free
 PROPS_DICT[VALID_DEREF]    = ['dereferenced value is not a valid reference']
 PROPS_DICT[VALID_MEMTRACK] = ['garbage detected']
@@ -88,7 +88,7 @@ def execute(args):
     formulas = [x[1] for x in props]
     # execute Forester
     plugin_ops = '-fplugin-arg-libfa-args=print-trace-svcomp;trace-file='+args[TRACE_PARAM]+' ' # Note options has to end with space
-    p = subprocess.Popen([GCC_HOST, "-I",GCC_OPT,"-fplugin="+GCC_PLUG, plugin_ops,
+    p = subprocess.Popen([GCC_HOST, "-I",GCC_OPT+" -o /dev/null -O0 -DFORESTER","-fplugin="+GCC_PLUG, plugin_ops,
         args[FILE_PARAM]], stderr=subprocess.PIPE)
     p.wait()
 
@@ -99,7 +99,7 @@ def execute(args):
         if reduce(okf, lines, False):
             print "TRUE"
         else:
-            ff = lambda acc,x : acc or "FORESTER INTERNAL ERROR" in x or "abort" in x or "Segmentation fault" in x
+            ff = lambda acc,x : acc or "FORESTER INTERNAL ERROR" in x or "Segmentation fault" in x
             if reduce(ff, lines, False) or propersHold(parseProps(formulas), lines):
                 res=2
                 print "UNKNOWN"
