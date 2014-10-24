@@ -80,6 +80,37 @@ namespace
 		out << "\t" << NODE_END << "\n";
 		out << "\t" << END;
 	}
+
+	void printEdge(
+			std::ostream&                                  out,
+			const std::string                              filename,
+			const int                                      lineNumber,
+			const int                                      nodeNumber)
+	{
+		const std::string indent("\t\t");
+		out << "\t" << EDGE_START << "\"" << NODE_NAME << nodeNumber << "\"" <<
+			EDGE_TARGET << "\""<<  NODE_NAME << nodeNumber+1 << "\">\n";
+
+		out << indent << DATA_START << "\"originfile\">\""<<  filename << "\"" << DATA_END;
+		out << indent << DATA_START << "\"originline\">"<< lineNumber << DATA_END;
+		out << "\t" << EDGE_END << "\n";
+
+	}
+
+	void printNode(
+			std::ostream&                                  out,
+			const int                                      nodeNumber)
+	{
+		if (nodeNumber == 1)
+		{
+			out << "\t" << NODE_START << "\"" << NODE_NAME << nodeNumber << "\">\n\t"
+				<< NODE_ENTRY << "\n\t" << NODE_END <<"\n";
+		}
+		else
+		{
+			out << "\t" << NODE_START << "\"" << NODE_NAME << nodeNumber << "\"/>\n";
+		}
+	}
 }
 
 
@@ -99,24 +130,9 @@ void SVTraceLite::printTrace(
 			continue;
 		}
 
-		if (nodeNumber_ == 1)
-		{
-			out << "\t" << NODE_START << "\"" << NODE_NAME << nodeNumber_ << "\">\n\t"
-				<< NODE_ENTRY << "\n\t" << NODE_END <<"\n";
-		}
-		else
-		{
-			out << "\t" << NODE_START << "\"" << NODE_NAME << nodeNumber_ << "\"/>\n";
-		}
+		printNode(out, nodeNumber_);
+		printEdge(out, instr->loc.file, lineNumber, nodeNumber_);
 	
-		const std::string indent("\t\t\t");
-		out << "\t\t" << EDGE_START << "\"" << NODE_NAME << nodeNumber_ << "\"" <<
-			EDGE_TARGET << "\""<<  NODE_NAME << nodeNumber_+1 << "\">\n";
-
-		out << indent << DATA_START << "\"originfile\">\""<< instr->loc.file << "\"" << DATA_END;
-		out << indent << DATA_START << "\"originline\">"<< lineNumber << DATA_END;
-		out << "\t" << EDGE_END << "\n";
-
 		++nodeNumber_;
 	}
 	
