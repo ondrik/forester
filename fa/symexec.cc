@@ -63,7 +63,7 @@ void reportErrorNoLocation(const char* errMsg)
 #include "restart_request.hh"
 #include "symctx.hh"
 #include "symexec.hh"
-#include "svtrace_printer.hh"
+#include "svtrace_lite.hh"
 
 using namespace ssd;
 
@@ -405,10 +405,10 @@ protected:
 
 				// get file name from a instruction. it is not neccessary to read it
 				// from the first instruction but it is needed to read the filename
-				const char* filename = (trace.size() > 0) ? trace[0]->loc.file : NULL;
+				//const char* filename = (trace.size() > 0) ? trace[0]->loc.file : NULL;
 				
-				SVTracePrinter svPrinter;
-				svPrinter.printTrace(trace, out, filename);
+				SVTraceLite svPrinter;
+				svPrinter.printTrace(trace, out);
 				
 				if (conf_.traceFile.length() > 0)
 				{

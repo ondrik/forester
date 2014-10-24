@@ -70,6 +70,7 @@ add_library(forester STATIC
 	symstate.cc
 	symstate_isect.cc
 	svtrace_printer.cc
+	svtrace_lite.cc
 	timbuk.cc
 	ufae.cc
 	unfolding.cc
