@@ -49,7 +49,7 @@ struct NodeBuilder {
 	 * @param[in]   offset    Offset of the node in the flat offset space
 	 */
 	static void buildNode(
-		std::vector<SelData>& nodeInfo,
+		std::vector<SelData>&                    nodeInfo,
 		const cl_type*                           type,
 		int                                      offset = 0,
 		const std::string&                       name = "");
