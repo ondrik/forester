@@ -20,6 +20,8 @@
 // Forester headers
 #include "folding.hh"
 
+#include "config.h"
+
 namespace
 {	// anonymous namespace
 

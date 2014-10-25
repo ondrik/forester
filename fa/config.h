@@ -66,4 +66,8 @@
 #define FA_USE_PREDICATE_ABSTRACTION     0
 
 
+#define FA_ALLOW_ZERO_STRUCT        1
+
+#define FA_CONTINUE_WITH_GARBAGE    1
+
 #endif /* CONFIG_H */

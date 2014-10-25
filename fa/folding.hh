@@ -30,7 +30,6 @@
 // Forester headers
 #include "abstractbox.hh"
 #include "boxman.hh"
-#include "config.h"
 #include "connection_graph.hh"
 #include "forestautext.hh"
 #include "restart_request.hh"

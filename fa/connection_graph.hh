@@ -35,7 +35,6 @@
 #include "types.hh"
 #include "treeaut_label.hh"
 #include "abstractbox.hh"
-#include "config.h"
 
 
 #define _MSBM         ((~static_cast<size_t>(0)) >> 1)
@@ -104,17 +103,8 @@ public:
 				this->defines == rhs.defines;
 		}
 
-		bool operator%(const CutpointInfo& rhs) const
-		{
-			return this->root == rhs.root &&
-				this->refCount == rhs.refCount &&
-#if FA_TRACK_SELECTORS
-				this->selCount == rhs.selCount &&
-#endif
-//				this->fwdSelectors == rhs.fwdSelectors &&
-				this->bwdSelector == rhs.bwdSelector &&
-				this->defines == rhs.defines;
-		}
+		bool operator%(const CutpointInfo& rhs) const;
+
 
 		friend size_t hash_value(const CutpointInfo& info)
 		{

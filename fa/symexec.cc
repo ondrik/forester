@@ -20,6 +20,7 @@
 // DO NOT MOVE LINES IN THIS PART  --- BEGIN
 
 // Forester headers
+#include "config.h"
 #include "streams.hh"
 
 /**

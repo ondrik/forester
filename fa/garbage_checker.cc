@@ -5,9 +5,10 @@
 #include <cl/code_listener.h>
 
 // Forester headers
-#include "streams.hh"
+#include "config.h"
 #include "error_messages.hh"
 #include "programerror.hh"
+#include "streams.hh"
 
 
 void GarbageChecker::traverse(
@@ -65,9 +66,15 @@ void GarbageChecker::checkGarbage(
 		{
 			loc = &state->GetInstr()->insn()->loc;
 		}
-		FA_ERROR_MSG(loc, ErrorMessages::GARBAGE_DETECTED);
 
-		//throw ProgramError(ErrorMessages::GARBAGE_DETECTED, state, loc);
+		if (!FA_CONTINUE_WITH_GARBAGE)
+		{
+			throw ProgramError(ErrorMessages::GARBAGE_DETECTED, state, loc);
+		}
+		else
+		{
+			FA_ERROR_MSG(loc, ErrorMessages::GARBAGE_DETECTED);
+		}
 	}
 }
 

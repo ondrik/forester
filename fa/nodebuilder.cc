@@ -1,6 +1,7 @@
 #include "nodebuilder.hh"
 
 #include "notimpl_except.hh"
+#include "config.h"
 
 namespace {
 	const std::string zeroExceptionMssg =
@@ -14,7 +15,9 @@ namespace {
 	{
 		// Assertions
 		assert(type != nullptr);
-		if (type->size <= 0)
+
+
+		if (!FA_ALLOW_ZERO_STRUCT && type->size <= 0)
 		{
 			throw NotImplementedException(zeroExceptionMssg);
 		}

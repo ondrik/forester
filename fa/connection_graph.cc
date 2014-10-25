@@ -19,7 +19,21 @@
 
 // Forester headers
 #include "connection_graph.hh"
+#include "config.h"
 #include "forestaut.hh"
+
+
+bool ConnectionGraph::CutpointInfo::operator%(const CutpointInfo& rhs) const
+{
+			return this->root == rhs.root &&
+				this->refCount == rhs.refCount &&
+#if FA_TRACK_SELECTORS
+				this->selCount == rhs.selCount &&
+#endif
+//				this->fwdSelectors == rhs.fwdSelectors &&
+				this->bwdSelector == rhs.bwdSelector &&
+				this->defines == rhs.defines;
+}
 
 
 void ConnectionGraph::updateStateSignature(

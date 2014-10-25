@@ -27,6 +27,7 @@
 
 // Forester headers
 #include "box.hh"
+#include "config.h"
 
 class BoxAntichain
 {
