@@ -46,7 +46,13 @@ public:
 	static void checkGarbage(
 		const FAE&                        fae,
 		const SymState*                   state,
-		const std::vector<bool>&          visited);
+		const std::vector<bool>&          visited,
+		std::vector<size_t>&              unvisited);
+
+
+	static void removeGarbage(
+		FAE&                             fae,
+		const std::vector<size_t>&       unvisited);
 
 
 	/**
@@ -58,6 +64,11 @@ public:
 	 */
 	static void check(
 		const FAE&                       fae,
+		const SymState*                  state);
+
+
+	static void checkAndRemoveGarbage(
+		FAE&                             fae,
 		const SymState*                  state);
 };
 

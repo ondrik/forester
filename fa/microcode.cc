@@ -549,7 +549,7 @@ void FI_check::execute(ExecutionManager& execMan, SymState& state)
 {
 	state.GetFAE()->updateConnectionGraph();
 
-	GarbageChecker::check(const_cast<FAE&>(*(state.GetFAE())), &state);
+	GarbageChecker::checkAndRemoveGarbage(const_cast<FAE&>(*(state.GetFAE())), &state);
 
 	SymState* tmpState = execMan.createChildState(state, next_);
 	execMan.enqueue(tmpState);
@@ -574,7 +574,7 @@ void FI_assert::execute(ExecutionManager& execMan, SymState& state)
 void FI_abort::execute(ExecutionManager& execMan, SymState& state)
 {
 	// Check for garbage before finishing path
-	GarbageChecker::check(const_cast<FAE&>(*(state.GetFAE())), &state);
+	GarbageChecker::checkAndRemoveGarbage(const_cast<FAE&>(*(state.GetFAE())), &state);
 	execMan.pathFinished(&state);
 }
 

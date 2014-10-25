@@ -36,7 +36,8 @@ void GarbageChecker::traverse(
 void GarbageChecker::checkGarbage(
 	const FAE&                        fae,
 	const SymState*                   state,
-	const std::vector<bool>&          visited)
+	const std::vector<bool>&          visited,
+	std::vector<size_t>&              unvisited)
 {
 	bool garbage = false;
 
@@ -51,6 +52,7 @@ void GarbageChecker::checkGarbage(
 				<< fae.connectionGraph.data[i]);
 
 			garbage = true;
+			unvisited.push_back(i);
 		}
 	}
 
@@ -63,8 +65,20 @@ void GarbageChecker::checkGarbage(
 		{
 			loc = &state->GetInstr()->insn()->loc;
 		}
+		FA_ERROR_MSG(loc, ErrorMessages::GARBAGE_DETECTED);
 
-		throw ProgramError(ErrorMessages::GARBAGE_DETECTED, state, loc);
+		//throw ProgramError(ErrorMessages::GARBAGE_DETECTED, state, loc);
+	}
+}
+
+
+void GarbageChecker::removeGarbage(
+		FAE&                             fae,
+		const std::vector<size_t>&       unvisited)
+{
+	for (size_t i : unvisited)
+	{
+		fae.setRoot(i, nullptr);
 	}
 }
 
@@ -77,6 +91,22 @@ void GarbageChecker::check(
 	std::vector<bool> visited(fae.getRootCount(), false);
 	traverse(fae, visited);
 
+	std::vector<size_t> unvisited;
 	// check garbage
-	checkGarbage(fae, state, visited);
+	checkGarbage(fae, state, visited, unvisited);
+}
+
+
+void GarbageChecker::checkAndRemoveGarbage(
+	FAE&                              fae,
+	const SymState*                   state)
+{
+	// compute reachable roots
+	std::vector<bool> visited(fae.getRootCount(), false);
+	traverse(fae, visited);
+
+	std::vector<size_t> unvisited;
+	// check garbage
+	checkGarbage(fae, state, visited, unvisited);
+	removeGarbage(fae, unvisited);
 }
