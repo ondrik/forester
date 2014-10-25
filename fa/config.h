@@ -65,9 +65,14 @@
  */
 #define FA_USE_PREDICATE_ABSTRACTION     0
 
-
+/**
+ * allow to use structures with zero size, e.g. pointers to undefined types
+ */
 #define FA_ALLOW_ZERO_STRUCT        1
 
+/**
+ * forester will continue in analysis also after detection of a garbage
+ */
 #define FA_CONTINUE_WITH_GARBAGE    1
 
 #endif /* CONFIG_H */
