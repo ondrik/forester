@@ -91,9 +91,9 @@ void ProgramConfig::processArg(const std::string& arg)
 		return;
 	}
 
-	if (arg.substr(0, arg.find_first_of('=')) == "trace-file")
+	if (arg.substr(0, arg.find_first_of(':')) == "trace-file")
 	{
-		this->traceFile = arg.substr(arg.find_first_of('=')+1,arg.length());
+		this->traceFile = arg.substr(arg.find_first_of(':')+1,arg.length());
 		FA_LOG("Config::processArg: \"trace-file\" mode requested");
 		return;
 	}
