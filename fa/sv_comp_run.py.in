@@ -96,20 +96,19 @@ def execute(args):
     with p.stderr as f:
         lines = f.readlines()
         okf = lambda acc,x : acc or "The program is SAFE." in x
-        if reduce(okf, lines, False):
+        ff = lambda acc,x : acc or "FORESTER INTERNAL ERROR" in x or "Segmentation fault" in x
+        prop = getProperty(parseProps(formulas), lines)
+        if reduce(okf, lines, False) and not prop == VALID_MEMTRACK:
             print "TRUE"
+        elif reduce(ff, lines, False) or propersHold(parseProps(formulas), lines):
+            res=2
+            print "UNKNOWN"
         else:
-            ff = lambda acc,x : acc or "FORESTER INTERNAL ERROR" in x or "Segmentation fault" in x
-            if reduce(ff, lines, False) or propersHold(parseProps(formulas), lines):
-                res=2
-                print "UNKNOWN"
+            res=1
+            if prop is None or prop not in [VALID_FREE, VALID_DEREF, VALID_MEMTRACK]:
+                print "FALSE"
             else:
-                res=1
-                prop = getProperty(parseProps(formulas), lines)
-                if prop is None or prop not in [VALID_FREE, VALID_DEREF, VALID_MEMTRACK]:
-                    print "FALSE"
-                else:
-                    print "FALSE("+prop+")"
+                print "FALSE("+prop+")"
 
 
     print resource.getrusage(resource.RUSAGE_CHILDREN)[0]
