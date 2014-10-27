@@ -2459,10 +2459,10 @@ protected:
 						// load 0 into r0
 						append(new FI_load_cst(nullptr, 0, Data::createInt(0)));
 
-						auto itVarMap = globalVarMap.find(var.uid);
-						assert(globalVarMap.end() != itVarMap);
+						assert(globalVarMap.end() != globalVarMap.find(var.uid));
+						const VarInfo& varInfo = globalVarMap.find(var.uid)->second;
 
-						int offset = itVarMap->second.getGlobalBlockOffset();
+						int offset = varInfo.getGlobalBlockOffset();
 
 						// load the variable into r1
 						append(new FI_get_GLOB(nullptr, 1, offset));
