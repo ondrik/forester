@@ -2469,21 +2469,23 @@ protected:
 
 						if (cl_type_e::CL_TYPE_STRUCT == var.type->code)
 						{	// in case the operand is a structure
-#if 0
 							// build a symbolic node
 							std::vector<size_t> offs;
-							NodeBuilder::buildNode(offs, op.type);
+							NodeBuilder::buildNode(offs, var.type);
+							append(new FI_acc_set(nullptr, 0, offset, offs));
 
+#if 0
 							if (needsAcc)
 							{	// in case separation is needed
 								// append separation of a set of nodes
 								append(new FI_acc_set(&insn, tmp, offset, offs));
 							}
 
-							// append store of the value into register
-							append(new FI_stores(&insn, tmp, src, offset));
 #endif
-							throw NotImplementedException("Implicit initialization of a structure");
+							// append store of the value into register
+							append(new FI_stores(nullptr, 1, 0, offset));
+
+							//throw NotImplementedException("Implicit initialization of a structure");
 						} else
 						{	// in case the operand is anything but a structure
 
