@@ -137,10 +137,9 @@ struct SelData
 	 */
 	friend std::ostream& operator<<(std::ostream& os, const SelData& x)
 	{
-		// assert that a selector has a name
-		assert(!x.name.empty());
+		std::string name = x.name.empty() ? "unknown" : x.name;
 
-		os << x.name << '[' << x.offset << ':' << x.size << ':';
+		os << name << '[' << x.offset << ':' << x.size << ':';
 		if (x.displ >= 0)
 		{
 			os << '+';

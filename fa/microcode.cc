@@ -471,7 +471,7 @@ void FI_node_create::execute(ExecutionManager& execMan, SymState& state)
 
 	SymState* tmpState = execMan.createChildStateWithNewRegs(state, next_);
 
-	if (srcData.d_void_ptr_size != size_)
+	if (checkSize_ && srcData.d_void_ptr_size != size_)
 	{	// in case the type size differs from the allocated size
 		throw ProgramError(ErrorMessages::ALLOCATE_MISMATCH , &state, getLoc(state));
 	}
@@ -549,7 +549,7 @@ void FI_check::execute(ExecutionManager& execMan, SymState& state)
 {
 	state.GetFAE()->updateConnectionGraph();
 
-	GarbageChecker::checkAndRemoveGarbage(const_cast<FAE&>(*(state.GetFAE())), &state);
+	GarbageChecker::checkAndRemoveGarbage(const_cast<FAE&>(*(state.GetFAE())), &state, false);
 
 	SymState* tmpState = execMan.createChildState(state, next_);
 	execMan.enqueue(tmpState);
@@ -574,7 +574,7 @@ void FI_assert::execute(ExecutionManager& execMan, SymState& state)
 void FI_abort::execute(ExecutionManager& execMan, SymState& state)
 {
 	// Check for garbage before finishing path
-	GarbageChecker::checkAndRemoveGarbage(const_cast<FAE&>(*(state.GetFAE())), &state);
+	GarbageChecker::checkAndRemoveGarbage(const_cast<FAE&>(*(state.GetFAE())), &state, true);
 	execMan.pathFinished(&state);
 }
 

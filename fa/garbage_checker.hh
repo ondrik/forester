@@ -47,7 +47,8 @@ public:
 		const FAE&                        fae,
 		const SymState*                   state,
 		const std::vector<bool>&          visited,
-		std::vector<size_t>&              unvisited);
+		std::vector<size_t>&              unvisited,
+		const bool                        endCheck=false);
 
 
 	static void removeGarbage(
@@ -69,7 +70,8 @@ public:
 
 	static void checkAndRemoveGarbage(
 		FAE&                             fae,
-		const SymState*                  state);
+		const SymState*                  state,
+		const bool                       endCheck);
 };
 
 #endif

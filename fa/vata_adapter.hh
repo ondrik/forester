@@ -35,7 +35,7 @@ private:
     typedef TreeAut::SymbolType SymbolType;
 
 public:   // data types
-		typedef TreeAut::Transition Transition;
+	typedef TreeAut::Transition Transition;
     typedef TreeAut::Iterator iterator;
     typedef TreeAut::DownAccessor DownAccessor;
     // iterator over accepting transitions
@@ -243,7 +243,7 @@ public: // public methods
      * @return Transition with the same parts
      */
     const Transition getTransition(
-        const std::vector<size_t>&          children,
+				const std::vector<size_t>&          children,
 				const SymbolType&                   symbol,
 				const size_t                        parent);
 

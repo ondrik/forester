@@ -526,32 +526,30 @@ public:   // methods
 		{	// for each data type in the storage
 			std::vector<size_t> v;
 			std::string name;
+			if (type->name)
+			{	// in case the structure has a name
+				name = std::string(type->name);
+			}
+			else
+			{	// in case the structure is nameless
+				std::ostringstream ss;
+				ss << type->uid;
+				name = ss.str();
+			}
+			FA_DEBUG_AT(3, name);
 
 			switch (type->code)
 			{
 				case cl_type_e::CL_TYPE_STRUCT: // for a structure
-
-					if (type->name)
-					{	// in case the structure has a name
-						name = std::string(type->name);
-					}
-					else
-					{	// in case the structure is nameless
-						std::ostringstream ss;
-						ss << type->uid;
-						name = ss.str();
-					}
-
 					NodeBuilder::buildNode(v, type);
-
-					FA_DEBUG_AT(3, name);
-
-					boxMan_.createTypeInfo(name, v);
 					break;
 
 				default: // for other types
+					v.push_back(0);
 					break;
 			}
+
+			boxMan_.createTypeInfo(name, v);
 		}
 
 		// ************ infer functions' stackframes ************
@@ -567,7 +565,7 @@ public:   // methods
 			}
 
 			std::ostringstream ss;
-			ss << nameOf(*fnc) << ':' << uidOf(*fnc);
+			ss << "__@" << nameOf(*fnc) << ':' << uidOf(*fnc);
 
 			FA_DEBUG_AT(3, ss.str());
 

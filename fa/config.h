@@ -75,4 +75,6 @@
  */
 #define FA_CONTINUE_WITH_GARBAGE    1
 
+#define FA_ALLOW_STACK_FRAME_ABSTRACTION 0
+
 #endif /* CONFIG_H */

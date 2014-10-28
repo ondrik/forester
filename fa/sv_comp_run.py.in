@@ -109,8 +109,6 @@ def execute(args):
                 print "FALSE"
             else:
                 print "FALSE("+prop+")"
-
-
     print resource.getrusage(resource.RUSAGE_CHILDREN)[0]
     return res
 

@@ -61,6 +61,13 @@ struct SmartTMatchF
         label_type l2 = TreeAut::GetSymbol(t2);
 		if (l1->isNode() && l2->isNode())
 		{
+			if (!FA_ALLOW_STACK_FRAME_ABSTRACTION)
+			{
+				if ((static_cast<const TypeBox *>(l1->nodeLookup(-1).aBox))->getName().find("__@") == 0)
+				{
+					return l1 == l2;
+				}
+			}
 			return l1->getTag() == l2->getTag();
 		}
 

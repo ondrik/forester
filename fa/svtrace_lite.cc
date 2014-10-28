@@ -59,7 +59,7 @@ namespace
 			const CodeStorage::Insn*                       instr2)
 	{
 		return instr1->loc.line == instr2->loc.line &&
-			instr1->loc.column >= instr2->loc.column &&
+			instr1->loc.column >= instr2->loc.column && // TODO: remove this if needed
 			instr1->code == instr2->code;
 	}
 

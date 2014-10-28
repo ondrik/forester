@@ -663,6 +663,8 @@ class FI_node_create : public SequentialInstruction
 	/// Selectors of the desired data structure
 	std::vector<SelData> sels_;
 
+	bool checkSize_;
+
 private:  // methods
 
 	FI_node_create(const FI_node_create&);
@@ -676,14 +678,16 @@ public:
 		size_t                          src,
 		size_t                          size,
 		const TypeBox*                  typeInfo,
-		const std::vector<SelData>&     sels
+		const std::vector<SelData>&     sels,
+		bool                            checkSize = true
 	) :
 		SequentialInstruction(insn),
 		dst_(dst),
 		src_(src),
 		size_(size),
 		typeInfo_(typeInfo),
-		sels_(sels)
+		sels_(sels),
+		checkSize_(checkSize)
 	{ }
 
 	virtual void execute(ExecutionManager& execMan, SymState& state);
@@ -699,7 +703,7 @@ public:
 		assert(nullptr != typeInfo_);
 
 		os << "node  \tr" << this->dst_ << ", r" << this->src_ << ", ("
-			<< typeInfo_->getName() << "), <";
+			<< typeInfo_->getName() << (checkSize_ ? ", strict" : "") << "), <";
 
 		for (auto it = sels_.cbegin(); it != sels_.cend(); ++it)
 		{

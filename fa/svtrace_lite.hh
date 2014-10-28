@@ -26,10 +26,10 @@ public: // public methods
 
 
 	/*
-	 * @brief Method prints trace from @instrs to the @out using @filename to get tokens.
+	 * @brief Method prints trace from @instrs to the @out using.
 	 *
 	 * @instrs which contains the instructions of a error trace. It gradually
-	 * creates trace graph using tokenized program and print it to @out.
+	 * creates trace graph and print it to @out.
 	 * @param[in]  instrs     Instruction included in error trace.
 	 * @param[out] out        Output stream where the graph is printed
 	 */

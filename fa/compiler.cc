@@ -1051,7 +1051,8 @@ protected:
 							}
 							else if (varInfo.isGlobal())
 							{
-								throw NotImplementedException("cLoadOperand(): global variables 2");
+								append(new FI_get_GLOB(&insn, dst, offset)); 
+							//	throw NotImplementedException("cLoadOperand(): global variables 2");
 							}
 							else
 							{
@@ -1540,7 +1541,7 @@ protected:
 			/* reg with the number of allocated bytes */ srcReg
 		));
 
-		if (dst.type->items[0].type->code != cl_type_e::CL_TYPE_VOID)
+		//if (dst.type->items[0].type->code != cl_type_e::CL_TYPE_VOID)
 		{	// in case the destination pointer is not a void pointer
 
 			// build a node with proper selectors
@@ -1564,7 +1565,8 @@ protected:
 				/* reg with the value from which the node is to be created */ srcReg,
 				/* size of the created node*/ dst.type->items[0].type->size,
 				/* type information */ boxMan_.getTypeInfo(typeName),
-				/* selectors of the node */ sels
+				/* selectors of the node */ sels,
+				dst.type->items[0].type->code != cl_type_e::CL_TYPE_VOID
 			));
 		}
 
@@ -1593,6 +1595,7 @@ protected:
 		// get registers for the source
 		size_t srcReg = cLoadOperand(0, src, insn);
 
+		// TODO anotate free
 		// append an instruction to isolate all selectors
 		append(new FI_acc_all(
 			&insn,
@@ -1843,14 +1846,16 @@ protected:
 		// isolate adjacent nodes (current ABP)
 		append(new FI_acc_all(&insn, 1));
 
-		// the new offset in the code segment
-		size_t head2 = assembly_->code_.size();
-
 		// fixpoint
-		cFixpoint(insn);
+		if (FA_ALLOW_STACK_FRAME_ABSTRACTION)
+		{
+			// the new offset in the code segment
+			size_t head2 = assembly_->code_.size();
+			cFixpoint(insn);
+			// TODO: I don't know why this is here
+			assembly_->code_[head2]->insn(&insn);
+		}
 
-		// TODO: I don't know why this is here
-		assembly_->code_[head2]->insn(&insn);
 
 		if (insn.operands[0].code != CL_OPERAND_VOID)
 		{	// in case the called function returns some value
@@ -2277,7 +2282,7 @@ protected:
 
 		// get function name
 		std::ostringstream ss;
-		ss << nameOf(fnc) << ':' << uidOf(fnc);
+		ss << "__@" << nameOf(fnc) << ':' << uidOf(fnc);
 
 		// allocate stack frame to r1
 		append(
@@ -2432,74 +2437,68 @@ protected:
 
 			if (CodeStorage::EVar::VAR_GL == var.code)
 			{	// for each global variable
+
 				if (!var.isExtern)
 				{	// if the variable has internal linkage
 					// assert it is initialised (explicitly or implicitely)
 					assert(var.initialized);
+//
+					// in case the variable is initialised implicitly
+					// NOTE: this is a very basic implementation with only very basic
+					// support. Advanced features are not supported
 
-					if (!var.initials.empty())
-					{	// in case the variable is initialised explicitly
-						for (const CodeStorage::Insn* insn : var.initials)
+					// load 0 into r0
+					append(new FI_load_cst(nullptr, 0, Data::createInt(0)));
+
+					assert(globalVarMap.end() != globalVarMap.find(var.uid));
+					const VarInfo& varInfo = globalVarMap.find(var.uid)->second;
+
+					int offset = varInfo.getGlobalBlockOffset();
+
+					// load the variable into r1
+					append(new FI_get_GLOB(nullptr, 1, offset));
+
+					if (cl_type_e::CL_TYPE_STRUCT == var.type->code)
+					{	// in case the operand is a structure
+						// build a symbolic node
+						std::vector<size_t> offs;
+						NodeBuilder::buildNode(offs, var.type);
+						for (size_t off : offs)
 						{
-							// Assertions
-							assert(nullptr != insn);
-							assert((cl_insn_e::CL_INSN_UNOP == insn->code)
-								|| (cl_insn_e::CL_INSN_BINOP == insn->code));
-
-							/// @todo: perform implicit zeroing (e.g. for structures)?
-							compileInstruction(*insn);
+							append(new FI_store(nullptr, 1, 0, off));
 						}
-					}
-					else
-					{	// in case the variable is initialised implicitly
-
-						// NOTE: this is a very basic implementation with only very basic
-						// support. Advanced features are not supported
-
-						// load 0 into r0
-						append(new FI_load_cst(nullptr, 0, Data::createInt(0)));
-
-						assert(globalVarMap.end() != globalVarMap.find(var.uid));
-						const VarInfo& varInfo = globalVarMap.find(var.uid)->second;
-
-						int offset = varInfo.getGlobalBlockOffset();
-
-						// load the variable into r1
-						append(new FI_get_GLOB(nullptr, 1, offset));
-
-						if (cl_type_e::CL_TYPE_STRUCT == var.type->code)
-						{	// in case the operand is a structure
-							// build a symbolic node
-							std::vector<size_t> offs;
-							NodeBuilder::buildNode(offs, var.type);
-							append(new FI_acc_set(nullptr, 0, offset, offs));
-
 #if 0
-							if (needsAcc)
-							{	// in case separation is needed
-								// append separation of a set of nodes
-								append(new FI_acc_set(&insn, tmp, offset, offs));
-							}
+						if (needsAcc)
+						{	// in case separation is needed
+							// append separation of a set of nodes
+							append(new FI_acc_set(&insn, tmp, offset, offs));
+						}
 
 #endif
-							// append store of the value into register
-							append(new FI_stores(nullptr, 1, 0, offset));
+						//throw NotImplementedException("Implicit initialization of a structure");
+					} else
+					{	// in case the operand is anything but a structure
 
-							//throw NotImplementedException("Implicit initialization of a structure");
-						} else
-						{	// in case the operand is anything but a structure
-
-							// store the value in r0 to the memory location pointed by r1
-							append(new FI_store(nullptr, 1, 0, offset));
-						}
-
-
-						// TODO: is the check instruction really necessary here?
-
-						// add an instruction to check invariants of the virtual machine
-						append(new FI_check(nullptr));
-						//throw NotImplementedException("Implicitly initialised global variable");
+						// store the value in r0 to the memory location pointed by r1
+						append(new FI_store(nullptr, 1, 0, offset));
 					}
+
+
+					//throw NotImplementedException("Implicitly initialised global variable");
+//
+					for (const CodeStorage::Insn* insn : var.initials)
+					{
+						// Assertions
+						assert(nullptr != insn);
+						assert((cl_insn_e::CL_INSN_UNOP == insn->code)
+							|| (cl_insn_e::CL_INSN_BINOP == insn->code));
+
+						/// @todo: perform implicit zeroing (e.g. for structures)?
+						compileInstruction(*insn);
+					}
+					
+					// add an instruction to check invariants of the virtual machine
+					append(new FI_check(nullptr));
 				}
 				else
 				{	// if the variable has external linkage
@@ -2614,7 +2613,7 @@ public:
 		append(new FI_node_free(nullptr, 1));
 
 		// check for garbage
-		append(new FI_check(nullptr));
+		//append(new FI_check(nullptr, true));
 
 		// abort
 		append(new FI_abort(nullptr));
@@ -2625,7 +2624,8 @@ public:
 				compileFunction(*fnc);
 		}
 
-		for (auto i = assembly_->code_.begin(); i != assembly_->code_.end(); ++i)
+		assert(!assembly_->code_.empty());
+		for (auto i = assembly_->code_.begin(); i != assembly_->code_.end()-1; ++i)
 		{	// finalize all microinstructions
 			(*i)->finalize(codeIndex_, i);
 		}
