@@ -74,6 +74,13 @@ def getProperty(props, lines):
             return prop
     return None
 
+def getProperties(props, lines):
+    res = []
+    for prop in props:
+        if checkProperty(prop, lines):
+            res.append(prop)
+    return res
+
 def parseProps(formulas):
     return map(lambda x: x.split()[1] if VALID_CALL not in x else VALID_CALL, formulas)
 
@@ -108,7 +115,10 @@ def execute(args):
             if prop is None or prop not in [VALID_FREE, VALID_DEREF, VALID_MEMTRACK]:
                 print "FALSE"
             else:
-                print "FALSE("+prop+")"
+                if VALID_DEREF in getProperties(parseProps(formulas), lines):
+                    print "FALSE("+VALID_DEREF+")"
+                else:
+                    print "FALSE("+prop+")"
     print resource.getrusage(resource.RUSAGE_CHILDREN)[0]
     return res
 
