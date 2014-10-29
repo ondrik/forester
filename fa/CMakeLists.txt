@@ -27,7 +27,7 @@ if(FA_DEBUG)
     add_definitions("-O0 -g")
     message (STATUS "Debugging support enabled...")
 else()
-    add_definitions("-O3 -DNDEBUG")
+    add_definitions("-O3")
 endif()
 
 # Add some more useful compiler flags

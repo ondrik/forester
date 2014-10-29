@@ -80,7 +80,8 @@ inline void dataCmp(
 	const Data&                     y,
 	F                               f)
 {
-	if ((x.isUnknw() || x.isUndef()) || (y.isUnknw() || y.isUndef()))
+	if ((x.isUnknw() || x.isUndef()) || (y.isUnknw() || y.isUndef())
+			|| x.isVoidPtr() || y.isVoidPtr())
 	{
 		if (static_cast<float>(random())/RAND_MAX < 0.5)
 		{

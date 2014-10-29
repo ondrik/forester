@@ -113,12 +113,15 @@ def execute(args):
         else:
             res=1
             if prop is None or prop not in [VALID_FREE, VALID_DEREF, VALID_MEMTRACK]:
-                print "FALSE"
+                #print "FALSE"
+                print "UNKNOWN"
             else:
                 if VALID_DEREF in getProperties(parseProps(formulas), lines):
-                    print "FALSE("+VALID_DEREF+")"
+                    print "UNKNOWN"
+                    #print "FALSE("+VALID_DEREF+")"
                 else:
-                    print "FALSE("+prop+")"
+                    print "UNKNOWN"
+                    #print "FALSE("+prop+")"
     print resource.getrusage(resource.RUSAGE_CHILDREN)[0]
     return res
 

@@ -18,6 +18,8 @@
  */
 
 // Forester headers
+#include "error_messages.hh"
+#include "programerror.hh"
 #include "splitting.hh"
 
 // anonymous namespace
@@ -678,7 +680,8 @@ void Splitting::isolateSet(
 
 				if (!found)
 				{
-					assert(false);
+					// TODO: we are not sure if this is caused by invalid dereference.
+					throw ProgramError(ErrorMessages::DEREFERENCED);
 				}
 			}
 		}
