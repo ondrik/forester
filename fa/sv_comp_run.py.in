@@ -40,7 +40,7 @@ PROPS_DICT[VALID_MEMTRACK] = ['garbage detected']
 def parseParams(params):
     parser = argparse.ArgumentParser(description='SV-Comp options: Task file, properties and output trace')
     parser.add_argument('--'+TRACE_PARAM, type=str, required=True,
-                       help='Path to a file where output file will be stored')
+                       help='Path to a file where output trace file will be stored')
 
     parser.add_argument(FILE_PARAM, type=str,
                        help='File with program for verification')
@@ -90,7 +90,7 @@ def execute(args):
         args[PROPERS_PARAM] = getPropertyFile(args[FILE_PARAM])
     reg = re.compile(PROP_REGEXP)
     with open(args[PROPERS_PARAM], 'r') as f:
-        props = [(x.group(INIT_IND), x.group(PROP_IND)) for x in [reg.match(y) for y in  f.readlines()]]
+        props = [(x.group(INIT_IND), x.group(PROP_IND)) for x in filter(lambda x: x is not None, [reg.match(y) for y in  f.readlines()]) ]
     inits = [x[0] for x in props]
     formulas = [x[1] for x in props]
     # execute Forester
