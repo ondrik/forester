@@ -62,10 +62,10 @@ struct Gt
 	bool operator()(const Data& x, const Data& y) const
 	{
 		if (x.isInt() && y.isInt())
-			return x.d_int < y.d_int;
+			return x.d_int > y.d_int;
 
 		if (x.isBool() && y.isBool())
-			return x.d_bool < y.d_bool;
+			return x.d_bool > y.d_bool;
 
 		throw std::runtime_error(
 			"Gt()(): comparison of the corresponding types not supported");
@@ -93,7 +93,7 @@ inline void dataCmp(
 		}
 	} else
 	{
-				//asm("int $3");
+		//asm("int $3");
 		bool t = f(x, y);
 		res.push_back(t);
 	}
