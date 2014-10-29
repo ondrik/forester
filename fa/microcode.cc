@@ -519,13 +519,27 @@ void FI_node_free::execute(ExecutionManager& execMan, SymState& state)
 // FI_iadd
 void FI_iadd::execute(ExecutionManager& execMan, SymState& state)
 {
-	// Assertions
-	assert(state.GetReg(src1_).isInt() && state.GetReg(src2_).isInt());
 
 	SymState* tmpState = execMan.createChildStateWithNewRegs(state, next_);
 
-	int sum = tmpState->GetReg(src1_).d_int + tmpState->GetReg(src2_).d_int;
-	tmpState->SetReg(dstReg_, Data::createInt((sum > 0)? 1 : 0));
+	if (tmpState->GetReg(src1_).isUndef() ||  tmpState->GetReg(src2_).isUndef())
+	{
+		tmpState->SetReg(dstReg_, Data::createUndef());
+	}
+	else
+	{
+		// Assertions
+		assert(state.GetReg(src1_).isInt() && state.GetReg(src2_).isInt());
+		int sum = tmpState->GetReg(src1_).d_int + tmpState->GetReg(src2_).d_int;
+		if (sum != 0)
+		{
+			tmpState->SetReg(dstReg_, Data::createUndef());
+		}
+		else
+		{
+			tmpState->SetReg(dstReg_, Data::createInt(0));
+		}
+	}
 
 	execMan.enqueue(tmpState);
 }
