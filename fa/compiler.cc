@@ -1631,7 +1631,7 @@ protected:
 		const cl_operand& src2 = insn.operands[2];
 
 		// assert the destination is a Boolean
-		assert(dst.type->code == cl_type_e::CL_TYPE_BOOL);
+		//assert(dst.type->code == cl_type_e::CL_TYPE_BOOL);
 
 		// get registers for the sources and the target
 		size_t dstReg = lookupStoreReg(dst, 0);

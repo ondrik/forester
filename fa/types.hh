@@ -693,6 +693,25 @@ struct Data
 		return seed;
 	}
 
+private:
+
+	static bool compareBoolInt(const Data& lhs, const Data& rhs)
+	{
+		assert(lhs.type == data_type_e::t_bool && rhs.type == data_type_e::t_int);
+		if (lhs.d_bool && rhs.d_int != 0)
+		{
+			return true;
+		}
+		else if (!lhs.d_bool && rhs.d_int == 0)
+		{
+			return true;
+		}
+
+		return false;
+	}
+
+public:
+
 	/**
 	 * @brief  Equality operator
 	 *
@@ -706,7 +725,18 @@ struct Data
 	{
 		// check if the types match
 		if (this->type != rhs.type)
+		{
+			if (this->type == data_type_e::t_bool && rhs.type == data_type_e::t_int)
+			{
+				return Data::compareBoolInt(*this, rhs);
+			}
+			else if (this->type == data_type_e::t_int && rhs.type == data_type_e::t_bool)
+			{
+				return Data::compareBoolInt(rhs, *this);
+			}
+
 			return false;
+		}
 
 		// if the types match, check values
 		switch (this->type) {
