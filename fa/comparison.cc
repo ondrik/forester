@@ -94,7 +94,6 @@ inline void dataCmp(
 		}
 	} else
 	{
-		//asm("int $3");
 		bool t = f(x, y);
 		res.push_back(t);
 	}
