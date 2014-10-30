@@ -1,27 +1,73 @@
 Instructions for SV-COMP'15
 ===========================
 
-1) Build Forester from sources against GCC system. We recommend to use gcc-4.6.
-   Please follow the instructions in the README file.
+0) Dependencies:
 
-2) For running SV-COMP test-case please use script 'fa_build/sv_comp_run.py'.
-   Note that the script requires python 2.7.
+   * GCC and G++
+    - on Ubuntu/Debian provided by packages called 'g++' and 'gcc'.
+	  We tested our tool using 'gcc-4.6'
+	  
+   * CMake 2.8+
+     - available at http://www.cmake.org
+     - the executable is called 'cmake'
+     - usually provided by a package called 'cmake'
 
-Usage: sv_comp_run.py usage: sv_comp_run.py [-h] --trace TRACE [--properties PROPERTIES] file
-       -h         Print help 
+   * Boost libraries 1.37+
+     - available at http://www.boost.org/
+     - package is usually called 'boost'
+     - on binary distros you may need also the 'boost-devel' sub-package
+
+   * 32bit system headers, especially in case of 64bit OS
+     - on Ubuntu/Debian provided by a package called 'libc6-dev-i386'
+     - you can try to check their presence
+       by 'gcc -m32 -o /dev/null /usr/include/stdlib.h'
+
+   * GCC plugin devel
+     - on Ubuntu/Debian provided by a package called 'gcc-X-multilib' 'gcc-X-plugin-dev'
+	   where X is version of gcc, e.g. gcc-4.6-multilib for gcc version 4.6.
+
+   * Flex and Bison
+     - Flex should be in version 2.5 or higher and Bison in version 2.7 or higher.
+	 - on Ubuntu/Debian provided by a package called 'flex' and 'bison'
+
+   * Python 2.7
+     - on Ubuntu/Debian provided by a package called 'python2.7'
+
+1) Build Forester from sources against GCC system. We recommend to use gcc 4.6.
+   For bulding use following command:
+             
+                 ./switch-host-gcc.sh PATH_TO_GCC
+
+	E.g. for gcc 4.6 is PATH_TO_GCC = /usr/bin/gcc-4.6
+
+	Please check 'README' for further information about Forester compilation
+	or 'fa/libvata/README' for further information about libVATA compilation
+	(libVATA is Tree Automata library included in Forester).
+   
+
+2) Use script 'fa_build/sv_comp_run.py' for run of a SV-COMP test-case.
+
+    Usage: sv_comp_run.py [-h] --trace TRACE [--properties PROPERTIES] file
+       -h
+	      Print help 
        --trace TRACE
 	      A file to print witness to
 	   --properties PROPERTIES
-	      A file with specified verification properties
+	      A file with specified verification properties.
+		  When the property file is not specified it is used
+		  folder_of_file/ALL.prp where folder_of_file is folder of
+		  a file with test case. This default file is defined by
+		  the competition rules.
 	   file
 	      A path to a file with test case
 
 	   Since Forester participates only in Memory Safety and Heap Manipulation categories
 	   the 32 bit architecture is used as default and cannot be changed by any parameter.
-
-A result of a verification task is from {TRUE, FALSE, UNKNOWN}
-and it is printed to standard output. A witness trace related to
-the verification task is printed to a specified trace file when the
-result is FALSE. When there are more verification properties to be
-checked and one of them is violated, the answer has format FALSE(p)
-where p is violated property.
+      
+   A result of a verification task is an item from {TRUE, FALSE, UNKNOWN}
+   and it is printed to standard output. When the result of verification
+   task is FALSE, the related witness trace is printed to the specified
+   trace. When there are more verification properties to be checked and
+   one of them is violated, the answer has format FALSE(p) where p is
+   violated property.
+   Note that the script 'fa_build/sv_comp_run.py' requires Python 2.7.
