@@ -95,7 +95,7 @@ def execute(args):
     formulas = [x[1] for x in props]
     # execute Forester
     plugin_ops = '-fplugin-arg-libfa-args=print-trace-svcomp;trace-file:'+args[TRACE_PARAM] # Note options has to end with space
-    p = subprocess.Popen([GCC_HOST, "-I",GCC_OPT+" -o /dev/null -O0 -DFORESTER","-fplugin="+GCC_PLUG, plugin_ops,
+    p = subprocess.Popen([GCC_HOST, "-I",GCC_OPT+" -o /dev/null -O0 -DFORESTER -m32","-fplugin="+GCC_PLUG, plugin_ops,
         args[FILE_PARAM]], stderr=subprocess.PIPE)
     p.wait()
 
