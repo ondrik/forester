@@ -1413,7 +1413,13 @@ protected:
 		assert(dst.type != nullptr);
 
 		if (src.type->code != dst.type->code) {
-			throw NotImplementedException("compileAssignment: Type conversion is not supported.");
+			if (src.type->code == CL_TYPE_BOOL && dst.type->code == CL_TYPE_INT)
+			{
+			}
+			else
+			{
+				throw NotImplementedException("compileAssignment: Type conversion is not supported.");
+			}
 		}
 
 		// get registers for the source and the target
