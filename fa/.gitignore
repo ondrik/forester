@@ -1,3 +1,4 @@
 version.h
 *.dot
 *.svg
+.ycm*
