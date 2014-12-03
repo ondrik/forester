@@ -2448,61 +2448,67 @@ protected:
 				{	// if the variable has internal linkage
 					// assert it is initialised (explicitly or implicitely)
 					assert(var.initialized);
-//
-					// in case the variable is initialised implicitly
-					// NOTE: this is a very basic implementation with only very basic
-					// support. Advanced features are not supported
-
-					// load 0 into r0
-					append(new FI_load_cst(nullptr, 0, Data::createInt(0)));
-
-					assert(globalVarMap.end() != globalVarMap.find(var.uid));
-					const VarInfo& varInfo = globalVarMap.find(var.uid)->second;
-
-					int offset = varInfo.getGlobalBlockOffset();
-
-					// load the variable into r1
-					append(new FI_get_GLOB(nullptr, 1, offset));
-
-					if (cl_type_e::CL_TYPE_STRUCT == var.type->code)
-					{	// in case the operand is a structure
-						// build a symbolic node
-						std::vector<size_t> offs;
-						NodeBuilder::buildNode(offs, var.type);
-						for (size_t off : offs)
+					
+					if (!var.initials.empty())
+					{
+						for (const CodeStorage::Insn* insn : var.initials)
 						{
-							append(new FI_store(nullptr, 1, 0, off));
+							// Assertions
+							assert(nullptr != insn);
+							assert((cl_insn_e::CL_INSN_UNOP == insn->code)
+								|| (cl_insn_e::CL_INSN_BINOP == insn->code));
+
+							/// @todo: perform implicit zeroing (e.g. for structures)?
+							compileInstruction(*insn);
 						}
+					}
+					else
+					{
+	//
+						// in case the variable is initialised implicitly
+						// NOTE: this is a very basic implementation with only very basic
+						// support. Advanced features are not supported
+
+						// load 0 into r0
+						append(new FI_load_cst(nullptr, 0, Data::createInt(0)));
+
+						assert(globalVarMap.end() != globalVarMap.find(var.uid));
+						const VarInfo& varInfo = globalVarMap.find(var.uid)->second;
+
+						int offset = varInfo.getGlobalBlockOffset();
+
+						// load the variable into r1
+						append(new FI_get_GLOB(nullptr, 1, offset));
+
+						if (cl_type_e::CL_TYPE_STRUCT == var.type->code)
+						{	// in case the operand is a structure
+							// build a symbolic node
+							std::vector<size_t> offs;
+							NodeBuilder::buildNode(offs, var.type);
+							for (size_t off : offs)
+							{
+								append(new FI_store(nullptr, 1, 0, off));
+							}
 #if 0
-						if (needsAcc)
-						{	// in case separation is needed
-							// append separation of a set of nodes
-							append(new FI_acc_set(&insn, tmp, offset, offs));
-						}
+							if (needsAcc)
+							{	// in case separation is needed
+								// append separation of a set of nodes
+								append(new FI_acc_set(&insn, tmp, offset, offs));
+							}
 
 #endif
-						//throw NotImplementedException("Implicit initialization of a structure");
-					} else
-					{	// in case the operand is anything but a structure
+							//throw NotImplementedException("Implicit initialization of a structure");
+						} else
+						{	// in case the operand is anything but a structure
 
-						// store the value in r0 to the memory location pointed by r1
-						append(new FI_store(nullptr, 1, 0, offset));
+							// store the value in r0 to the memory location pointed by r1
+							append(new FI_store(nullptr, 1, 0, 0));
+						}
 					}
 
 
 					//throw NotImplementedException("Implicitly initialised global variable");
-//
-					for (const CodeStorage::Insn* insn : var.initials)
-					{
-						// Assertions
-						assert(nullptr != insn);
-						assert((cl_insn_e::CL_INSN_UNOP == insn->code)
-							|| (cl_insn_e::CL_INSN_BINOP == insn->code));
-
-						/// @todo: perform implicit zeroing (e.g. for structures)?
-						compileInstruction(*insn);
-					}
-					
+//					
 					// add an instruction to check invariants of the virtual machine
 					append(new FI_check(nullptr));
 				}
