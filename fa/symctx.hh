@@ -91,55 +91,13 @@ public:   // static methods
 	 * @param[in]  stor  The @p CodeStorage from which the context is to be
 	 *                   initialised
 	 */
-	static void initCtx(const CodeStorage::Storage& stor)
-	{
-		if (stor.types.codePtrSizeof() >= 0)
-		{
-			size_of_code_ptr = static_cast<size_t>(stor.types.codePtrSizeof());
-		}
-		else
-		{
-			size_of_code_ptr = sizeof(void(*)());
-		}
+	static void initCtx(const CodeStorage::Storage& stor);
 
-		if (stor.types.dataPtrSizeof() >= 0)
-		{
-			size_of_data_ptr = static_cast<size_t>(stor.types.dataPtrSizeof());
-		}
-		else
-		{
-			size_of_data_ptr = sizeof(void*);
-		}
+	static size_t getSizeOfCodePtr();
 
-		// Post-condition
-		assert(size_of_data_ptr > 0);
-		assert(size_of_code_ptr > 0);
-	}
+	static size_t getSizeOfDataPtr();
 
-	static size_t getSizeOfCodePtr()
-	{
-		// Assertions
-		assert(size_of_code_ptr > 0);
-
-		return size_of_code_ptr;
-	}
-
-	static size_t getSizeOfDataPtr()
-	{
-		// Assertions
-		assert(size_of_data_ptr > 0);
-
-		return size_of_data_ptr;
-	}
-
-	static bool isStacked(const CodeStorage::Var& var) {
-		switch (var.code) {
-			case CodeStorage::EVar::VAR_FNC_ARG: return true;
-			case CodeStorage::EVar::VAR_LC: return !var.name.empty();
-			case CodeStorage::EVar::VAR_GL: return false;
-			default: return false;
-		}
-	}
+	static bool isStacked(const CodeStorage::Var& var);
 
 private:  // data members
 
@@ -180,68 +138,7 @@ public:   // methods
 	 */
 	SymCtx(
 		const CodeStorage::Fnc& fnc,
-		const var_map_type* globalVarMap = nullptr
-	) :
-		fnc_(fnc),
-		sfLayout_{},
-		varMap_{},
-		regCount_(2),
-		argCount_(0)
-	{
-		// pointer to previous stack frame
-		sfLayout_.push_back(SelData(ABP_OFFSET, ABP_SIZE, 0, "_pABP"));
-
-		// pointer to context info
-		sfLayout_.push_back(SelData(RET_OFFSET, RET_SIZE, 0, "_retaddr"));
-
-		size_t offset = ABP_SIZE + RET_SIZE;
-
-		for (auto& funcVar : fnc_.vars)
-		{	// for each variable in the function
-			const CodeStorage::Var& var = fnc_.stor->vars[funcVar];
-
-			switch (var.code) {
-				case CodeStorage::EVar::VAR_LC:
-					if (!SymCtx::isStacked(var)) {
-						varMap_.insert(
-							std::make_pair(var.uid, VarInfo::createInReg(regCount_++))
-						);
-						break;
-					}
-					// no break
-				case CodeStorage::EVar::VAR_FNC_ARG:
-					NodeBuilder::buildNode(sfLayout_, var.type, offset, var.name);
-					varMap_.insert(std::make_pair(var.uid, VarInfo::createOnStack(offset)));
-					offset += var.type->size;
-					if (var.code == CodeStorage::EVar::VAR_FNC_ARG)
-						++argCount_;
-					break;
-				case CodeStorage::EVar::VAR_GL:
-				{ // global variables do not occur at the stack, but we need to track
-					// them as they can be used
-					if (nullptr != globalVarMap)
-					{	// in case we are compiling the function
-						FA_NOTE("Compiling global variable " << var.name << " in function "
-							<< nameOf(fnc_));
-
-						auto itGlobalVar = globalVarMap->find(var.uid);
-						if (globalVarMap->end() == itGlobalVar)
-						{ // the variable must be in the global map
-							assert(false);
-						}
-
-						/// @todo: instead of inserting, why not just initialise varMap_ to
-						///        globalVarMap
-						varMap_.insert(std::make_pair(var.uid, itGlobalVar->second));
-					}
-
-					break;
-				}
-				default:
-					assert(false);
-			}
-		}
-	}
+		const var_map_type* globalVarMap = nullptr);
 
 	/**
 	 * @brief  Constructor for @e global context
@@ -251,48 +148,19 @@ public:   // methods
 	 *
 	 * @todo: revise the whole * concept
 	 */
-	SymCtx(const var_map_type* globalVarMap) :
-		fnc_(*static_cast<CodeStorage::Fnc*>(nullptr)),
-		sfLayout_{},
-		varMap_{*globalVarMap},
-		regCount_(0),
-		argCount_(0)
-	{
-		// Assertions
-		assert(nullptr != globalVarMap);
-	}
+	SymCtx(const var_map_type* globalVarMap);
 
-	const VarInfo& getVarInfo(size_t id) const {
-		var_map_type::const_iterator i = varMap_.find(id);
-		assert(i != varMap_.end());
-		return i->second;
-	}
+	const VarInfo& getVarInfo(size_t id) const;
 
+	const StackFrameLayout& GetStackFrameLayout() const;
 
-	const StackFrameLayout& GetStackFrameLayout() const
-	{
-		return sfLayout_;
-	}
+	const var_map_type& GetVarMap() const;
 
-	const var_map_type& GetVarMap() const
-	{
-		return varMap_;
-	}
+	size_t GetRegCount() const;
 
-	size_t GetRegCount() const
-	{
-		return regCount_;
-	}
+	size_t GetArgCount() const;
 
-	size_t GetArgCount() const
-	{
-		return argCount_;
-	}
-
-	const CodeStorage::Fnc& GetFnc() const
-	{
-		return fnc_;
-	}
+	const CodeStorage::Fnc& GetFnc() const;
 
 };
 
