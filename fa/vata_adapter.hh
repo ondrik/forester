@@ -404,8 +404,8 @@ public: // public methods
 	template <class TVisitor>
 	void accept(TVisitor& visitor) const
 	{
-	  FA_DEBUG_AT(1,"TA accept\n");
-			visitor(*this);
+		//FA_DEBUG_AT(1,"TA accept\n");
+		visitor(*this);
 	}
 
 
@@ -526,7 +526,7 @@ public: // public methods
             F                              funcRename,
             bool                           addFinalStates = true)
     {
-        FA_DEBUG_AT(1,"TA rename\n");
+        //FA_DEBUG_AT(1,"TA rename\n");
         if (addFinalStates)
         {
             for (const auto& state : src.getFinalStates())
@@ -568,7 +568,7 @@ public: // public methods
 			F                                          f,
 			G                                          g) const
 	{
-		FA_DEBUG_AT(1,"TA height abstraction\n");
+		//FA_DEBUG_AT(1,"TA height abstraction\n");
 		VATAAbstraction::heightAbstraction(vataAut_, result, height, f, g);
 	}
 
