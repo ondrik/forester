@@ -40,15 +40,12 @@ SymCtx::SymCtx(
 
 	size_t offset = ABP_SIZE + RET_SIZE;
 
-	std::cerr << "NEW FUNCTION \n";
 	for (auto& funcVar : fnc_.vars)
 	{	// for each variable in the function
-		std::cerr << "funcVars inserting " << funcVar << "\n";
 		const CodeStorage::Var& var = fnc_.stor->vars[funcVar];
 
 		switch (var.code) {
 			case CodeStorage::EVar::VAR_LC:
-				std::cerr << "funcVars inserted " << funcVar << "\n";
 				if (!SymCtx::isStacked(var)) {
 					varMap_.insert(
 						std::make_pair(var.uid, VarInfo::createInReg(regCount_++))
