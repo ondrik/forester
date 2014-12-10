@@ -130,9 +130,9 @@ std::ostream& operator<<(std::ostream& os, const FA& fa)
 		if (!fa.getRoot(i))
 			continue;
 
-		os << "===" << std::endl << "root " << i; // no cutpoint info
-		os << "===" << std::endl << "root " << i << " [" << fa.connectionGraph.data[i] << ']';
-		os << *fa.getRoot(i) << "\n";
+		os << std::endl << "root " << i; // no cutpoint info
+		os << std::endl << "root " << i << " connectionGraph [" << fa.connectionGraph.data[i] << ']' << '\n';
+		os << *fa.getRoot(i);
         /*
 		TAWriter<label_type> writer(os);
 
