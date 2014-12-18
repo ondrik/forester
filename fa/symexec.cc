@@ -426,6 +426,29 @@ protected:
 				Streams::traceUcode(oss.str().c_str());
 			}
 
+			if (FA_BACKWARD_RUN)
+			{
+				FA_LOG("Executing backward run...");
+
+				// check whether the counterexample is spurious and in case it is collect
+				// some perhaps helpful information (failpoint and predicate)
+				BackwardRun bwdRun(execMan_);
+				SymState::Trace trace = e.state()->getTrace();
+				SymState* failPoint = nullptr;
+				std::shared_ptr<const FAE> predicate = nullptr;
+
+				bool isSpurious = bwdRun.isSpuriousCE(trace, failPoint, predicate);
+				if (isSpurious)
+				{
+					FA_NOTE("Is spurious");
+				}
+				else
+				{
+					FA_NOTE("Is real");
+				}
+				throw;
+			}
+
 			if (FA_USE_PREDICATE_ABSTRACTION)
 			{	// in case we are using predicate abstraction
 				FA_LOG("Executing backward run...");
@@ -446,7 +469,7 @@ protected:
 
 					FA_NOTE("The counterexample IS (PROBABLY) spurious");
 
-					FA_NOTE("Failing instuction: " << *failPoint->GetInstr());
+					FA_NOTE("Failing instruction: " << *failPoint->GetInstr());
 					FA_NOTE("Learnt predicate: " << *predicate);
 
 					// now, we add 'predicate' to the set of predicates that are used for

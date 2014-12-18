@@ -77,4 +77,9 @@
 
 #define FA_ALLOW_STACK_FRAME_ABSTRACTION 1
 
+/**
+ * detect spurious counterexamples using backward run
+ */
+#define FA_BACKWARD_RUN 1
+
 #endif /* CONFIG_H */
