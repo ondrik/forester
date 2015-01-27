@@ -47,9 +47,9 @@ public:   // data types
 
 	typedef TreeAut::Transition Transition;
 
-public:   // data members
+private:   // data members
 
-	TreeAut& ta;
+	TreeAut& ta; // serves like a backend for internals of TA of this FA
 
 protected:// data members
 
@@ -104,6 +104,14 @@ public:   // methods
 	{
 		return _MSB_TEST(state);
 	}
+
+	FA(FA& fa) :
+		ta(fa.ta),
+		variables_{},
+		roots_{},
+		connectionGraph{}
+	{ }
+
 
 	FA(TreeAut& ta) :
 		ta(ta),
@@ -255,6 +263,11 @@ public:   // methods
 		assert(varId < variables_.size());
 
 		variables_[varId] = data;
+	}
+	
+	TreeAut createTAWithSameBackend()
+	{
+		return TreeAut::createTAWithSameTransitions(this->ta);
 	}
 
 	/**

@@ -73,7 +73,7 @@ public:   // methods
 		rootTA.heightAbstraction(rel, height, f, cutpointCmp);
 
 
-		TreeAut ta = TreeAut::createTAWithSameTransitions(fae_.ta);
+		TreeAut ta = fae_.createTAWithSameBackend();
 		rootTA.collapsed(ta, rel);
     assert(areFinalStatesPreserved(rootTA, ta));
 
@@ -229,7 +229,7 @@ public:   // methods
 
 		for (size_t i = 0; i < fae_.getRootCount(); ++i)
 		{
-			TreeAut ta = TreeAut::createTAWithSameTransitions(fae_.ta);
+			TreeAut ta = fae_.createTAWithSameBackend();
 			//fae_.getRoot(i)->collapsed(ta, rel, faeStateIndex);
 			fae_.setRoot(i, std::shared_ptr<TreeAut>(fae_.allocTA()));
 			ta.uselessAndUnreachableFree(*fae_.getRoot(i));

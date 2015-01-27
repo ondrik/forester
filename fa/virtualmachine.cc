@@ -271,7 +271,7 @@ void VirtualMachine::nodeModify(
 	assert(root < fae_.getRootCount());
 	assert(nullptr != fae_.getRoot(root));
 
-	TreeAut ta = TreeAut::createTAWithSameTransitions(fae_.ta);
+	TreeAut ta = fae_.createTAWithSameBackend();
 	this->transitionModify(
 		ta,
 		fae_.getRoot(root)->getAcceptingTransition(),
@@ -298,7 +298,7 @@ void VirtualMachine::nodeModifyMultiple(
 	assert(nullptr != fae_.getRoot(root));
 	assert(in.isStruct());
 
-	TreeAut ta = TreeAut::createTAWithSameTransitions(fae_.ta);
+	TreeAut ta = fae_.createTAWithSameBackend();
 	this->transitionModify(ta, fae_.getRoot(root)->getAcceptingTransition(),
 		offset, *in.d_struct, out);
 	fae_.getRoot(root)->copyTransitions(ta);

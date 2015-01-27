@@ -271,8 +271,8 @@ protected:
 	 */
 	bool computeSelectorMap(
 		std::unordered_map<size_t, size_t>&      selectorMap,
-		size_t                                   root,
-		size_t                                   state);
+		const size_t                             root,
+		const size_t                             state);
 
 
 	/**

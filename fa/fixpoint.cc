@@ -521,7 +521,7 @@ void FI_abs::execute(ExecutionManager& execMan, SymState& state)
 
 	if (boxMan_.boxDatabase().size())
 	{
-		FAE old(fae->ta, boxMan_);
+		FAE old(*fae, boxMan_);
 
 		do
 		{

@@ -7,7 +7,8 @@ void Unfolding::boxMerge(
 		const Box*                     box,
 		const std::vector<size_t>&     rootIndex)
 {
-    TreeAut tmp(this->fae.ta), tmp2(this->fae.ta);
+    TreeAut tmp = this->fae.createTAWithSameBackend();
+	TreeAut tmp2 = this->fae.createTAWithSameBackend();
 //		this->fae.boxMan->adjustLeaves(tmp2, boxRoot);
     this->fae.relabelReferences(tmp, boxRoot, rootIndex);
     this->fae.unique(tmp2, tmp);
@@ -137,7 +138,7 @@ void Unfolding::unfoldBox(size_t root, const Box* box)
     assert(aux != static_cast<size_t>(-1));
     assert(aux < this->fae.getRootCount());
 
-    TreeAut tmp(this->fae.ta);
+    TreeAut tmp = this->fae.createTAWithSameBackend();
 
     this->fae.getRoot(aux)->unfoldAtRoot(tmp, this->fae.freshState());
     this->fae.setRoot(aux, std::shared_ptr<TreeAut>(this->fae.allocTA()));

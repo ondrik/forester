@@ -493,6 +493,13 @@ public:
 		savedStateOffset()
 	{ }
 
+	FAE(FAE& fae, BoxMan& boxMan) :
+		FA(fae),
+		boxMan(&boxMan),
+		stateOffset(1),
+		savedStateOffset()
+	{ }
+
 	FAE(const FAE& x) :
 		FA(x),
 		boxMan(x.boxMan),
