@@ -1,2 +1,2 @@
-test-p0119.c:38: note: free (_)
 test-p0119.c:38: error: garbage detected
+test-p0119.c:39: note: writing memory graph to 'test-p0119.c-39-0000.dot'...

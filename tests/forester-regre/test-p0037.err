@@ -1,1 +1,4 @@
-symexec.cc:32: error: garbage detected [internal location]
+error: garbage detected
+test-p0037.c:29: error: garbage detected
+test-p0037.c:31: note: free (a)
+test-p0037.c:31: error: dereferenced value is not a valid reference [(undef)]

@@ -1,1 +1,2 @@
-symexec.cc:32: error: garbage detected [internal location]
+error: exit_garbage detected
+test-f0118.c:18: error: garbage detected
