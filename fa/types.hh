@@ -204,7 +204,7 @@ struct Data
 	/// Union with additional information about the data
 	union
 	{
-		void*	  d_native_ptr;               ///< real memory pointer
+		void*	d_native_ptr;               ///< real memory pointer
 		size_t	d_void_ptr_size;            ///< void pointer size
 
 		/// information about reference
