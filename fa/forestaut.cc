@@ -118,7 +118,8 @@ std::ostream& operator<<(std::ostream& os, const TreeAut& ta)
 
 std::ostream& operator<<(std::ostream& os, const FA& fa)
 {
-	os << '[';
+	std::cerr << "FOREST AUTOMATON\n";
+	os << "VARS [";
 	for (const Data& var : fa.variables_)
 	{
 		os << ' ' << var;
