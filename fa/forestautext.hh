@@ -161,7 +161,8 @@ public:
 			{	// in case the number of components or global variables does not match
 				continue;
 			}
-   		std::vector<std::shared_ptr<TreeAut>> roots;
+			
+			std::vector<std::shared_ptr<TreeAut>> roots;
 			size_t j;
 			for (j = 0; j != numRoots; ++j)
 			{	// for all TA in the FA
@@ -171,8 +172,8 @@ public:
 				roots.push_back(std::shared_ptr<TreeAut>(ta));
 
 				const size_t& rootState = trans.GetNthChildren(j);
-       	// TODO PERF: If you want this faster provide your td_cache build
-        // out of the inner cycle
+				// TODO PERF: If you want this faster provide your td_cache build
+				// out of the inner cycle
 				ta->copyReachableTransitionsFromRoot(src, rootState);
 				ta->addFinalState(rootState);
 
