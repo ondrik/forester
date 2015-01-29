@@ -51,7 +51,7 @@ private:   // data members
 
 	TreeAut& ta; // serves like a backend for internals of TA of this FA
 
-protected:// data members
+protected: // data members
 
 	DataArray variables_;
 
