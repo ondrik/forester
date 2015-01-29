@@ -47,10 +47,6 @@ class AbstractInstruction;
  */
 class SymState : public LinkTree
 {
-private:  // data types
-
-	typedef TreeAut::Transition Transition;
-
 public:   // data types
 
 	/// Trace of symbolic states

@@ -484,8 +484,8 @@ void SymState::SubstituteRefs(
 		{
 			for (; srcIt != srcEnd; ++srcIt)
 			{
-				const Transition& thisTrans = *thisIt;
-				const Transition& srcTrans = *srcIt;
+				const auto& thisTrans = *thisIt;
+				const auto& srcTrans = *srcIt;
 
 				// we handle data one level up
 				assert(!TreeAut::GetSymbol(thisTrans)->isData() 
@@ -803,8 +803,8 @@ void SymState::Intersect(
 		{
 			for (; fwdIt != fwdEnd; ++fwdIt)
 			{
-				const Transition& thisTrans = *thisIt;
-				const Transition& fwdTrans = *fwdIt;
+				const auto& thisTrans = *thisIt;
+				const auto& fwdTrans = *fwdIt;
 
 				// we handle data one level up
 				assert(!TreeAut::GetSymbol(thisTrans)->isData()
