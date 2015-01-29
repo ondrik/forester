@@ -39,9 +39,9 @@ public:   // data types
 	enum class node_type
 	{
 		n_unknown,
-		n_node,
-		n_data,
-		n_vData
+		n_node, // general node -- selectors, boxes, etc.
+		n_data, // data
+		n_vData // data vector
 	};
 
 	/**
