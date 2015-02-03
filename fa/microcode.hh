@@ -1043,9 +1043,9 @@ public:
 };
 
 /**
- * @brief  Assertion on the value of a register
+ * @brief Ends execution when no return function reached.
  *
- * Checks whether the value of a register is equal to the desired value.
+ * Instruction ends program execution when no return function is reached.
  */
 class FI_noret : public VoidInstruction
 {
