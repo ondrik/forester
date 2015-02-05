@@ -384,8 +384,8 @@ public:
 	 * @todo: obfuscate (too clear)
 	 */
 	void nodeLookup(
-		size_t                           root,
-		size_t                           offset,
+		const size_t                     root,
+		const size_t                     offset,
 		Data&                            data) const
 	{
 		// Assertions
