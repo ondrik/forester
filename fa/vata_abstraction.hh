@@ -31,7 +31,7 @@ public:
     // currently erases '1' from the relation
 	template <class A, class F, class G>
 	static void heightAbstraction(
-    const A&                                   aut,
+		const A&                                   aut,
 		std::unordered_map<size_t, size_t>&        result,
 		size_t                                     height,
 		F                                          f,
@@ -118,14 +118,14 @@ private:
 		const std::unordered_map<size_t, size_t>& rel)
 	{
 			if (trans1.GetChildrenSize() != trans2.GetChildrenSize())
-	    {
+			{
 					return false;
-   		}
+			}
 
 			if (!funcMatch(trans1, trans2))
-  	  { // check symbol
+			{ // check symbol
 					return false;
-    	}
+			}
 		
 			for (size_t m = 0; m < trans1.GetChildrenSize(); ++m)
 			{
@@ -147,7 +147,7 @@ private:
 		const std::unordered_map<size_t,size_t>& tmp);
 
 
-   static void completeSymmetricIndex(
+	static void completeSymmetricIndex(
 		std::unordered_map<size_t,size_t>&         result,
 		const std::unordered_set<size_t>&          usedStates);
 };

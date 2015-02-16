@@ -57,7 +57,7 @@ public:   // methods
 		assert(root < fae_.getRootCount());
 		assert(nullptr != fae_.getRoot(root));
         
-    const TreeAut& rootTA = *fae_.getRoot(root);
+		const TreeAut& rootTA = *fae_.getRoot(root);
 		std::unordered_map<size_t, size_t> rel;
 
 		// compute the abstraction (i.e. which states are to be merged)
@@ -75,7 +75,7 @@ public:   // methods
 
 		TreeAut ta = fae_.createTAWithSameBackend();
 		rootTA.collapsed(ta, rel);
-    assert(areFinalStatesPreserved(rootTA, ta));
+		assert(areFinalStatesPreserved(rootTA, ta));
 
 		fae_.setRoot(root, std::shared_ptr<TreeAut>(fae_.allocTA()));
 		ta.uselessAndUnreachableFree(*fae_.getRoot(root));
