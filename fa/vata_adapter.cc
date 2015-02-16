@@ -400,7 +400,14 @@ std::ostream& operator<<(std::ostream& os, const VATAAdapter& ta)
     os << "TREE AUT " << std::endl;
     for (auto t : ta.vataAut_)
     {
-        os << stateToString(t.GetParent()) << " " << VATAAdapter::GetSymbol(t) << " ";
+		if (ta.isFinalState(t.GetParent()))
+		{
+			os << "[" << stateToString(t.GetParent()) << "] " << VATAAdapter::GetSymbol(t) << " ";
+		}
+		else 
+		{
+			os << stateToString(t.GetParent()) << " " << VATAAdapter::GetSymbol(t) << " ";
+		}
         for (auto s : t.GetChildren())
 		{
 			os << stateToString(s) << " ";
