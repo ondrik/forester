@@ -33,25 +33,24 @@
 
 TreeAut* Normalization::mergeRoot(
 	TreeAut&                          dst,
-	size_t                            ref,
-	TreeAut&                          src,
+	const size_t                      ref,
+	const TreeAut&                    src,
 	std::vector<size_t>&              joinStates)
 {
 	// Assertions
 	assert(ref < this->fae.getRootCount());
 
-	TreeAut* ta = this->fae.allocTA();
-	ta->addFinalStates(dst.getFinalStates());
-
-	size_t refState = _MSB_ADD(this->fae.boxMan->getDataId(Data::createRef(ref)));
 	std::unordered_map<size_t, size_t> joinStatesMap;
-
 	for (size_t finState : src.getFinalStates())
 	{
 		joinStates.push_back(this->fae.nextState());
 		joinStatesMap.insert(std::make_pair(finState, this->fae.freshState()));
 	}
 
+	TreeAut* ta = this->fae.allocTA();
+	ta->addFinalStates(dst.getFinalStates());
+	size_t refState = _MSB_ADD(this->fae.boxMan->getDataId(Data::createRef(ref)));
+	
 	bool hit = false;
 	for (TreeAut::iterator i = dst.begin(); i != dst.end(); ++i)
 	{

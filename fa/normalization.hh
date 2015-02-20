@@ -45,7 +45,7 @@ protected:
 	TreeAut* mergeRoot(
 		TreeAut&                          dst,
 		size_t                            ref,
-		TreeAut&                          src,
+		const TreeAut&                    src,
 		std::vector<size_t>&              joinStates);
 
 
