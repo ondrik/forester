@@ -70,7 +70,7 @@ protected:
 	 */
 	void normalizeRoot(
 		std::vector<bool>&                normalized,
-		size_t                            root,
+		const size_t                      root,
 		const std::vector<bool>&          marked);
 
 
