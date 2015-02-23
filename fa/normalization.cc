@@ -245,35 +245,41 @@ void Normalization::scan(
 	}
 }
 
+namespace {
+	static bool isInCanonicalForm(
+		const std::vector<bool>&          marked,
+		const std::vector<size_t>&        order)
+	{
+		size_t i;
+
+		for (i = 0; i < order.size(); ++i)
+		{
+			if (!marked[i] || (order[i] != i))
+				return false;
+		}
+
+		assert(i == order.size());
+		return true;
+	}
+}
 
 bool Normalization::normalize(
 	const std::vector<bool>&          marked,
 	const std::vector<size_t>&        order)
 {
-	bool merged = false;
-
-	size_t i;
-
-	for (i = 0; i < order.size(); ++i)
-	{
-		if (!marked[i] || (order[i] != i))
-			break;
-	}
-
-	if (i == order.size())
+	if (isInCanonicalForm(marked, order))
 	{	// in case the FA is in the canonical form
 		this->fae.resizeRoots(order.size());
 		this->fae.connectionGraph.data.resize(order.size());
 		return false;
 	}
 
-	// in case the FA is not in the canonical form
-
 	// reindex roots
 	std::vector<size_t> index(this->fae.getRootCount(), static_cast<size_t>(-1));
 	std::vector<bool> normalized(this->fae.getRootCount(), false);
 	std::vector<std::shared_ptr<TreeAut>> newRoots;
 	size_t offset = 0;
+	bool merged = false;
 
 	for (auto& i : order)
 	{	// push tree automata into a new tuple in the right order
