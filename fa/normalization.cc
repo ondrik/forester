@@ -30,47 +30,82 @@
 #include "symstate.hh"
 #include "virtualmachine.hh"
 
+namespace {
+	
+	void substituteRootRefByTA(
+		TreeAut&                        resTA,
+		const TreeAut::Transition&      trans,
+		const size_t                    rootRefState,
+		const std::vector<size_t>&      joinStates)
+	{
+		std::vector<size_t> transChildren = trans.GetChildren();
+		std::vector<size_t>::iterator rootRefIterator = 
+			std::find(transChildren.begin(), transChildren.end(), rootRefState);
+		assert(rootRefIterator != transChildren.end());
+
+		for (const auto& k : joinStates)
+		{
+			*rootRefIterator = k;
+			resTA.addTransition(
+				transChildren,
+				TreeAut::GetSymbol(trans),
+				trans.GetParent());
+		}
+	}
+
+	// StateTuple has to be iterable and has to have defined equivalence relation
+	template<class StateTuple>
+	static bool containsRootRef(
+		const StateTuple& stateTuple,
+		const size_t rootRefState)
+	{
+		return std::find(stateTuple.begin(), stateTuple.end(), rootRefState) != stateTuple.end();
+	}
+}
 
 TreeAut* Normalization::mergeRoot(
 	TreeAut&                          dst,
-	const size_t                      ref,
+	const size_t                      rootRef,
 	const TreeAut&                    src,
 	std::vector<size_t>&              joinStates)
 {
 	// Assertions
-	assert(ref < this->fae.getRootCount());
+	assert(rootRef < this->fae.getRootCount());
 
 	std::unordered_map<size_t, size_t> joinStatesMap;
-	for (size_t finState : src.getFinalStates())
+	for (const size_t finState : src.getFinalStates())
 	{
 		joinStates.push_back(this->fae.nextState());
 		joinStatesMap.insert(std::make_pair(finState, this->fae.freshState()));
 	}
 
-	TreeAut* ta = this->fae.allocTA();
-	ta->addFinalStates(dst.getFinalStates());
-	size_t refState = _MSB_ADD(this->fae.boxMan->getDataId(Data::createRef(ref)));
+	TreeAut* resTA = this->fae.allocTA();
+	resTA->addFinalStates(dst.getFinalStates());
+	size_t rootRefState = _MSB_ADD(this->fae.boxMan->getDataId(Data::createRef(rootRef)));
 	
 	bool hit = false;
-	for (TreeAut::iterator i = dst.begin(); i != dst.end(); ++i)
+	for (const auto& trans : dst)
 	{
-		std::vector<size_t> tmp = (*i).GetChildren();
-		std::vector<size_t>::iterator j = std::find(tmp.begin(), tmp.end(), refState);
-		if (j != tmp.end())
+		if (containsRootRef(trans.GetChildren(), rootRefState))
 		{
-			for (std::vector<size_t>::iterator k = joinStates.begin();
-				k != joinStates.end(); ++k)
-			{
-				*j = *k;
-				ta->addTransition(tmp, TreeAut::GetSymbol(*i), (*i).GetParent());
-			}
+			substituteRootRefByTA(*resTA, trans, rootRefState, joinStates);
 			hit = true;
-		} else ta->addTransition(*i);
+		}
+		else
+		{
+			resTA->addTransition(trans);
+		}
 	}
 	if (!hit) {assert(false);}
 	// avoid screwing up things
-	src.unfoldAtRoot(*ta, joinStatesMap, false);
-	return ta;
+	src.unfoldAtRoot(*resTA, joinStatesMap, false);
+
+	// postconditions
+	
+	// the new TA should have the same final states as dst TA
+	// so at least number of the states is checked. 
+	assert(resTA->getFinalStates().size() == dst.getFinalStates().size());
+	return resTA;
 }
 
 
