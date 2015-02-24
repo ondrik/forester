@@ -43,6 +43,11 @@ int main() {
 	//start with an empty tree
 	struct T* root = &null;
 
+	if (BLACK == root->colour)
+	{
+		struct T* temp = NULL; temp = temp->parent;
+	}
+
 	//insert a random number of random nodes
 	while (__nondet()) {
 		if (root->colour != BLACK)
@@ -135,7 +140,6 @@ int main() {
 
 	//Test that:
 	//there are no two succesive random nodes
-
 
 	//kill the tree (using the aux var r)
 	while (root != &null) {
