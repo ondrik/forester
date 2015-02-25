@@ -43,6 +43,7 @@ int main()
 			end->next = NULL;
 			end->colour = BLACK;
 		}
+		__VERIFIER_assert(BLACK != end->colour);
 	}
 
 	end = NULL;
@@ -57,8 +58,6 @@ int main()
 		if (RED == end->colour)
 		{
 			end = end->next;
-			__VERIFIER_assert(NULL != end);
-			__VERIFIER_assert(BLACK == end->colour);
 		}
 
 		end = end->next;
