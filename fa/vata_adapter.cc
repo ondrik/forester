@@ -181,6 +181,7 @@ size_t VATAAdapter::getFinalState() const
 
 const VATAAdapter::Transition VATAAdapter::getAcceptingTransition() const
 {
+    assert(vataAut_.GetAcceptTrans().begin() != vataAut_.GetAcceptTrans().end());
     assert(++(vataAut_.GetAcceptTrans().begin()) == vataAut_.GetAcceptTrans().end());
     //FA_DEBUG_AT(1,"TA get accepting transitions\n");
     return *(vataAut_.GetAcceptTrans().begin());
