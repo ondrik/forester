@@ -465,15 +465,15 @@ void SymState::SubstituteRefs(
 		const size_t& thisRoot = curState.first.root;
 		const size_t& srcRoot = curState.second.root;
 
-		const std::shared_ptr<TreeAut> thisTA = thisFAE->getRoot(thisRoot);
-		const std::shared_ptr<TreeAut> srcTA = srcFAE->getRoot(srcRoot);
-		assert((nullptr != thisTA) && (nullptr != srcTA));
-
 		const size_t& thisState = curState.first.state;
 		const size_t& srcState = curState.second.state;
 
 		FA_NOTE("Processing product state (" <<  curState.first << ", "
 			<< curState.second << ")");
+
+		const std::shared_ptr<TreeAut> thisTA = thisFAE->getRoot(thisRoot);
+		const std::shared_ptr<TreeAut> srcTA = srcFAE->getRoot(srcRoot);
+		assert((nullptr != thisTA) && (nullptr != srcTA));
 
 		auto thisIt = thisTA->begin(thisState);
 		auto thisEnd = thisTA->end(thisState);
