@@ -133,9 +133,6 @@ UNKNOWN
 /home/martin/forester/fa/sv-comp/c/list-ext-properties/test-0158_1_false-valid-free.i
 UNKNOWN
 0.02
-/home/martin/forester/fa/sv-comp/c/list-ext-properties/test-0019_1_false-valid-memtrack.i
-FALSE(valid-memtrack)
-0.032
 /home/martin/forester/fa/sv-comp/c/list-ext-properties/test-0158_1_false-valid-memtrack.i
 UNKNOWN
 0.02
