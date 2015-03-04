@@ -652,8 +652,8 @@ void SymState::SubstituteRefs(
 							<< TreeAut::GetSymbol(thisTrans) << "(" << osLhs.str() << ")");
 
 						fae->getRoot(thisRoot)->addTransition(lhs,
-                                TreeAut::GetSymbol(thisTrans),
-                                thisTrans.GetParent());
+								TreeAut::GetSymbol(thisTrans),
+								thisState);
 					}
 				}
 				else
