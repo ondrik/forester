@@ -10,6 +10,9 @@ import eval_structure
 SPURIOUS_INFIX = '_true'
 REAL_INFIX = '_false'
 
+def print_help():
+    print("usage: ./svcomp_wrapper.py file")
+    print("file ...... File with a list of sv-comp test cases to be run")
 
 def should_be_spurious(test):
     return sc_tests.contains_suffix(test, SPURIOUS_INFIX)
@@ -39,4 +42,7 @@ def run(path_to_tests):
             set(get_unknown(br_results)))
 
 if __name__ == '__main__':
+    if len(sys.argv) < 2:
+        print_help()
+        sys.exit()
     run(sys.argv[1])

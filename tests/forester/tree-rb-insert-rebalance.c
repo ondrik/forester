@@ -43,23 +43,20 @@ int main() {
 	//start with an empty tree
 	struct T* root = &null;
 
-	if (BLACK == root->colour)
-	{
-		struct T* temp = NULL; temp = temp->parent;
-	}
-
 	//insert a random number of random nodes
-	while (__nondet()) {
+	while (__VERIFIER_nondet_int()) {
 		if (root->colour != BLACK)
 			*(int*)(NULL) = 0;
+
 		//create a new node z
 		struct T* z = root;
 		struct T* y = &null;
+		
 		//insert z as a random leaf
 		int lastChoice;
 		while (z != &null) {
 			y = z;
-			if (__nondet()) {
+			if (__VERIFIER_nondet_int()) {
 				z = z->left;
 				lastChoice = 0;
 				//			    if (x == &null) {y->left = z;}
@@ -70,6 +67,8 @@ int main() {
 				//			    if (x == &null) {y->right = z;}
 			}
 		}
+
+
 		z = malloc(sizeof(struct T));
 		z->parent = y;
 		//make z root if the tree is empty
@@ -83,7 +82,6 @@ int main() {
 		z->left = &null;
 		z->right = &null;
 		z->colour = RED;
-
 
 		//rebalance the tree
 		while (z->parent->colour == RED) {

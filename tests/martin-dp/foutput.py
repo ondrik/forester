@@ -17,6 +17,11 @@ FILE_PARAM_INDEX = 2
 LIST_PARAM_KEY = 'LIST_KEY'
 FILE_PARAM_KEY = 'FILE_KEY'
 
+def print_help():
+    print("Usage: ./foutput.py tests output")
+    print("tests  ..... File with test cases to be run")
+    print("output ..... Output file")
+
 def get_params(cl_params):
     return {LIST_PARAM_KEY :cl_params[LIST_PARAM_INDEX], FILE_PARAM_KEY : cl_params[FILE_PARAM_INDEX]}
 
@@ -47,5 +52,6 @@ def run_tests(params):
 
 if __name__ == '__main__':
     if len(sys.argv) < 2:
-        raise(Exception("Not enough parameters"))
+        print_help()
+        sys.exit()
     run_tests(get_params(sys.argv))

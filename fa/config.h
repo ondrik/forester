@@ -80,6 +80,6 @@
 /**
  * detect spurious counterexamples using backward run
  */
-#define FA_BACKWARD_RUN 0
+#define FA_BACKWARD_RUN 1
 
 #endif /* CONFIG_H */

@@ -2,13 +2,12 @@
 
 import functools
 import sys
+import os
 
 import sc_tests
 import forester_exec
 import sc_stats_printer
 import eval_structure
-
-TESTS_DIR="sc/"
 
 SWP_SUFFIX="swp"
 
@@ -26,10 +25,14 @@ UNKNOWN_MSG = "[Unknown]"
 TRUE_MSG = "[OK]"
 FALSE_MSG = "[False]"
 
-def get_tests():
+def print_help():
+    print('Usage: ./sc_tests.py dir')
+    print('Run all tests in directory "dir" (check directory sc/)')
+
+def get_tests(test_dir):
     return sc_tests.list_intersect(
-            sc_tests.files_with_suffix(TESTS_DIR, C_SUFFIX),
-            sc_tests.files_without_suffix(TESTS_DIR, SWP_SUFFIX))
+            sc_tests.files_with_suffix(test_dir, C_SUFFIX),
+            sc_tests.files_without_suffix(test_dir, SWP_SUFFIX))
 
 def get_spurious(t):
     assert(len(t) >= 1)
@@ -99,29 +102,36 @@ def eval_res(expected_s, expected_r, s, r, u):
     print("---------------------------------")
     sc_stats_printer.prints(expected_s, expected_r, s, r, u)
 
-def get_expected_spurious():
+def get_expected_spurious(test_dir):
     return sc_tests.list_intersect(
-            sc_tests.files_with_suffix(TESTS_DIR, SPURIOUS_SUFFIX),
-            sc_tests.files_without_suffix(TESTS_DIR, SWP_SUFFIX))
+            sc_tests.files_with_suffix(test_dir, SPURIOUS_SUFFIX),
+            sc_tests.files_without_suffix(test_dir, SWP_SUFFIX))
 
-def get_expected_real():
+def get_expected_real(test_dir):
     return sc_tests.list_intersect(
-            sc_tests.files_with_suffix(TESTS_DIR, REAL_SUFFIX),
-            sc_tests.files_without_suffix(TESTS_DIR, SWP_SUFFIX))
+            sc_tests.files_with_suffix(test_dir, REAL_SUFFIX),
+            sc_tests.files_without_suffix(test_dir, SWP_SUFFIX))
 
 
-def run_all_tests():
+def run_all_tests(test_dir):
     FUNCT_DETECTION_MAP = {}
     FUNCT_DETECTION_MAP[SPURIOUS_KEY] = should_be_spurious
     FUNCT_DETECTION_MAP[REAL_KEY] = should_be_real
     
-    results = execute_tests(get_tests(), FUNCT_DETECTION_MAP)
+    results = execute_tests(get_tests(test_dir), FUNCT_DETECTION_MAP)
     eval_res(
-            set(get_expected_spurious()),
-            set(get_expected_real()),
+            set(get_expected_spurious(test_dir)),
+            set(get_expected_real(test_dir)),
             set(get_spurious(results)),
             set(get_real(results)),
             set(get_unknown(results)))
 
 if __name__ == '__main__':
-    run_all_tests()
+    if (len(sys.argv[1]) < 2 or sys.argv[1] == "-h"):
+        print_help()
+        sys.exit()
+    if not os.path.isdir(sys.argv[1]):
+        print("Argument should be directory")
+        print_help()
+        sys.exit()
+    run_all_tests(sys.argv[1])
