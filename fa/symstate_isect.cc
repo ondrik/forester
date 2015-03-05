@@ -401,7 +401,9 @@ void SymState::SubstituteRefs(
 
 		if (srcVar.isRef() && thisVar.isUndef())
 		{	// in case we need to substitute at global variable
-			assert(oldValue == srcVar);
+			// what could happen when a node was referenced by the global
+			// variable or there was a value returned by a function.
+			assert(oldValue == srcVar || i > 1);
 			thisVar = newValue;
 		}
 
