@@ -19,5 +19,4 @@ def prepare(file_to_analyse):
 
 def prepare_and_execute(file_to_analyse):
     p = prepare(file_to_analyse)
-    p.wait()
     return p
