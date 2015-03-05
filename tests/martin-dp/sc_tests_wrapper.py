@@ -127,7 +127,7 @@ def run_all_tests(test_dir):
             set(get_unknown(results)))
 
 if __name__ == '__main__':
-    if (len(sys.argv[1]) < 2 or sys.argv[1] == "-h"):
+    if (len(sys.argv) < 2 or sys.argv[1] == "-h"):
         print_help()
         sys.exit()
     if not os.path.isdir(sys.argv[1]):
