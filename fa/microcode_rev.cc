@@ -249,6 +249,22 @@ SymState* FI_node_create::reverseAndIsect(
 	return tmpState;
 }
 
+SymState* FI_check::reverseAndIsect(
+	ExecutionManager&                      execMan,
+	const SymState&                        fwdPred,
+	const SymState&                        bwdSucc) const
+{
+	(void)fwdPred;
+
+	SymState* tmpState = execMan.copyStateWithNewRegs(bwdSucc, fwdPred.GetInstr());
+
+	// perform intersection
+	// tmpState->Intersect(fwdPred); TODO this is bullshit, this will not ever bring removed thrash back.
+
+	FA_WARN("Executing !!VERY!! suspicious reverse operation FI_check");
+	return tmpState;
+}
+
 SymState* FI_store::reverseAndIsect(
 	ExecutionManager&                      execMan,
 	const SymState&                        fwdPred,

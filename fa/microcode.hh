@@ -809,6 +809,11 @@ public:
 
 	virtual void execute(ExecutionManager& execMan, SymState& state);
 
+	virtual SymState* reverseAndIsect(
+		ExecutionManager&                      execMan,
+		const SymState&                        fwdPred,
+		const SymState&                        bwdSucc) const;
+
 	virtual std::ostream& toStream(std::ostream& os) const {
 		return os << "check ";
 	}
