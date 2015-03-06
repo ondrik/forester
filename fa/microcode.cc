@@ -562,10 +562,16 @@ void FI_imul::execute(ExecutionManager& execMan, SymState& state)
 void FI_check::execute(ExecutionManager& execMan, SymState& state)
 {
 	state.GetFAE()->updateConnectionGraph();
-
-	GarbageChecker::checkAndRemoveGarbage(const_cast<FAE&>(*(state.GetFAE())), &state, false);
-
 	SymState* tmpState = execMan.createChildState(state, next_);
+
+	std::shared_ptr<FAE> faeGarbageLess = std::shared_ptr<FAE>(
+			new FAE(*(tmpState->GetFAE())));
+
+	GarbageChecker::checkAndRemoveGarbage(
+			const_cast<FAE&>(*(faeGarbageLess)), &state, false);
+	
+	tmpState->SetFAE(faeGarbageLess);
+
 	execMan.enqueue(tmpState);
 }
 
