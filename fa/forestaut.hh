@@ -155,6 +155,20 @@ public:   // methods
 		return roots_.size();
 	}
 
+	size_t getAllocRootCount() const
+	{
+		size_t count = 0;
+		for (const auto& root : roots_)
+		{
+			if (root != nullptr)
+			{
+				++count;
+			}
+		}
+
+		return count;
+	}
+
 	/**
 	 * @brief  Gets the count of valid roots
 	 *
