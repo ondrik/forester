@@ -38,7 +38,7 @@ void GarbageChecker::checkGarbage(
 	const FAE&                        fae,
 	const SymState*                   state,
 	const std::vector<bool>&          visited,
-	std::vector<size_t>&              unvisited,
+	std::unordered_set<size_t>&       unvisited,
 	const bool                        endCheck)
 {
 	bool garbage = false;
@@ -54,7 +54,7 @@ void GarbageChecker::checkGarbage(
 				<< fae.connectionGraph.data[i]);
 
 			garbage = true;
-			unvisited.push_back(i);
+			unvisited.insert(i);
 		}
 	}
 
@@ -82,8 +82,8 @@ void GarbageChecker::checkGarbage(
 
 
 void GarbageChecker::removeGarbage(
-		FAE&                             fae,
-		const std::vector<size_t>&       unvisited)
+		FAE&                               fae,
+		const std::unordered_set<size_t>&  unvisited)
 {
 	for (size_t i : unvisited)
 	{
@@ -100,7 +100,7 @@ void GarbageChecker::check(
 	std::vector<bool> visited(fae.getRootCount(), false);
 	traverse(fae, visited);
 
-	std::vector<size_t> unvisited;
+	std::unordered_set<size_t> unvisited;
 	// check garbage
 	checkGarbage(fae, state, visited, unvisited, false);
 }
@@ -109,14 +109,35 @@ void GarbageChecker::check(
 void GarbageChecker::checkAndRemoveGarbage(
 	FAE&                              fae,
 	const SymState*                   state,
-	const bool                        endCheck)
+	const bool                        endCheck,
+	std::unordered_set<size_t>&       unvisited)
 {
 	// compute reachable roots
 	std::vector<bool> visited(fae.getRootCount(), false);
 	traverse(fae, visited);
 
-	std::vector<size_t> unvisited;
 	// check garbage
 	checkGarbage(fae, state, visited, unvisited, endCheck);
 	removeGarbage(fae, unvisited);
+}
+
+void GarbageChecker::checkAndRemoveGarbage(
+	FAE&                              fae,
+	const SymState*                   state,
+	const bool                        endCheck)
+{
+	std::unordered_set<size_t> unvisited;
+
+	checkAndRemoveGarbage(fae, state, endCheck, unvisited);
+}
+
+void GarbageChecker::nontraverseCheckAndRemoveGarbage(
+	FAE&                              fae,
+	const SymState*                   state,
+	const std::vector<bool>&          visited)
+{
+	std::unordered_set<size_t> unvisited;
+
+	GarbageChecker::checkGarbage(fae, state, visited, unvisited);
+	GarbageChecker::removeGarbage(fae, unvisited);
 }

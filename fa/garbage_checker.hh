@@ -41,19 +41,17 @@ private:
 		std::vector<bool>&                visited);
 
 
-public:
-
 	static void checkGarbage(
 		const FAE&                        fae,
 		const SymState*                   state,
 		const std::vector<bool>&          visited,
-		std::vector<size_t>&              unvisited,
+		std::unordered_set<size_t>&       unvisited,
 		const bool                        endCheck=false);
 
 
 	static void removeGarbage(
-		FAE&                             fae,
-		const std::vector<size_t>&       unvisited);
+		FAE&                               fae,
+		const std::unordered_set<size_t>&  unvisited);
 
 
 	/**
@@ -67,11 +65,32 @@ public:
 		const FAE&                       fae,
 		const SymState*                  state);
 
+public:
 
 	static void checkAndRemoveGarbage(
 		FAE&                             fae,
 		const SymState*                  state,
+		const bool                       endCheck,
+		std::unordered_set<size_t>&      unvisited);
+
+	/**
+	 * Just an interface to checkAndRemoveGargabe with the forth parameter.
+	 * This method creates an vector where the removed garbage nodes are stored
+	 * and then calls the core method providing the vector.
+	 */
+	static void checkAndRemoveGarbage(
+		FAE&                             fae,
+		const SymState*                  state,
 		const bool                       endCheck);
+
+	/**
+	 * This function checks and removes garbage but does not perform
+	 * traversal over @p fae.
+	 */
+	static void nontraverseCheckAndRemoveGarbage(
+		FAE&                                fae,
+		const SymState*                     state,
+		const std::vector<bool>&            visited);
 };
 
 #endif
