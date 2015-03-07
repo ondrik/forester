@@ -568,7 +568,7 @@ void FI_check::execute(ExecutionManager& execMan, SymState& state)
 			new FAE(*(tmpState->GetFAE())));
 
 	GarbageChecker::checkAndRemoveGarbage(
-			const_cast<FAE&>(*(faeGarbageLess)), &state, false);
+			const_cast<FAE&>(*(faeGarbageLess)), &state, false, garbageRoots_);
 	
 	tmpState->SetFAE(faeGarbageLess);
 
