@@ -147,7 +147,7 @@ SymState* FI_node_free::reverseAndIsect(
 	const Data& data = tmpState->GetReg(dst_);
 	assert(data.isRef());
 	assert(0 == data.d_ref.displ);
-	size_t root = data.d_ref.root;
+	const size_t root = data.d_ref.root;
 	if (nullptr != fae->getRoot(root))
 	{	// in case some unexpected TA is in the position
 
@@ -159,7 +159,7 @@ SymState* FI_node_free::reverseAndIsect(
 	const Data& oldData = fwdPred.GetReg(dst_);
 	assert(oldData.isRef());
 	assert(0 == oldData.d_ref.displ);
-	size_t oldRoot = oldData.d_ref.root;
+	const size_t oldRoot = oldData.d_ref.root;
 	assert(nullptr != fwdPred.GetFAE()->getRoot(oldRoot));
 
 	// check that the registers correspond
@@ -258,8 +258,24 @@ SymState* FI_check::reverseAndIsect(
 
 	SymState* tmpState = execMan.copyStateWithNewRegs(bwdSucc, fwdPred.GetInstr());
 
-	// perform intersection
-	// tmpState->Intersect(fwdPred); TODO this is bullshit, this will not ever bring removed thrash back.
+	std::shared_ptr<FAE> fae = std::shared_ptr<FAE>(new FAE(*(tmpState->GetFAE())));
+	assert(nullptr != fae);
+
+	// 'vm' is used to manipulate with 'fae'
+	VirtualMachine vm(*fae);
+	// we need to copy a tree automaton from the forward configuration into
+	// the backward configuration
+	VirtualMachine fwdVM(*(fwdPred.GetFAE()));
+
+	for (const auto& rootIndex : garbageRoots_)
+	{ // add all removed garbage roots back to FA
+		vm.nodeCopy(rootIndex, fwdVM, rootIndex);
+	}
+	assert(fae->getAllocRootCount() == tmpState->GetFAE()->getAllocRootCount() + garbageRoots_.size());
+
+	tmpState->SetFAE(fae);
+
+	// TODO do we need renew a references? When it was garbage there were not probably any references.
 
 	FA_WARN("Executing !!VERY!! suspicious reverse operation FI_check");
 	return tmpState;
