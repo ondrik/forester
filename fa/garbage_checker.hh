@@ -67,6 +67,18 @@ private:
 
 public:
 
+	/**
+	 * Methods iterates through forest automaton @p fae and finds
+	 * all accessible and non-accessible roots in the current @p state
+	 * (so whether it is possible to access the root by traversal from
+	 * a TA pointed by some variable in the state).
+	 * The non-accessible are then marked as a garbage and removed.
+	 *
+	 * @param[in,out] fae FA where the garbage is searched
+	 * @param[in] state Current symbolic state
+	 * @param[in] endCheck
+	 * @param[out] List of garbage roots.
+	 */
 	static void checkAndRemoveGarbage(
 		FAE&                             fae,
 		const SymState*                  state,
