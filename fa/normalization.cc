@@ -217,9 +217,7 @@ void Normalization::scan(
 	// compute canonical root ordering
 	this->traverse(visited, order, marked);
 
-	std::vector<size_t> unvisited;
-	GarbageChecker::checkGarbage(this->fae, this->state_, visited, unvisited);
-	GarbageChecker::removeGarbage(this->fae, unvisited);
+	GarbageChecker::nontraverseCheckAndRemoveGarbage(this->fae, this->state_, visited);
 
 	if (!extended)
 	{
