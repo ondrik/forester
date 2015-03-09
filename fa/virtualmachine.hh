@@ -258,21 +258,23 @@ private:// methods
 
 public:
 
-
+	
 	/**
-	 * @brief Checks wheather a given node is undefined reference in a given fae
+	 * @brief Checks wheather a given node has type determined by a given function
 	 *
-	 * Returns true when @p ref indexes an undefined root reference in a FA @p fae.
+	 * Returns true when @p ref indexes a node of type determined by TypeFunction.
 	 *
-	 * @return True When indexed node is undefined root reference, otherwise false.
+	 * @return True When indexed node has a given type, otherwise false.
 	 */
-	static bool isRefUndef(const FAE& fae, const Data& ref)
+	template<class TypeFunction>
+	static bool isNodeType(const FAE& fae, const Data& node, TypeFunction typeDecider)
 	{
 		Data tmpData;
-		VirtualMachine(fae).nodeLookup(ref.d_ref.root, ref.d_ref.displ, tmpData);
+		VirtualMachine(fae).nodeLookup(node.d_ref.root, node.d_ref.displ, tmpData);
 
-		return tmpData.isUndef();
+		return typeDecider(tmpData);
 	}
+
 
 	/**
 	 * @brief  Gets the number of variables in the environment
