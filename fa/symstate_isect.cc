@@ -456,21 +456,39 @@ void SymState::SubstituteRefs(
 		assert(thisVar.isRef() && srcVar.isRef());
 		assert(thisVar.d_ref.displ == srcVar.d_ref.displ);
 
-		if (thisVar.d_ref.displ != 0 &&
-				VirtualMachine::isRefUndef(*thisFAE, thisVar) &&
-				VirtualMachine::isRefUndef(*srcFAE, srcVar))
-		{ // variable in register is undefined pointer so it has not its own TA
-			continue;
-		}
-		else if (thisVar.d_ref.displ != 0)
-		{
-			assert(false);
+		size_t thisRef = thisVar.d_ref.root;
+		size_t srcRef = srcVar.d_ref.root;
+
+		if (thisVar.d_ref.displ != 0)
+		{ // not the TA referenced by thisVar is used to make a new product state
+			auto isundef = [](const Data& data) -> bool {return data.isUndef();};
+			auto isnative = [](const Data& data) -> bool {return data.isNativePtr();};
+			auto isref = [](const Data& data) -> bool {return data.isRef();};
+
+			if (VirtualMachine::isNodeType(*thisFAE, thisVar, isundef) &&
+				VirtualMachine::isNodeType(*srcFAE, srcVar, isundef))
+			{ // variable in register is undefined pointer so it has not its own TA
+				continue;
+			}
+			else if (VirtualMachine::isNodeType(*thisFAE, thisVar, isnative) &&
+				VirtualMachine::isNodeType(*srcFAE, srcVar, isnative))
+			{ // native pointer is return address of a function
+				continue;
+			}
+			else if (VirtualMachine::isNodeType(*thisFAE, thisVar, isref) &&
+				VirtualMachine::isNodeType(*srcFAE, srcVar, isref))
+			{ // TODO is this correct?
+				FA_WARN("Suspicious replacement of root refs");
+				Data tmpData;
+				VirtualMachine(*thisFAE).nodeLookup(thisVar.d_ref.root, thisVar.d_ref.displ, tmpData);
+				thisRef = tmpData.d_ref.root;
+				VirtualMachine(*srcFAE).nodeLookup(thisVar.d_ref.root, thisVar.d_ref.displ, tmpData);
+				srcRef = tmpData.d_ref.root;
+			}
 		}
 
-		assert(0 == thisVar.d_ref.displ);
-
-		const TreeAut* thisRoot = thisFAE->getRoot(thisVar.d_ref.root).get();
-		const TreeAut* srcRoot  = srcFAE->getRoot(srcVar.d_ref.root).get();
+		const TreeAut* thisRoot = thisFAE->getRoot(thisRef).get();
+		const TreeAut* srcRoot  = srcFAE->getRoot(srcRef).get();
 		assert((nullptr != thisRoot) && (nullptr != srcRoot));
 
 		engine.makeProductState(
