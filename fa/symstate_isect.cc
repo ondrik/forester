@@ -27,7 +27,7 @@
 // Forester headers
 #include "streams.hh"
 #include "symstate.hh"
-
+#include "virtualmachine.hh"
 
 struct RootState
 {
@@ -455,6 +455,18 @@ void SymState::SubstituteRefs(
 
 		assert(thisVar.isRef() && srcVar.isRef());
 		assert(thisVar.d_ref.displ == srcVar.d_ref.displ);
+
+		if (thisVar.d_ref.displ != 0 &&
+				VirtualMachine::isRefUndef(*thisFAE, thisVar) &&
+				VirtualMachine::isRefUndef(*srcFAE, srcVar))
+		{ // variable in register is undefined pointer so it has not its own TA
+			continue;
+		}
+		else if (thisVar.d_ref.displ != 0)
+		{
+			assert(false);
+		}
+
 		assert(0 == thisVar.d_ref.displ);
 
 		const TreeAut* thisRoot = thisFAE->getRoot(thisVar.d_ref.root).get();
