@@ -9,9 +9,9 @@ void* fnc(void) {
 
 int main()
 {
-    void *ptr = fnc();
+    void *ptri = fnc();
     if (__VERIFIER_nondet_int())
-        free(ptr);
+        free(ptri);
 
     struct { void *v1; void *v2; } *s = malloc(sizeof(*s));
     if (s) {
