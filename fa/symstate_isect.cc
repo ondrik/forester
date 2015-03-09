@@ -485,6 +485,10 @@ void SymState::SubstituteRefs(
 				VirtualMachine(*srcFAE).nodeLookup(thisVar.d_ref.root, thisVar.d_ref.displ, tmpData);
 				srcRef = tmpData.d_ref.root;
 			}
+			else
+			{
+				assert(false);
+			}
 		}
 
 		const TreeAut* thisRoot = thisFAE->getRoot(thisRef).get();
