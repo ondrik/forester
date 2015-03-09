@@ -258,6 +258,22 @@ private:// methods
 
 public:
 
+
+	/**
+	 * @brief Checks wheather a given node is undefined reference in a given fae
+	 *
+	 * Returns true when @p ref indexes an undefined root reference in a FA @p fae.
+	 *
+	 * @return True When indexed node is undefined root reference, otherwise false.
+	 */
+	static bool isRefUndef(const FAE& fae, const Data& ref)
+	{
+		Data tmpData;
+		VirtualMachine(fae).nodeLookup(ref.d_ref.root, ref.d_ref.displ, tmpData);
+
+		return tmpData.isUndef();
+	}
+
 	/**
 	 * @brief  Gets the number of variables in the environment
 	 *
