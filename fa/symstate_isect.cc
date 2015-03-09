@@ -398,8 +398,9 @@ void SymState::SubstituteRefs(
 	{	// copy global variables
 		Data thisVar = thisFAE->GetVar(i);
 		const Data& srcVar = srcFAE->GetVar(i);
+		const bool wasThisUndef = thisVar.isUndef();
 
-		if (srcVar.isRef() && thisVar.isUndef())
+		if (srcVar.isRef() && wasThisUndef)
 		{	// in case we need to substitute at global variable
 			// what could happen when a node was referenced by the global
 			// variable or there was a value returned by a function.
@@ -412,6 +413,11 @@ void SymState::SubstituteRefs(
 		if (!srcVar.isRef() || !thisVar.isRef())
 		{	// in case some of them is not a reference
 			assert(srcVar == thisVar);
+			continue;
+		}
+
+		if (wasThisUndef)
+		{ // the value in a global register of thisFA contained a value returned by function
 			continue;
 		}
 
