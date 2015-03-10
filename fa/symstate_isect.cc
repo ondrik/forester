@@ -493,6 +493,11 @@ void SymState::SubstituteRefs(
 
 		const TreeAut* thisRoot = thisFAE->getRoot(thisRef).get();
 		const TreeAut* srcRoot  = srcFAE->getRoot(srcRef).get();
+
+		if (nullptr == thisRoot && nullptr == srcRoot)
+		{ // register contains reference which has been removed before this instruction in forward run
+			continue;
+		}
 		assert((nullptr != thisRoot) && (nullptr != srcRoot));
 
 		engine.makeProductState(
