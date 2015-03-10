@@ -4,9 +4,6 @@ FALSE
 /home/martin/forester/fa/sv-comp/c/heap-manipulation/dll_of_dll_false-unreach-call.i
 UNKNOWN
 0.364
-/home/martin/forester/fa/sv-comp/c/heap-manipulation/merge_sort_false-unreach-call.i
-FALSE
-0.112
 /home/martin/forester/fa/sv-comp/c/heap-manipulation/sll_to_dll_rev_false-unreach-call.i
 UNKNOWN
 0.232
@@ -155,7 +152,7 @@ UNKNOWN
 TRUE
 0.028
 /home/martin/forester/fa/sv-comp/c/ldv-regression/sizeofparameters_test.c_true-unreach-call.i
-FALSE
+TRUE
 0.028
 /home/martin/forester/fa/sv-comp/c/ldv-regression/structure_assignment.c_true-unreach-call.i
 UNKNOWN
@@ -173,7 +170,7 @@ TRUE
 TRUE
 0.048
 /home/martin/forester/fa/sv-comp/c/ldv-regression/test_overflow.c_true-unreach-call.i
-FALSE
+TRUE
 0.032
 /home/martin/forester/fa/sv-comp/c/ldv-regression/test_union_cast-1_true-unreach-call.i
 UNKNOWN
