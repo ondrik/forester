@@ -816,6 +816,12 @@ void SymState::Intersect(
 			assert(fwdVar == thisVar);
 			fae->PushVar(thisVar);
 		}
+		else if (0 != thisVar.d_ref.displ &&
+				!shouldCreateProductState(*thisFAE, *fwdFAE, thisVar, fwdVar))
+		{
+			assert(thisVar.d_ref.displ == fwdVar.d_ref.displ);
+			fae->PushVar(thisVar);
+		}
 		else
 		{
 			assert(thisVar.isRef() && fwdVar.isRef());
