@@ -353,7 +353,7 @@ public:   // methods
 	}
 };
 
-bool shouldContinueOnNodeType(
+bool shouldCreateProductState(
 		const FAE& thisFAE,
 		const FAE& srcFAE,
 		const Data& thisVar,
@@ -365,15 +365,15 @@ bool shouldContinueOnNodeType(
 	if (VirtualMachine::isNodeType(thisFAE, thisVar, isundef) &&
 		VirtualMachine::isNodeType(srcFAE, srcVar, isundef))
 	{ // variable in register is undefined pointer so it has not its own TA
-		return true;
+		return false;
 	}
 	else if (VirtualMachine::isNodeType(thisFAE, thisVar, isnative) &&
 		VirtualMachine::isNodeType(srcFAE, srcVar, isnative))
 	{ // native pointer is return address of a function
-		return true;
+		return false;
 	}
 
-	return false;
+	return true;
 }
 
 } // namespace
@@ -487,7 +487,7 @@ void SymState::SubstituteRefs(
 		{ // not the TA referenced by thisVar is used to make a new product state
 			auto isref = [](const Data& data) -> bool {return data.isRef();};
 
-			if (shouldContinueOnNodeType(*thisFAE, *srcFAE, thisVar, srcVar))
+			if (!shouldCreateProductState(*thisFAE, *srcFAE, thisVar, srcVar))
 			{
 				continue;
 			}
