@@ -352,6 +352,30 @@ public:   // methods
 		return index;
 	}
 };
+
+bool shouldContinueOnNodeType(
+		const FAE& thisFAE,
+		const FAE& srcFAE,
+		const Data& thisVar,
+		const Data& srcVar)
+{
+	auto isundef = [](const Data& data) -> bool {return data.isUndef();};
+	auto isnative = [](const Data& data) -> bool {return data.isNativePtr();};
+
+	if (VirtualMachine::isNodeType(thisFAE, thisVar, isundef) &&
+		VirtualMachine::isNodeType(srcFAE, srcVar, isundef))
+	{ // variable in register is undefined pointer so it has not its own TA
+		return true;
+	}
+	else if (VirtualMachine::isNodeType(thisFAE, thisVar, isnative) &&
+		VirtualMachine::isNodeType(srcFAE, srcVar, isnative))
+	{ // native pointer is return address of a function
+		return true;
+	}
+
+	return false;
+}
+
 } // namespace
 
 
@@ -461,18 +485,10 @@ void SymState::SubstituteRefs(
 
 		if (thisVar.d_ref.displ != 0)
 		{ // not the TA referenced by thisVar is used to make a new product state
-			auto isundef = [](const Data& data) -> bool {return data.isUndef();};
-			auto isnative = [](const Data& data) -> bool {return data.isNativePtr();};
 			auto isref = [](const Data& data) -> bool {return data.isRef();};
 
-			if (VirtualMachine::isNodeType(*thisFAE, thisVar, isundef) &&
-				VirtualMachine::isNodeType(*srcFAE, srcVar, isundef))
-			{ // variable in register is undefined pointer so it has not its own TA
-				continue;
-			}
-			else if (VirtualMachine::isNodeType(*thisFAE, thisVar, isnative) &&
-				VirtualMachine::isNodeType(*srcFAE, srcVar, isnative))
-			{ // native pointer is return address of a function
+			if (shouldContinueOnNodeType(*thisFAE, *srcFAE, thisVar, srcVar))
+			{
 				continue;
 			}
 			else if (VirtualMachine::isNodeType(*thisFAE, thisVar, isref) &&
