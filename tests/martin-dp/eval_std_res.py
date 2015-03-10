@@ -18,23 +18,12 @@ FALSEU = "unreach"
 def eval_res(name, res):
     if RES_UNKNOWN in res:
         return eval_structure.UNKNOWN
-    elif RES_TRUE in res:
-        if NAME_TRUE in name:
-            return eval_structure.UNKNOWN
-        else:
-            return eval_structure.UNKNOWN
-    elif RES_FALSE in res:
-        for i in FALSEL:
-            if i in res and i not in name:
-                return eval_structure.SPURIOUS
-            elif i in res and i in name:
-                return eval_structure.REAL
-        if NAME_TRUE in name:
-            return eval_structure.SPURIOUS
-        elif FALSEU in name:
-            return eval_structure.REAL
-    return eval_structure.UNKNOWN
-
+    elif NAME_FALSE in name:
+        return eval_structure.REAL
+    elif NAME_TRUE in name and RES_FALSE in res:
+        return eval_structure.SPURIOUS
+    else:
+        return eval_structure.UNKNOWN
        
 def eval_file(path):
     f = open(path)
