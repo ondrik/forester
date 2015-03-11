@@ -140,7 +140,7 @@ void VirtualMachine::transitionModify(
 void VirtualMachine::transitionModifyInternal(
 		TreeAut&                                        dst,
 		const Transition&                               transition,
-		size_t                                          base,
+		const size_t                                    base,
 		const std::vector<std::pair<size_t, Data>>&     in,
 		Data&                                           out,
 		OutDataFunctor&                                 outFunc)
