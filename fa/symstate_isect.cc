@@ -440,7 +440,7 @@ void SymState::SubstituteRefs(
 			continue;
 		}
 
-		if (wasThisUndef)
+		if (wasThisUndef || i > 1) // TODO is this really correct
 		{ // the value in a global register of thisFA contained a value returned by function
 			continue;
 		}
