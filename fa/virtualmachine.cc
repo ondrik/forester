@@ -146,7 +146,7 @@ void VirtualMachine::transitionModifyInternal(
 		OutDataFunctor&                                 outFunc)
 {
 	// Create a new final state
-	size_t state = fae_.freshState();
+	const size_t state = fae_.freshState();
 	dst.addFinalState(state);
 
 	std::vector<size_t> lhs = transition.GetChildren();
@@ -179,6 +179,7 @@ void VirtualMachine::transitionModifyInternal(
 		label[ni.index] = fae_.boxMan->getSelector(s);
 	}
 
+	//FA_NOTE("MODIFIED " << stateToString(state));
 	FAE::reorderBoxes(label, lhs);
 	dst.addTransition(lhs, fae_.boxMan->lookupLabel(label), state);
 }
@@ -261,6 +262,25 @@ void VirtualMachine::nodeDelete(size_t root)
 }
 
 
+void VirtualMachine::reinsertModifiedTA(
+	const size_t            root,
+	TreeAut&                ta)
+{
+	// Note that this operations also adds an old root state from the TA fae_[root]
+	// but it is not set as a root by this function so it will be removed by
+	// operation eliminating unreachable states (function unreachableFree).
+	fae_.getRoot(root)->copyTransitions(ta);
+	assert(fae_.getRoot(root)->getAcceptingTransition().GetParent() !=
+			ta.getAcceptingTransition().GetParent());
+	TreeAut* tmp = fae_.allocTA();
+	//FA_NOTE("BEFORE " << ta);
+	ta.unreachableFree(*tmp);
+	//FA_NOTE("AFTER " << *tmp);
+	fae_.setRoot(root, std::shared_ptr<TreeAut>(tmp));
+	fae_.connectionGraph.invalidate(root);
+
+}
+
 void VirtualMachine::nodeModify(
 	size_t                      root,
 	size_t                      offset,
@@ -278,12 +298,7 @@ void VirtualMachine::nodeModify(
 		offset,
 		in,
 		out);
-
-	fae_.getRoot(root)->copyTransitions(ta);
-	TreeAut* tmp = fae_.allocTA();
-	ta.unreachableFree(*tmp);
-	fae_.setRoot(root, std::shared_ptr<TreeAut>(tmp));
-	fae_.connectionGraph.invalidate(root);
+	reinsertModifiedTA(root, ta);
 }
 
 
@@ -301,13 +316,52 @@ void VirtualMachine::nodeModifyMultiple(
 	TreeAut ta = fae_.createTAWithSameBackend();
 	this->transitionModify(ta, fae_.getRoot(root)->getAcceptingTransition(),
 		offset, *in.d_struct, out);
-	fae_.getRoot(root)->copyTransitions(ta);
-	TreeAut* tmp = fae_.allocTA();
-	ta.unreachableFree(*tmp);
-	fae_.setRoot(root, std::shared_ptr<TreeAut>(tmp));
-	fae_.connectionGraph.invalidate(root);
+	reinsertModifiedTA(root, ta);
 }
 
+SelData VirtualMachine::getSelector(
+	const size_t                root,
+	const size_t                offset) const
+{
+	const Transition& trans = fae_.getRoot(root)->getAcceptingTransition();
+	const NodeLabel::NodeItem& ni = TreeAut::GetSymbol(trans)->nodeLookup(offset);
+	return VirtualMachine::readSelector(ni.aBox);
+}
+
+void VirtualMachine::selectorModify(
+	const size_t                root,
+	const size_t                offset,
+	const SelData&              newSel)
+{
+	// Assertions
+	assert(root < fae_.getRootCount());
+	assert(nullptr != fae_.getRoot(root));
+
+	TreeAut ta = fae_.createTAWithSameBackend();
+
+	const Transition& trans = fae_.getRoot(root)->getAcceptingTransition();
+	std::vector<size_t> lhs = trans.GetChildren();
+	std::vector<const AbstractBox*> label = TreeAut::GetSymbol(trans)->getNode();
+
+	const NodeLabel::NodeItem& ni = TreeAut::GetSymbol(trans)->nodeLookup(offset);
+	label[ni.index] = fae_.boxMan->getSelector(newSel);
+
+	const size_t newRoot = fae_.freshState();
+	ta.addFinalState(newRoot);
+	ta.addTransition(lhs, fae_.boxMan->lookupLabel(label), newRoot);
+
+	reinsertModifiedTA(root, ta);
+}
+
+void VirtualMachine::selectorDisplModify(
+	const size_t                root,
+	const size_t                offset,
+	const size_t                newDispl)
+{
+	SelData sel = getSelector(root, offset);
+	sel.displ = newDispl;
+	selectorModify(root, offset, sel);
+}
 
 void VirtualMachine::getNearbyReferences(
 	size_t                       root,

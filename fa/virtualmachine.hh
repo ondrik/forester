@@ -256,9 +256,52 @@ private:// methods
 		OutDataFunctor&                               outFunctor);
 
 
+	/**
+	 * Function copies given @p ta to fae_ with all transitions
+	 * same as it has before this function but the modified transition
+	 * is changed. Modification of transition is not done in this function.
+	 * It is supposed that the modified transition is a root one in the
+	 * original TA.
+	 *
+	 * @param  rootIndex index of TA in FA
+	 * @param  TA to be copied.
+	 */
+	void reinsertModifiedTA(
+		const size_t            rootIndex,
+		TreeAut&                ta);
+
+
 public:
 
-	
+	/**
+	 * Returns a selector which is in a label under @p root
+	 * state on the given @p offset
+	 */
+	SelData getSelector(
+		const size_t                root,
+		const size_t                offset) const;
+
+
+	/**
+	 * Assigns a new selector @p newSelf to the selector in label
+	 * under the @p root on @offset
+	 */
+	void selectorModify(
+		const size_t                root,
+		const size_t                offset,
+		const SelData&              newSel);
+
+
+	/**
+	 * Assigns a new displacement @newDispl to the selector in label
+	 * under the @p root on @offset
+	 */
+	void selectorDisplModify(
+		const size_t                root,
+		const size_t                offset,
+		const size_t                newDispl);
+
+
 	/**
 	 * @brief Checks wheather a given node has type determined by a given function
 	 *
