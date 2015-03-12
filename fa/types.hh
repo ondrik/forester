@@ -70,6 +70,22 @@ struct SelData
 		name(name)
 	{ }
 
+	SelData(const SelData&     copySel) :
+		offset(copySel.offset),
+		size(copySel.size),
+		displ(copySel.displ),
+		name(copySel.name)
+	{ }
+
+
+	// Move constructor
+	SelData(SelData&&           tempSel) :
+		offset(tempSel.offset),
+		size(tempSel.size),
+		displ(tempSel.displ),
+		name(std::move(tempSel.name))
+	{ }
+
 #if 0
 	/**
 	 * @brief  Construct selector information from arguments
