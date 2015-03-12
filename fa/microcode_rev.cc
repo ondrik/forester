@@ -305,7 +305,14 @@ SymState* FI_store::reverseAndIsect(
 	std::shared_ptr<FAE> fae = std::shared_ptr<FAE>(new FAE(*(tmpState->GetFAE())));
 
 	Data tmp;            // necessary for the call of the nodeModify() method
-	VirtualMachine(*fae).nodeModify(
+	// original selector value that can change when displacement was set
+	// to a value of displacement of root reference
+	const size_t fwdSelValue = VirtualMachine(*fwdPred.GetFAE()).getSelector(treeRef.d_ref.root, treeRef.d_ref.displ + offset_).displ;
+	VirtualMachine vm(*fae);
+	vm.selectorDisplModify(treeRef.d_ref.root, treeRef.d_ref.displ + offset_,
+			fwdSelValue);
+	// old value of node
+	vm.nodeModify(
 		treeRef.d_ref.root, treeRef.d_ref.displ + offset_, oldVal, tmp
 	);
 
