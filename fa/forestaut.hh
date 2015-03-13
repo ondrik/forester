@@ -201,6 +201,11 @@ public:   // methods
 		return roots_[i];
 	}
 
+	bool rootDefined(const size_t root) const
+	{
+		return root < roots_.size() && getRoot(root).get() != nullptr;
+	}
+
 	void setRoot(size_t i, std::shared_ptr<TreeAut> ta)
 	{
 		assert(i < this->getRootCount());
