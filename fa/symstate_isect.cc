@@ -494,6 +494,7 @@ void SymState::SubstituteRefs(
 			else if (VirtualMachine::isNodeType(*thisFAE, thisVar, isref) &&
 				VirtualMachine::isNodeType(*srcFAE, srcVar, isref))
 			{ // TODO is this correct?
+				// if both register points a reference than the referenced root is loaded
 				FA_WARN("Suspicious replacement of root refs");
 				Data tmpData;
 				VirtualMachine(*thisFAE).nodeLookup(thisVar.d_ref.root, thisVar.d_ref.displ, tmpData);
@@ -507,13 +508,13 @@ void SymState::SubstituteRefs(
 			}
 		}
 
-		const TreeAut* thisRoot = thisFAE->getRoot(thisRef).get();
-		const TreeAut* srcRoot  = srcFAE->getRoot(srcRef).get();
-
-		if (nullptr == thisRoot && nullptr == srcRoot)
+		if (!thisFAE->rootDefined(thisRef) && !srcFAE->rootDefined(srcRef))
 		{ // register contains reference which has been removed before this instruction in forward run
 			continue;
 		}
+		const TreeAut* thisRoot = thisFAE->getRoot(thisRef).get();
+		const TreeAut* srcRoot  = srcFAE->getRoot(srcRef).get();
+
 		assert((nullptr != thisRoot) && (nullptr != srcRoot));
 
 		engine.makeProductState(
