@@ -137,6 +137,78 @@ void VirtualMachine::transitionModify(
 }
 
 
+const NodeLabel::NodeItem& VirtualMachine::getNodeItem(
+		const Transition&                               transition,
+		const size_t                                    base,
+		const std::pair<size_t, Data>&                  oldSelector) const
+{
+	// Retrieve the item with the given offset
+	const NodeLabel::NodeItem& ni = TreeAut::GetSymbol(transition)->
+			nodeLookup(oldSelector.first + base);
+	// Assertions
+	assert(VirtualMachine::isSelectorWithOffset(ni.aBox, oldSelector.first + base));
+
+	return ni;
+}
+
+
+const Data* VirtualMachine::getData(
+		const Transition&                               transition,
+		const NodeLabel::NodeItem&                      ni)
+{
+	const Data* tmp = nullptr;
+	if (!fae_.isData(transition.GetNthChildren(ni.offset), tmp))
+	{
+		throw std::runtime_error("transitionModify(): destination is not a leaf!");
+	}
+
+	return tmp;
+}
+
+
+VirtualMachine::DataSelector VirtualMachine::createDataSelector(
+		const NodeLabel::NodeItem&                      ni,
+		Data&                                           out,
+		OutDataFunctor&                                 outFunc,
+		const std::pair<size_t, Data>&                  oldSelector,
+		const Data*                                     data)
+{
+	outFunc.save(out, oldSelector.first, *data);
+	SelData s = VirtualMachine::readSelector(ni.aBox);
+	VirtualMachine::displToData(s, outFunc.get(out));
+	Data d = oldSelector.second;
+	VirtualMachine::displToSel(s, d);
+
+	return DataSelector(d,s);
+}
+
+
+void VirtualMachine::addSelector(
+		TreeAut&                                        dst,
+		const DataSelector&                             dataSelector,
+		const NodeLabel::NodeItem&                      ni,
+		std::vector<size_t>&                            lhs,
+		std::vector<const AbstractBox*>&                label)
+{
+	lhs[ni.offset] = fae_.addData(dst, dataSelector.data);
+	label[ni.index] = fae_.boxMan->getSelector(dataSelector.selector);
+}
+
+
+void VirtualMachine::pushIfStruct(
+		const std::pair<size_t, Data>&           sel,
+		std::vector<std::pair<size_t, Data>>&    inStructStack)
+{
+	if (sel.second.isStruct())
+	{
+		for (auto& structItem : *sel.second.d_struct)
+		{
+			inStructStack.push_back(std::pair<size_t, Data>(sel.first + structItem.first, structItem.second));
+		}
+	}
+}
+
+
 void VirtualMachine::transitionModifyInternal(
 		TreeAut&                                        dst,
 		const Transition&                               transition,
@@ -156,30 +228,30 @@ void VirtualMachine::transitionModifyInternal(
         TreeAut::GetSymbol(transition)->getNode();
 
 	out = Data::createStruct();
+
+	std::vector<std::pair<size_t, Data>> structSelectorStack;
+
 	for (const std::pair<size_t, Data>& sel : in)
 	{
-		// Retrieve the item with the given offset
-		const NodeLabel::NodeItem& ni = TreeAut::GetSymbol(transition)->
-                nodeLookup(sel.first + base);
-		// Assertions
-		assert(VirtualMachine::isSelectorWithOffset(ni.aBox, sel.first + base));
-
-		const Data* tmp = nullptr;
-		if (!fae_.isData(transition.GetNthChildren(ni.offset), tmp))
-		{
-			throw std::runtime_error("transitionModify(): destination is not a leaf!");
-		}
-
-		outFunc.save(out, sel.first, *tmp);
-		SelData s = VirtualMachine::readSelector(ni.aBox);
-		VirtualMachine::displToData(s, outFunc.get(out));
-		Data d = sel.second;
-		VirtualMachine::displToSel(s, d);
-		lhs[ni.offset] = fae_.addData(dst, d);
-		label[ni.index] = fae_.boxMan->getSelector(s);
+		pushIfStruct(sel, structSelectorStack);
+		const NodeLabel::NodeItem& ni = getNodeItem(transition, base, sel);
+		DataSelector dataSelector =
+			createDataSelector(ni, out, outFunc, sel, getData(transition, ni));
+		addSelector(dst, dataSelector, ni, lhs, label);
 	}
 
-	//FA_NOTE("MODIFIED " << stateToString(state));
+	while (!structSelectorStack.empty())
+	{
+		const std::pair<size_t, Data> sel = structSelectorStack.front();
+		structSelectorStack.erase(structSelectorStack.begin());
+
+		pushIfStruct(sel, structSelectorStack);
+		const NodeLabel::NodeItem& ni = getNodeItem(transition, base, sel);
+		DataSelector dataSelector =
+			createDataSelector(ni, out, outFunc, sel, getData(transition, ni));
+		addSelector(dst, dataSelector, ni, lhs, label);
+	}
+
 	FAE::reorderBoxes(label, lhs);
 	dst.addTransition(lhs, fae_.boxMan->lookupLabel(label), state);
 }
@@ -273,9 +345,7 @@ void VirtualMachine::reinsertModifiedTA(
 	assert(fae_.getRoot(root)->getAcceptingTransition().GetParent() !=
 			ta.getAcceptingTransition().GetParent());
 	TreeAut* tmp = fae_.allocTA();
-	//FA_NOTE("BEFORE " << ta);
 	ta.unreachableFree(*tmp);
-	//FA_NOTE("AFTER " << *tmp);
 	fae_.setRoot(root, std::shared_ptr<TreeAut>(tmp));
 	fae_.connectionGraph.invalidate(root);
 

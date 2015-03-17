@@ -79,6 +79,29 @@ public:   // data types
 		virtual ~OutDataFunctor() {};
 	};
 
+	struct DataSelector
+	{
+		Data data;
+		SelData selector;
+
+		DataSelector(Data pData, SelData pSelector) :
+			data(pData),
+			selector(pSelector)
+		{}
+
+
+		DataSelector(DataSelector& dataSelector) :
+			data(dataSelector.data),
+			selector(dataSelector.selector)
+		{}
+
+
+		DataSelector(DataSelector&& dataSelector) :
+			data(std::move(dataSelector.data)),
+			selector(std::move(dataSelector.selector))
+		{}
+	};
+
 
 private:   // data members
 
@@ -270,6 +293,38 @@ private:// methods
 		const size_t            rootIndex,
 		TreeAut&                ta);
 
+	const NodeLabel::NodeItem& getNodeItem(
+		const Transition&                               transition,
+		const size_t                                    base,
+		const std::pair<size_t, Data>&                  oldSelector) const;
+
+	const Data* getData(
+		const Transition&                               transition,
+		const NodeLabel::NodeItem&                      ni);
+
+	/**
+	 * @brief Adds a selector to a label and add also appropriate left hand side child
+	 * Adds a selector to a label and add also appropriate left hand side child.
+	 * The selector is indentified by base, oldSelector offset and transition.
+	 */
+	DataSelector createDataSelector(
+			const NodeLabel::NodeItem&                  ni,
+			Data&                                       out,
+			OutDataFunctor&                             outFunc,
+			const std::pair<size_t, Data>&              oldSelector,
+			const Data*                                 data);
+
+
+	void addSelector(
+		TreeAut&                                        dst,
+		const DataSelector&                             dataSelector,
+		const NodeLabel::NodeItem&                      ni,
+		std::vector<size_t>&                            lhs,
+		std::vector<const AbstractBox*>&                label);
+
+	void pushIfStruct(
+		const std::pair<size_t, Data>&                  sel,
+		std::vector<std::pair<size_t, Data>>&           inStructStack);
 
 public:
 
