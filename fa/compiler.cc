@@ -1023,6 +1023,20 @@ protected:
 							// append an instruction to load the element
 							append(new FI_load(&insn, dst, dst, offset));
 						}
+					} else if (op.type->code == cl_type_e::CL_TYPE_STRUCT)
+					{
+						if (varInfo.isOnStack())
+						{
+							offset = varInfo.getStackOffset();
+						}
+						std::vector<size_t> offs;
+						NodeBuilder::buildNode(offs, op.type);
+
+						append(new FI_get_ABP(&insn, dst, 0));
+						// append an instruction to isolate the root
+						append(new FI_acc_set(&insn, dst, offset, offs));
+						// append an instruction to load the root
+						append(new FI_loads(&insn, dst, dst, offset, offs));
 					} else
 					{	// in case there is not a dereference
 						if (varInfo.isOnStack())
