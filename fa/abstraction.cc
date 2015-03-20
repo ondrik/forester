@@ -76,38 +76,42 @@ void Abstraction::predicateAbstraction(
 		// refine the relation according to cutpoints etc.
 		ConnectionGraph::StateToCutpointSignatureMap stateMap;
 		ConnectionGraph::computeSignatures(stateMap, *fae_.getRoot(i));
-		for (auto j = faeStateIndex.begin(); j != faeStateIndex.end(); ++j)
+		for (const auto j : faeStateIndex)
 		{	// go through the matrix
-			for (auto k = faeStateIndex.begin(); k != faeStateIndex.end(); ++k)
+			for (const auto k : faeStateIndex)
 			{
 				if (k == j)
-					continue;
-
-				if (fae_.getRoot(i)->isFinalState(j->first)
-					|| fae_.getRoot(i)->isFinalState(k->first))
 				{
-					rel[j->second][k->second] = false;
+					continue;
+				}
+
+				if (fae_.getRoot(i)->isFinalState(j.first)
+					|| fae_.getRoot(i)->isFinalState(k.first))
+				{
+					rel[j.second][k.second] = false;
 					continue;
 				}
 
 				// load data if present
 				const Data* jData;
-				const bool jIsData = fae_.isData(j->first, jData);
+				const bool jIsData = fae_.isData(j.first, jData);
 				assert((!jIsData || (nullptr != jData)) && (!(nullptr == jData) || !jIsData));
 				const Data* kData;
-				const bool kIsData = fae_.isData(k->first, kData);
+				const bool kIsData = fae_.isData(k.first, kData);
 				assert((!kIsData || (nullptr != kData)) && (!(nullptr == kData) || !kIsData));
 
 				if (jIsData || kIsData)
 				{
-					rel[j->second][k->second] = false;
+					rel[j.second][k.second] = false;
 					continue;
 				}
 
-				if (stateMap[j->first] % stateMap[k->first])
+				if (stateMap[j.first] % stateMap[k.first])
+				{
 					continue;
+				}
 
-				rel[j->second][k->second] = false;
+				rel[j.second][k.second] = false;
 			}
 		}
 	}
@@ -118,9 +122,9 @@ void Abstraction::predicateAbstraction(
 
 	std::ostringstream ossInd;
 	ossInd << '[';
-	for (auto it = faeStateIndex.begin(); it != faeStateIndex.end(); ++it)
+	for (const auto it : faeStateIndex)
 	{
-		ossInd << '(' << FA::writeState(it->first) << ',' << it->second << ')';
+		ossInd << '(' << FA::writeState(it.first) << ',' << it.second << ')';
 	}
 
 	ossInd << ']';
