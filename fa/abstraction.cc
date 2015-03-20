@@ -92,10 +92,10 @@ void Abstraction::predicateAbstraction(
 
 				// load data if present
 				const Data* jData;
-				bool jIsData = fae_.isData(j->first, jData);
+				const bool jIsData = fae_.isData(j->first, jData);
 				assert((!jIsData || (nullptr != jData)) && (!(nullptr == jData) || !jIsData));
 				const Data* kData;
-				bool kIsData = fae_.isData(k->first, kData);
+				const bool kIsData = fae_.isData(k->first, kData);
 				assert((!kIsData || (nullptr != kData)) && (!(nullptr == kData) || !kIsData));
 
 				if (jIsData || kIsData)
