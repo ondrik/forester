@@ -241,7 +241,7 @@ void VirtualMachine::transitionModifyInternal(
 	}
 
 	while (!structSelectorStack.empty())
-	{
+	{ // loop for the inner structure elements
 		const std::pair<size_t, Data> sel = structSelectorStack.front();
 		structSelectorStack.erase(structSelectorStack.begin());
 
