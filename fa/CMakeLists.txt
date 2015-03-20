@@ -38,6 +38,7 @@ ADD_CXX_ONLY_FLAG("W_EFFCXX"             "-Weffc++")
 
 # libforester.a
 add_library(forester STATIC
+	abstraction.cc
 	backward_run.cc
 	box.cc
 	boxman.cc
