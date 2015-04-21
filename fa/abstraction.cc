@@ -30,13 +30,12 @@ void Abstraction::predicateAbstraction(
 	for (const auto& predicate : predicates)
 	{
 		FA_NOTE("Predicate: " << *predicates.back());
-		assert(predicates.back()->getRootCount() == this->fae_.getRootCount());
+		assert(predicate->getRootCount() >= this->fae_.getRootCount());
 
 		VATA::AutBase::ProductTranslMap translMap;
 		for (size_t root = 0; root < this->fae_.getRootCount(); ++root)
 		{
 			VATAAdapter::intersectionBU(*this->fae_.getRoot(root), *(predicate->getRoot(root)), &translMap);
-
 		}
 
 		std::vector<std::set<size_t>> matchWith(numStates, std::set<size_t>());
@@ -176,11 +175,12 @@ void Abstraction::predicateAbstraction(
 
 	for (size_t i = 0; i < fae_.getRootCount(); ++i)
 	{
-		TreeAut* ta = fae_.allocTA();
-		fae_.getRoot(i)->collapsed(*ta, relCom);
-		FA_NOTE("NEW TA " << *ta);
-		fae_.setRoot(i, std::shared_ptr<TreeAut>(ta));
-		//ta.uselessAndUnreachableFree(*fae_.getRoot(i));
+		TreeAut ta = fae_.createTAWithSameBackend();
+		fae_.getRoot(i)->collapsed(ta, relCom);
+		FA_NOTE("NEW TA " << ta);
+		//fae_.setRoot(i, std::shared_ptr<TreeAut>(ta));
+		fae_.setRoot(i, std::shared_ptr<TreeAut>(fae_.allocTA()));
+		ta.uselessAndUnreachableFree(*fae_.getRoot(i));
 	}
 
 	FA_NOTE("Predicate abstraction output: " << fae_);
