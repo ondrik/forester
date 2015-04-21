@@ -551,6 +551,10 @@ public: // public methods
         return dst;
     }
 
+	static VATAAdapter intersectionBU(
+		const VATAAdapter&                   lhs,
+		const VATAAdapter&                   rhs,
+		VATA::AutBase::ProductTranslMap*     pTranslMap);
 
 	/**
 	 * @brief Computes height abstraction over this TA.

@@ -375,10 +375,17 @@ VATAAdapter& VATAAdapter::collapsed(
     VATAAdapter&                              dst,
     const std::unordered_map<size_t, size_t>& rel) const
 {
-		//FA_DEBUG_AT(1,"TA collapsed\n");
     dst.vataAut_ = std::move(vataAut_.CollapseStates(rel));
 
     return dst;
+}
+
+VATAAdapter VATAAdapter::intersectionBU(
+		const VATAAdapter&                   lhs,
+		const VATAAdapter&                   rhs,
+		VATA::AutBase::ProductTranslMap*     pTranslMap)
+{
+	return VATAAdapter(VATA::ExplicitTreeAut::IntersectionBU(lhs.vataAut_, rhs.vataAut_, pTranslMap));
 }
 
 namespace
