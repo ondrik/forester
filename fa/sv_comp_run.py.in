@@ -33,6 +33,9 @@ VALID_DEREF    = 'valid-deref'
 VALID_MEMTRACK = 'valid-memtrack'
 IGNORED        = 'ignored' # ignored Forester warnings
 
+REAL       = 'Is real'
+SPURIOUS   = 'Is spurious'
+
 PROPS_DICT                 = {}
 PROPS_DICT[VALID_CALL]     = ['error called', 'noreturn function called']
 PROPS_DICT[VALID_FREE]     = [] # TODO invalid free
@@ -112,10 +115,11 @@ def execute(args):
         lines = f.readlines()
         okf = lambda acc,x : acc or "The program is SAFE." in x
         ff = lambda acc,x : acc or "FORESTER INTERNAL ERROR" in x or "Segmentation fault" in x
+        spuriousf = lambda acc,x : acc or SPURIOUS in x
         prop = getProperty(parseProps(formulas), lines)
         if reduce(okf, lines, False) and not prop == VALID_MEMTRACK:
             print "TRUE"
-        elif reduce(ff, lines, False) or propersHold(parseProps(formulas), lines):
+        elif reduce(ff, lines, False) or propersHold(parseProps(formulas), lines) or reduce(spuriousf, lines, False):
             res=2
             print "UNKNOWN"
         else:
