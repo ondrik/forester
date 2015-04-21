@@ -36,13 +36,13 @@ bool VATAAbstraction::statesInRel(
 
 void VATAAbstraction::completeSymmetricIndex(
         std::unordered_map<size_t, size_t>&    result,
-				const std::unordered_set<size_t>&      usedStates)
+		const std::unordered_set<size_t>&      usedStates)
 {
-		for (const size_t state : usedStates)
+	for (const size_t state : usedStates)
     {
-	 			if (!result.count(state))
-				{
-					result[state] = state;
-				}
+		if (!result.count(state))
+		{
+			result[state] = state;
+		}
     }
 }
