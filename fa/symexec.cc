@@ -426,7 +426,7 @@ protected:
 				Streams::traceUcode(oss.str().c_str());
 			}
 
-			if (FA_BACKWARD_RUN)
+			if (FA_BACKWARD_RUN && !FA_USE_PREDICATE_ABSTRACTION)
 			{
 				FA_LOG("Executing backward run...");
 
