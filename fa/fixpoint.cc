@@ -183,28 +183,6 @@ struct FuseNonFixedF
 	}
 };
 
-
-bool normalize(
-	FAE&                      fae,
-	const SymState*           state,
-	const std::set<size_t>&   forbidden,
-	bool                      extended)
-{
-	Normalization norm(fae, state);
-
-	std::vector<size_t> order;
-	std::vector<bool> marked;
-
-	norm.scan(marked, order, forbidden, extended);
-
-	bool result = norm.normalize(marked, order);
-
-	FA_DEBUG_AT(3, "after normalization: " << std::endl << fae);
-
-	return result;
-}
-
-
 /**
  * @brief  Folds a FA without learning
  *
@@ -282,18 +260,7 @@ void reorder(
 	FAE&              fae)
 {
 	fae.unreachableFree();
-
-	Normalization norm(fae, state);
-
-	std::vector<size_t> order;
-	std::vector<bool> marked;
-
-	norm.scan(marked, order, std::set<size_t>());
-
-	// normalize without merging (we say that all components are referred more
-	// than once), i.e. only reorder
-	std::fill(marked.begin(), marked.end(), true);
-	norm.normalize(marked, order);
+	Normalization::normalizeWithoutMerging(fae, state);
 
 	FA_DEBUG_AT(3, "after reordering: " << std::endl << fae);
 }
@@ -513,7 +480,7 @@ void FI_abs::execute(ExecutionManager& execMan, SymState& state)
 #endif
 	forbidden = Normalization::computeForbiddenSet(*fae);
 
-	normalize(*fae, &state, forbidden, true);
+	Normalization::normalize(*fae, &state, forbidden, true);
 
 	abstract(*fae);
 #if FA_ALLOW_FOLDING
@@ -527,7 +494,7 @@ void FI_abs::execute(ExecutionManager& execMan, SymState& state)
 		{
 			forbidden = Normalization::computeForbiddenSet(*fae);
 
-			normalize(*fae, &state, forbidden, true);
+			Normalization::normalize(*fae, &state, forbidden, true);
 
 			abstract(*fae);
 
@@ -583,7 +550,7 @@ void FI_fix::execute(ExecutionManager& execMan, SymState& state)
 #endif
 	forbidden = Normalization::computeForbiddenSet(*fae);
 
-	normalize(*fae, &state, forbidden, true);
+	Normalization::normalize(*fae, &state, forbidden, true);
 #if FA_ALLOW_FOLDING
 	if (boxMan_.boxDatabase().size())
 	{
@@ -598,7 +565,7 @@ void FI_fix::execute(ExecutionManager& execMan, SymState& state)
 		{
 			forbidden = Normalization::computeForbiddenSet(*fae);
 
-			normalize(*fae, &state, forbidden, true);
+			Normalization::normalize(*fae, &state, forbidden, true);
 
 			forbidden.clear();
 

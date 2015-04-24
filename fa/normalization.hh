@@ -79,14 +79,6 @@ protected:
 		size_t                            self,
 		const std::vector<bool>&          marked);
 
-public:
-
-	void scan(
-		std::vector<bool>&                marked,
-		std::vector<size_t>&              order,
-		const std::set<size_t>&           forbidden = std::set<size_t>(),
-		bool                              extended = false);
-
 
 	/**
 	 * @brief  Transforms the forest automaton into a canonicity-respecting form
@@ -101,10 +93,30 @@ public:
 	 *
 	 * @returns  @p true in case some components were merged, @p false otherwise
 	 */
-	bool normalize(
+	bool normalizeInternal(
 		const std::vector<bool>&          marked,
 		const std::vector<size_t>&        order);
 
+public:
+
+	void scan(
+		std::vector<bool>&                marked,
+		std::vector<size_t>&              order,
+		const std::set<size_t>&           forbidden = std::set<size_t>(),
+		bool                              extended = false);
+
+
+	static bool normalize(
+		FAE&                              fae,
+		const SymState*                   state,
+		const std::set<size_t>&           forbidden = std::set<size_t>(),
+		bool                              extended = false);
+
+	static bool normalizeWithoutMerging(
+		FAE&                              fae,
+		const SymState*                   state,
+		const std::set<size_t>&           forbidden = std::set<size_t>(),
+		bool                              extended = false);
 
 	/**
 	 * @brief  Computes the indices of components which are not to be merged

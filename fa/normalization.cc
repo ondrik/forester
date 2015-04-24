@@ -261,7 +261,7 @@ namespace {
 	}
 }
 
-bool Normalization::normalize(
+bool Normalization::normalizeInternal(
 	const std::vector<bool>&          marked,
 	const std::vector<size_t>&        order)
 {
@@ -313,6 +313,49 @@ bool Normalization::normalize(
 	return merged;
 }
 
+bool Normalization::normalize(
+		FAE&                              fae,
+		const SymState*                   state,
+		const std::set<size_t>&           forbidden,
+		bool                              extended)
+{
+	Normalization norm(fae, state);
+
+	std::vector<size_t> order;
+	std::vector<bool> marked;
+
+	norm.scan(marked, order, forbidden, extended);
+
+	bool result = norm.normalizeInternal(marked, order);
+
+	FA_DEBUG_AT(3, "after normalization: " << std::endl << fae);
+
+	return result;
+}
+
+bool Normalization::normalizeWithoutMerging(
+		FAE&                              fae,
+		const SymState*                   state,
+		const std::set<size_t>&           forbidden,
+		bool                              extended)
+{
+	Normalization norm(fae, state);
+
+	std::vector<size_t> order;
+	std::vector<bool> marked;
+
+	norm.scan(marked, order, forbidden, extended);
+
+	// normalize without merging (we say that all components are referred more
+	// than once), i.e. only reorder
+	std::fill(marked.begin(), marked.end(), true);
+	
+	bool result = norm.normalizeInternal(marked, order);
+
+	FA_DEBUG_AT(3, "after normalization: " << std::endl << fae);
+
+	return result;
+}
 
 std::set<size_t> Normalization::computeForbiddenSet(FAE& fae)
 {
