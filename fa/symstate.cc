@@ -22,6 +22,7 @@
 #include "compiler.hh"
 #include "integrity.hh"
 #include "memplot.hh"
+#include "normalization.hh"
 #include "regdef.hh"
 #include "streams.hh"
 #include "symstate.hh"
@@ -139,6 +140,16 @@ void SymState::recycle(Recycler<SymState>& recycler)
 		state->clearChildren();
 		recycler.recycle(state);
 	}
+}
+
+
+std::shared_ptr<FAE> SymState::newNormalizedFAE()
+{
+	std::shared_ptr<FAE> normFae = std::shared_ptr<FAE>(new FAE(*fae_));
+	normFae->updateConnectionGraph();
+	Normalization::normalize(*normFae, this);
+
+	return normFae;
 }
 
 

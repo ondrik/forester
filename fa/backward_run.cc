@@ -22,6 +22,33 @@
 #include "memplot.hh"
 #include "streams.hh"
 
+namespace
+{
+	std::vector<std::shared_ptr<const TreeAut>> getEmptyTrees(
+			const FAE&            fwdFAE,
+			const FAE&            bwdFAE)
+	{
+		assert(fwdFAE.getRootCount() == bwdFAE.getRootCount());
+
+		std::vector<std::shared_ptr<const TreeAut>> res;
+
+		for (size_t i = 0; i < fwdFAE.getRootCount(); ++i)
+		{
+			TreeAut isectTA = TreeAut::intersectionBU(
+					*(fwdFAE.getRoot(i)),*(bwdFAE.getRoot(i)));
+			TreeAut finalIsectTA;
+			isectTA.uselessAndUnreachableFree(finalIsectTA);
+
+			if (finalIsectTA.areTransitionsEmpty())
+			{
+				res.push_back(bwdFAE.getRoot(i));
+			}
+		}
+
+
+		return res;
+	}
+}
 
 bool BackwardRun::isSpuriousCE(
 	const SymState::Trace&              fwdTrace,
@@ -71,7 +98,15 @@ bool BackwardRun::isSpuriousCE(
 		if (resultState->GetFAE()->Empty())
 		{	// in case the intersection is empty - spurious counterexample
 			failPoint = fwdState;
-			predicate = bwdState->GetFAE();
+		
+			std::shared_ptr<FAE> normFAEBwd = bwdState->newNormalizedFAE();
+			std::shared_ptr<FAE> normFAEFwd = fwdState->newNormalizedFAE();
+			assert(normFAEFwd->getRootCount() == normFAEBwd->getRootCount());
+			
+			std::vector<std::shared_ptr<const TreeAut>> emptyTA = getEmptyTrees(*normFAEFwd, *normFAEBwd);
+			assert(!emptyTA.empty()); // TODO this could be condition of spuriousness
+
+			predicate = normFAEBwd;
 
 			return true;
 		}

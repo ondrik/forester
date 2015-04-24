@@ -246,6 +246,9 @@ public:   // methods
 	void recycle(Recycler<SymState>& recycler);
 
 
+	std::shared_ptr<FAE> newNormalizedFAE();
+
+
 	/**
 	 * @brief  Run a visitor on the instance
 	 *
