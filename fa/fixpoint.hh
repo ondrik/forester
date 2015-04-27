@@ -123,7 +123,7 @@ class FI_abs : public FixpointBase
 private:  // data members
 
 	/// The set of FA used for the predicate abstraction
-	std::vector<std::shared_ptr<const FAE>> predicates_;
+	std::vector<std::shared_ptr<const TreeAut>> predicates_;
 
 private:  // methods
 
@@ -157,9 +157,9 @@ public:   // methods
 	 *
 	 * @param[in]  predicate  The predicate to be added
 	 */
-	void addPredicate(const std::shared_ptr<const FAE>& predicate)
+	void addPredicate(std::vector<std::shared_ptr<const TreeAut>>& predicate)
 	{
-		predicates_.push_back(predicate);
+		predicates_.insert(predicates_.end(), predicate.begin(), predicate.end());
 	}
 
 	/**
@@ -169,7 +169,7 @@ public:   // methods
 	 *
 	 * @returns  Container with predicate forest automata
 	 */
-	const std::vector<std::shared_ptr<const FAE>>& getPredicates() const
+	const std::vector<std::shared_ptr<const TreeAut>>& getPredicates() const
 	{
 		return predicates_;
 	}

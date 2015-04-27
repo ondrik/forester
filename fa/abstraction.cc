@@ -8,7 +8,7 @@
 #include <vector>
 
 void Abstraction::predicateAbstraction(
-		const std::vector<std::shared_ptr<const FAE>>&    predicates)
+		const std::vector<std::shared_ptr<const TreeAut>>&    predicates)
 {
 	FA_NOTE("Predicate abstraction input: " << fae_);
 
@@ -27,15 +27,20 @@ void Abstraction::predicateAbstraction(
 	// TODO: use boost::dynamic_bitset
 	std::vector<std::vector<bool>> rel;
 
+	VATA::AutBase::ProductTranslMap translMap;
 	for (const auto& predicate : predicates)
 	{
-		FA_NOTE("Predicate: " << *predicates.back());
-		assert(predicate->getRootCount() >= this->fae_.getRootCount());
+		FA_NOTE("Predicate: " << *predicate);
+		//assert(predicate->getRootCount() >= this->fae_.getRootCount());
+		//const size_t roots = predicate->getRootCount() >= this->fae_.getRootCount()
+		//	? this->fae_.getRootCount() : predicate->getRootCount();
 
-		VATA::AutBase::ProductTranslMap translMap;
 		for (size_t root = 0; root < this->fae_.getRootCount(); ++root)
 		{
-			VATAAdapter::intersectionBU(*this->fae_.getRoot(root), *(predicate->getRoot(root)), &translMap);
+			FA_NOTE("ISECT1: " << *this->fae_.getRoot(root));
+			FA_NOTE("ISECT2: " << predicate /* *(predicate->getRoot(root)) */);
+			const auto res = VATAAdapter::intersectionBU(*this->fae_.getRoot(root), /* *(predicate->getRoot(root)) */ *predicate, &translMap);
+			FA_NOTE("RES: " << res);
 		}
 
 		std::vector<std::set<size_t>> matchWith(numStates, std::set<size_t>());

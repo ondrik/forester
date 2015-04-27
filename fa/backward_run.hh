@@ -60,9 +60,9 @@ public:   // methods
 	 * @returns  @p true if the counterexample is spurious, @p false if otherwise
 	 */
 	bool isSpuriousCE(
-		const SymState::Trace&              fwdTrace,
-		SymState*&                          failPoint,
-		std::shared_ptr<const FAE>&         predicate);
+		const SymState::Trace&                           fwdTrace,
+		SymState*&                                       failPoint,
+		std::vector<std::shared_ptr<const TreeAut>>&     predicate);
 };
 
 

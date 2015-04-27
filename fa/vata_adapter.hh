@@ -296,6 +296,11 @@ public: // public methods
      */
     bool isFinalState(size_t state) const;
 
+
+	/**
+	 * @brief Remove all final states from TA
+	 */
+	size_t eraseFinalStates();
     
     /**
      * @brief Returns a set of the final states of @vataAut_

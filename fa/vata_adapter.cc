@@ -174,9 +174,14 @@ size_t VATAAdapter::getFinalState() const
 {
 		//FA_DEBUG_AT(1,"TA get final state\n");
 
-		const std::unordered_set<size_t>& finalStates = this->getFinalStates();
-		assert(1 == finalStates.size());
+	const std::unordered_set<size_t>& finalStates = this->getFinalStates();
+	assert(1 == finalStates.size());
     return *finalStates.begin();
+}
+
+size_t VATAAdapter::eraseFinalStates()
+{
+	this->vataAut_.EraseFinalStates();
 }
 
 const VATAAdapter::Transition VATAAdapter::getAcceptingTransition() const

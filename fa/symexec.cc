@@ -273,7 +273,7 @@ protected:
 					const FI_abs* absInstr = dynamic_cast<const FI_abs*>(instr);
 					if (nullptr != absInstr)
 					{
-						for (const std::shared_ptr<const FAE>& pred : absInstr->getPredicates())
+						for (const std::shared_ptr<const TreeAut>& pred : absInstr->getPredicates())
 						{
 							std::ostringstream os;
 							os << "\n---------------------------------------------------\n"
@@ -435,7 +435,7 @@ protected:
 				BackwardRun bwdRun(execMan_);
 				SymState::Trace trace = e.state()->getTrace();
 				SymState* failPoint = nullptr;
-				std::shared_ptr<const FAE> predicate = nullptr;
+				std::vector<std::shared_ptr<const TreeAut>> predicate;
 
 				bool isSpurious = bwdRun.isSpuriousCE(trace, failPoint, predicate);
 				if (isSpurious)
@@ -458,19 +458,22 @@ protected:
 				BackwardRun bwdRun(execMan_);
 				SymState::Trace trace = e.state()->getTrace();
 				SymState* failPoint = nullptr;
-				std::shared_ptr<const FAE> predicate = nullptr;
+				std::vector<std::shared_ptr<const TreeAut>> predicate;
 
 				bool isSpurious = bwdRun.isSpuriousCE(trace, failPoint, predicate);
 				if (isSpurious)
 				{
-					assert(nullptr != predicate);
+					assert(!predicate.empty());
 					assert(nullptr != failPoint);
 					assert(nullptr != failPoint->GetInstr());
 
 					FA_NOTE("The counterexample IS (PROBABLY) spurious");
 
 					FA_NOTE("Failing instruction: " << *failPoint->GetInstr());
-					FA_NOTE("Learnt predicate: " << *predicate);
+					for (const auto& p : predicate)
+					{
+						FA_NOTE("Learnt predicate: " << p);
+					}
 
 					// now, we add 'predicate' to the set of predicates that are used for
 					// abstraction at failPoint (which should BTW be abstraction)

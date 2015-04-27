@@ -29,6 +29,8 @@ namespace
 			const FAE&            bwdFAE)
 	{
 		assert(fwdFAE.getRootCount() == bwdFAE.getRootCount());
+		FA_DEBUG_AT(1, "empty input fwd " << fwdFAE);
+		FA_DEBUG_AT(1, "empty input bwd " << bwdFAE);
 
 		std::vector<std::shared_ptr<const TreeAut>> res;
 
@@ -38,6 +40,7 @@ namespace
 					*(fwdFAE.getRoot(i)),*(bwdFAE.getRoot(i)));
 			TreeAut finalIsectTA;
 			isectTA.uselessAndUnreachableFree(finalIsectTA);
+			FA_DEBUG_AT(1, "empty " << isectTA);
 
 			if (finalIsectTA.areTransitionsEmpty())
 			{
@@ -51,14 +54,14 @@ namespace
 }
 
 bool BackwardRun::isSpuriousCE(
-	const SymState::Trace&              fwdTrace,
-	SymState*&                          failPoint,
-	std::shared_ptr<const FAE>&         predicate)
+	const SymState::Trace&                           fwdTrace,
+	SymState*&                                       failPoint,
+	std::vector<std::shared_ptr<const TreeAut>>&     predicate)
 {
 	// Assertions
 	assert(!fwdTrace.empty());
 	assert(nullptr == failPoint);
-	assert(nullptr == predicate);
+	assert(predicate.empty());
 
 	// iterator from the leaf of the forward run
 	auto itFwdTrace = fwdTrace.cbegin();
@@ -103,10 +106,8 @@ bool BackwardRun::isSpuriousCE(
 			std::shared_ptr<FAE> normFAEFwd = fwdState->newNormalizedFAE();
 			assert(normFAEFwd->getRootCount() == normFAEBwd->getRootCount());
 			
-			std::vector<std::shared_ptr<const TreeAut>> emptyTA = getEmptyTrees(*normFAEFwd, *normFAEBwd);
-			assert(!emptyTA.empty()); // TODO this could be condition of spuriousness
-
-			predicate = normFAEBwd;
+			predicate = getEmptyTrees(*normFAEFwd, *normFAEBwd);
+			assert(!predicate.empty()); // TODO this could be condition of spuriousness
 
 			return true;
 		}

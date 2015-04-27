@@ -108,7 +108,8 @@ public:   // methods
 		const size_t&          lhsRoot,
 		const size_t&          lhsState,
 		const size_t&          rhsRoot,
-		const size_t&          rhsState)
+		const size_t&          rhsState,
+		const bool&            jumped=false)
 	{
 		// the product state
 		RootState lhsRootState(lhsRoot, lhsState);
@@ -220,7 +221,8 @@ public:   // methods
 		const size_t&          lhsRoot,
 		const size_t&          lhsState,
 		const size_t&          rhsRoot,
-		const size_t&          rhsState)
+		const size_t&          rhsState,
+		const bool&            jumped=false)
 	{
 		// the product state
 		RootState lhsRootState(lhsRoot, lhsState);
@@ -266,7 +268,25 @@ public:   // methods
 
 		if (isNewRoot)
 		{	// set final state
+			FA_NOTE("Creating new final state " << state << "("
+				<< itBoolPairProcessed.first->first.first << ","
+				<< itBoolPairProcessed.first->first.second << ")"
+				<< " of root " << root); 
 			fae_.getRoot(root)->addFinalState(state);
+		}
+		if (jumped && fae_.getRoot(root)->getFinalStates().size() == 1)
+		{
+			const size_t finalState = fae_.getRoot(root)->getFinalState();
+			if (fae_.getRoot(root)->begin(finalState) == fae_.getRoot(root)->end(finalState))
+			{
+				fae_.getRoot(root)->eraseFinalStates();
+				fae_.getRoot(root)->addFinalState(state);
+				FA_NOTE("Recreating new final state " << state << "("
+					<< itBoolPairProcessed.first->first.first << ","
+					<< itBoolPairProcessed.first->first.second << ")"
+					<< " of root " << root); 
+			}
+
 		}
 
 		auto itBoolRhsRootMap = rhsRootMap_.insert(std::make_pair(rhsRoot, root));
@@ -674,7 +694,8 @@ void SymState::SubstituteRefs(
 
 								engine.makeProductState(
 									thisRoot, thisTrans.GetNthChildren(i),
-									srcNewRoot, srcNewTA->getFinalState());
+									srcNewRoot, srcNewTA->getFinalState(),
+									true);
 
 								lhs.push_back(thisTrans.GetNthChildren(i));
 							}
@@ -688,7 +709,8 @@ void SymState::SubstituteRefs(
 
 								engine.makeProductState(
 									thisNewRoot, thisNewTA->getFinalState(),
-									srcRoot, srcTrans.GetNthChildren(i));
+									srcRoot, srcTrans.GetNthChildren(i),
+									true);
 
 								lhs.push_back(fae->addData(*fae->getRoot(thisRoot).get(),
 									Data::createRef(thisNewRoot)));
@@ -955,7 +977,8 @@ void SymState::Intersect(
 
 							RootState rootState = engine.makeProductState(
 								thisNewRoot, thisNewTA->getFinalState(),
-								fwdNewRoot, fwdNewTA->getFinalState());
+								fwdNewRoot, fwdNewTA->getFinalState(),
+								true);
 
 							lhs.push_back(fae->addData(*fae->getRoot(curNewState.root).get(),
 								Data::createRef(rootState.root)));
@@ -986,7 +1009,8 @@ void SymState::Intersect(
 
 								rootState = engine.makeProductState(
 									thisRoot, thisTrans.GetNthChildren(i),
-									fwdNewRoot, fwdNewTA->getFinalState());
+									fwdNewRoot, fwdNewTA->getFinalState(),
+									true);
 							}
 							else
 							{
@@ -998,7 +1022,8 @@ void SymState::Intersect(
 
 								rootState = engine.makeProductState(
 									thisNewRoot, thisNewTA->getFinalState(),
-									fwdRoot, fwdTrans.GetNthChildren(i));
+									fwdRoot, fwdTrans.GetNthChildren(i),
+									true);
 							}
 
 							lhs.push_back(fae->addData(*fae->getRoot(curNewState.root).get(),
@@ -1023,7 +1048,18 @@ void SymState::Intersect(
 
 						FA_NOTE("TA " << curNewState.root << ": adding transition "
 							<< FA::writeState(curNewState.state) << " -> "
-							<< TreeAut::GetSymbol(thisTrans) << "(" << osLhs.str() << ")");
+							<< TreeAut::GetSymbol(thisTrans) << " (" << osLhs.str() << ")");
+
+						/*
+						 * TODO: remove??
+						auto& ta = fae->getRoot(curNewState.root);
+						const size_t finalState = ta->getFinalState();
+						if (ta->begin(finalState) == ta->end(finalState))
+						{
+							ta->eraseFinalStates();
+							ta->addFinalState(curNewState.state);
+						}
+						*/
 
 						fae->getRoot(curNewState.root)->addTransition(
 							lhs, TreeAut::GetSymbol(thisTrans), curNewState.state);
@@ -1031,6 +1067,7 @@ void SymState::Intersect(
 				}
 			}
 		}
+		//FA_NOTE("InterResult of intersection: " << *fae);
 	}
 
 	FA_NOTE("Result of intersection: " << *fae);
@@ -1047,6 +1084,7 @@ void SymState::Intersect(
 		if (ta->getFinalStates().empty())
 		{	// in case the language of an automaton is empty
 			fae->clear();   // the language of the FA is empty
+			FA_NOTE("A tree of intersection is empty");
 			return;
 		}
 
@@ -1197,7 +1235,7 @@ void FAE::makeProduct(
 							// internal.
 							engine.makeProductState(
 								lhsRoot, lhsTrans.GetNthChildren(i),
-								rhsRoot, rhsTrans.GetNthChildren(i));
+								rhsRoot, rhsTrans.GetNthChildren(i), true);
 						}
 						else if (lhsIsData && rhsIsData &&
 							!lhsData->isRef() && !rhsData->isRef())
@@ -1230,7 +1268,8 @@ void FAE::makeProduct(
 
 							engine.makeProductState(
 								lhsNewRoot, lhsNewTA->getFinalState(),
-								rhsNewRoot, rhsNewTA->getFinalState());
+								rhsNewRoot, rhsNewTA->getFinalState(),
+								true);
 						}
 						else if ((lhsIsData && !rhsIsData && lhsData->isNull())
 							|| (!lhsIsData && rhsIsData && rhsData->isNull())
@@ -1259,7 +1298,8 @@ void FAE::makeProduct(
 
 								engine.makeProductState(
 									lhsNewRoot, lhsNewTA->getFinalState(),
-									rhsRoot, rhsTrans.GetNthChildren(i));
+									rhsRoot, rhsTrans.GetNthChildren(i),
+									true);
 							}
 							else
 							{
@@ -1271,7 +1311,8 @@ void FAE::makeProduct(
 
 								engine.makeProductState(
 									lhsRoot, lhsTrans.GetNthChildren(i),
-									rhsNewRoot, rhsNewTA->getFinalState());
+									rhsNewRoot, rhsNewTA->getFinalState(),
+									true);
 							}
 						}
 						else
