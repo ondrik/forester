@@ -472,7 +472,7 @@ protected:
 					FA_NOTE("Failing instruction: " << *failPoint->GetInstr());
 					for (const auto& p : predicate)
 					{
-						FA_NOTE("Learnt predicate: " << p);
+						FA_NOTE("Learnt predicate: " << *p);
 					}
 
 					// now, we add 'predicate' to the set of predicates that are used for
