@@ -136,7 +136,7 @@ public:   // methods
 
 		if (isNewState)
 		{	// in case the state has not been processed before
-			FA_NOTE("Creating new product state (" <<  lhsRootState << ", "
+			FA_DEBUG_AT(1,"Creating new product state (" <<  lhsRootState << ", "
 				<< rhsRootState << ")");
 			workstack_.push_back(prodState);
 		}
@@ -250,7 +250,7 @@ public:   // methods
 		bool isNewRoot = itBoolPairRootMap.second;
 		if (isNewRoot)
 		{
-			FA_NOTE("Creating new root: " << rootCnt_ << " as the product of roots ("
+			FA_DEBUG_AT(1,"Creating new root: " << rootCnt_ << " as the product of roots ("
 				<< lhsRoot << ", " << rhsRoot << ")");
 			++rootCnt_;
 
@@ -266,7 +266,7 @@ public:   // methods
 		auto itBoolPairProcessed = processed_.insert(std::make_pair(prodState, newState));
 		bool isNewState = itBoolPairProcessed.second;
 
-		FA_NOTE("Processing product state [" << rhsState << "," << lhsState << "] -> " 
+		FA_DEBUG_AT(1,"Processing product state [" << rhsState << "," << lhsState << "] -> " 
 				<< newState << ", roots ["
 				<< lhsRoot	<< "," << rhsRoot << "] -> " << root);
 
@@ -275,7 +275,7 @@ public:   // methods
 
 		if (isNewState)
 		{	// in case the state has not been processed before
-			FA_NOTE("Creating new state: " << FA::writeState(fae_.nextState())
+			FA_DEBUG_AT(1,"Creating new state: " << FA::writeState(fae_.nextState())
 				<< " as the product of states (" <<  lhsRootState << ", "
 				<< rhsRootState << ")");
 			workstack_.push_back(std::make_pair(prodState, newState));
@@ -287,7 +287,7 @@ public:   // methods
 
 		if (isNewRoot || jumped)
 		{	// set final state
-			FA_NOTE("Creating new final state " << state << "("
+			FA_DEBUG_AT(1,"Creating new final state " << state << "("
 				<< itBoolPairProcessed.first->first.first << ","
 				<< itBoolPairProcessed.first->first.second << ")"
 				<< " of root " << root); 
@@ -297,7 +297,7 @@ public:   // methods
 		auto itBoolRhsRootMap = rhsRootMap_.insert(std::make_pair(rhsRoot, root));
 		if (!itBoolRhsRootMap.second)
 		{
-			FA_NOTE("Not entering already processed RHS root " << rhsRoot << " -> "
+			FA_DEBUG_AT(1,"Not entering already processed RHS root " << rhsRoot << " -> "
 				<< root << " (already present mapping "
 				<< itBoolRhsRootMap.first->first << " -> "
 				<< itBoolRhsRootMap.first->second << ")");
@@ -369,7 +369,7 @@ public:   // methods
 					++cnt;
 				}
 
-				FA_NOTE("Adding " << cnt << " at position " << i << " of index");
+				FA_DEBUG_AT(1,"Adding " << cnt << " at position " << i << " of index");
 				index[i] = cnt++;
 			}
 		}
@@ -416,7 +416,7 @@ void SymState::SubstituteRefs(
 	const std::shared_ptr<const FAE> srcFAE = src.GetFAE();
 	assert((nullptr != thisFAE) && (nullptr != srcFAE));
 
-	FA_NOTE("before substitution: " << *thisFAE);
+	FA_DEBUG_AT(1,"before substitution: " << *thisFAE);
 
 	FAE* fae = new FAE(*thisFAE);
 	fae->clear();
@@ -557,7 +557,7 @@ void SymState::SubstituteRefs(
 		const size_t& thisState = curState.first.state;
 		const size_t& srcState = curState.second.state;
 
-		FA_NOTE("Processing product state (" <<  curState.first << ", "
+		FA_DEBUG_AT(1,"Processing product state (" <<  curState.first << ", "
 			<< curState.second << ")");
 
 		const std::shared_ptr<TreeAut> thisTA = thisFAE->getRoot(thisRoot);
@@ -584,7 +584,7 @@ void SymState::SubstituteRefs(
 				// TODO: so far, we are not doing unfolding!
 				if (TreeAut::GetSymbol(thisTrans) == TreeAut::GetSymbol(srcTrans))
 				{
-					FA_NOTE("Transition: " << 
+					FA_DEBUG_AT(1,"Transition: " << 
                             TreeAut::GetSymbol(thisTrans) <<
                             ", thisState = " <<
                             thisState <<
@@ -628,7 +628,7 @@ void SymState::SubstituteRefs(
 						{ // ************* perform substitution of reference *************
 							assert(thisIsData && thisData->isUndef());
 
-							FA_NOTE("Substituting " << *srcData << " for " << newValue);
+							FA_DEBUG_AT(1,"Substituting " << *srcData << " for " << newValue);
 
 							lhs.push_back(fae->addData(
 								*fae->getRoot(thisRoot).get(), newValue));
@@ -656,7 +656,7 @@ void SymState::SubstituteRefs(
 							assert(thisData->d_ref.displ == srcData->d_ref.displ);
 							assert(0 == thisData->d_ref.displ);
 
-							FA_NOTE("Two references");
+							FA_DEBUG_AT(1,"Two references");
 
 							const size_t& thisNewRoot = thisData->d_ref.root;
 							const size_t& srcNewRoot  = srcData->d_ref.root;
@@ -679,7 +679,7 @@ void SymState::SubstituteRefs(
 						{ // ************* process NULL pointers *************
 							// This is the case when there is a NULL pointer and either an
 							// internal state or a reference
-							FA_NOTE("NULL ptr!");
+							FA_DEBUG_AT(1,"NULL ptr!");
 
 							break;   // cut this branch of the product
 						}
@@ -687,7 +687,7 @@ void SymState::SubstituteRefs(
 							|| (!srcIsData && thisIsData && thisData->isRef()))
 						{ // ************* process jumps *************
 							// This is the case when one FA jumps to another TA and the other does not
-							FA_NOTE("jump!");
+							FA_DEBUG_AT(1,"jump!");
 
 							if (srcIsData)
 							{
@@ -738,7 +738,7 @@ void SymState::SubstituteRefs(
 							osLhs << FA::writeState(*it);
 						}
 
-						FA_NOTE("TA " << thisRoot << ": adding transition "
+						FA_DEBUG_AT(1,"TA " << thisRoot << ": adding transition "
 							<< FA::writeState(thisState) << " -> "
 							<< TreeAut::GetSymbol(thisTrans) << "(" << osLhs.str() << ")");
 
@@ -757,7 +757,7 @@ void SymState::SubstituteRefs(
 
 	// TODO: 'odprasit' this function
 	// TODO: I also need to perform some on-the fly splitting
-	FA_NOTE("after substitution: " << *fae);
+	FA_DEBUG_AT(1,"after substitution: " << *fae);
 
 //	fae->updateConnectionGraph();
 }
@@ -882,7 +882,7 @@ void SymState::Intersect(
 		const size_t& thisRoot = curState.first.root;
 		const size_t& fwdRoot = curState.second.root;
 		
-		FA_NOTE("Main processing product state (" << curState.first << ", " << curState.second << ") -> "
+		FA_DEBUG_AT(1,"Main processing product state (" << curState.first << ", " << curState.second << ") -> "
 				<< curNewState.state << ", "
 				<< "[" << thisRoot << "," << fwdRoot << "] -> " << curNewState.root);
 
@@ -920,7 +920,7 @@ void SymState::Intersect(
 				// TODO: so far, we are not doing unfolding!
 				if (TreeAut::GetSymbol(thisTrans) == TreeAut::GetSymbol(fwdTrans))
 				{
-					FA_NOTE("Transition: " << TreeAut::GetSymbol(thisTrans) <<
+					FA_DEBUG_AT(1,"Transition: " << TreeAut::GetSymbol(thisTrans) <<
                             ", thisState = " << thisState << ", srcState = " << fwdState);
 
 					assert(thisTrans.GetChildrenSize() == fwdTrans.GetChildrenSize());
@@ -995,7 +995,7 @@ void SymState::Intersect(
 							const size_t state = fae->addData(*fae->getRoot(curNewState.root).get(),
 								Data::createRef(rootState.root));
 							//fae->getRoot(curNewState.root)->addFinalState(state);
-							FA_NOTE("Adding data node r" << _MSB_GET(state) << " of root " << curNewState.root);
+							FA_DEBUG_AT(1,"Adding data node r" << _MSB_GET(state) << " of root " << curNewState.root);
 							lhs.push_back(state);
 						}
 						else if ((fwdIsData && !thisIsData && fwdData->isNull())
@@ -1011,7 +1011,7 @@ void SymState::Intersect(
 							|| (!fwdIsData && thisIsData && thisData->isRef()))
 						{ // ************* process jumps *************
 							// This is the case when one FA jumps to another TA and the other does not
-							FA_NOTE("jump!");
+							FA_DEBUG_AT(1,"jump!");
 
 							RootState rootState;
 							if (fwdIsData)
@@ -1041,7 +1041,7 @@ void SymState::Intersect(
 
 							const size_t state = fae->addData(*fae->getRoot(curNewState.root).get(),
 								Data::createRef(rootState.root));
-							FA_NOTE("Adding data node r" << _MSB_GET(state) << " of root " << curNewState.root);
+							FA_DEBUG_AT(1,"Adding data node r" << _MSB_GET(state) << " of root " << curNewState.root);
 							//fae->getRoot(curNewState.root)->addFinalState(state);
 							lhs.push_back(state);
 						}
@@ -1062,7 +1062,7 @@ void SymState::Intersect(
 							osLhs << FA::writeState(*it);
 						}
 
-						FA_NOTE("TA " << curNewState.root << ": adding transition "
+						FA_DEBUG_AT(1,"TA " << curNewState.root << ": adding transition "
 							<< FA::writeState(curNewState.state) << " -> "
 							<< TreeAut::GetSymbol(thisTrans) << " (" << osLhs.str() << ")");
 
@@ -1074,7 +1074,7 @@ void SymState::Intersect(
 		}
 	}
 
-	FA_NOTE("Result of intersection: " << *fae);
+	FA_DEBUG_AT(1,"Result of intersection: " << *fae);
 
 	// now, check whether there is some component with an empty language in the
 	// result
@@ -1088,7 +1088,7 @@ void SymState::Intersect(
 		if (ta->getFinalStates().empty())
 		{	// in case the language of an automaton is empty
 			fae->clear();   // the language of the FA is empty
-			FA_NOTE("A tree of intersection is empty");
+			FA_DEBUG_AT(1,"A tree of intersection is empty");
 			return;
 		}
 
@@ -1105,7 +1105,7 @@ void SymState::Intersect(
 
 	std::ostringstream os;
 	utils::printCont(os, index);
-	FA_NOTE("Index: " << os.str());
+	FA_DEBUG_AT(1,"Index: " << os.str());
 
 	std::vector<std::shared_ptr<TreeAut>> newRoots;
 	size_t newRootsSize = std::max(fae->getRootCount(), fwdFAE->getRootCount());
@@ -1123,7 +1123,7 @@ void SymState::Intersect(
 	// update representation
 	fae->swapRoots(newRoots);
 
-	FA_NOTE("Before relabelling: " << *fae);
+	FA_DEBUG_AT(1,"Before relabelling: " << *fae);
 
 	for (size_t i = 0; i < index.size(); ++i)
 	{
@@ -1132,7 +1132,7 @@ void SymState::Intersect(
 		));
 	}
 
-	FA_NOTE("After shuffling: " << *fae);
+	FA_DEBUG_AT(1,"After shuffling: " << *fae);
 
 	// FIXME: do we really need this?
 //	fae->updateConnectionGraph();
@@ -1184,7 +1184,7 @@ void FAE::makeProduct(
 		const size_t& lhsState = curState.first.state;
 		const size_t& rhsState = curState.second.state;
 
-		FA_NOTE("Processing product state (" <<  curState.first << ", "
+		FA_DEBUG_AT(1,"Processing product state (" <<  curState.first << ", "
 			<< curState.second << ")");
 
 		auto lhsIt  = lhsTA->begin(lhsState);
@@ -1207,7 +1207,7 @@ void FAE::makeProduct(
 				// TODO: so far, we are not doing unfolding!
 				if (TreeAut::GetSymbol(lhsTrans) == TreeAut::GetSymbol(rhsTrans))
 				{
-					FA_NOTE("Transition: " << TreeAut::GetSymbol(lhsTrans)
+					FA_DEBUG_AT(1,"Transition: " << TreeAut::GetSymbol(lhsTrans)
                             << ", thisState = " << lhsState << ", srcState = " << rhsState);
 
 					assert(lhsTrans.GetChildrenSize() == rhsTrans.GetChildrenSize());
@@ -1261,7 +1261,7 @@ void FAE::makeProduct(
 							assert(lhsData->d_ref.displ == rhsData->d_ref.displ);
 							assert(0 == lhsData->d_ref.displ);
 
-							FA_NOTE("Two references");
+							FA_DEBUG_AT(1,"Two references");
 
 							const size_t& lhsNewRoot = lhsData->d_ref.root;
 							const size_t& rhsNewRoot = rhsData->d_ref.root;
@@ -1281,7 +1281,7 @@ void FAE::makeProduct(
 						{ // ************* process NULL pointers *************
 							// This is the case when there is a NULL pointer and either an
 							// internal state or a reference
-							FA_NOTE("NULL ptr!");
+							FA_DEBUG_AT(1,"NULL ptr!");
 
 							break;   // cut this branch of the product
 						}
@@ -1289,7 +1289,7 @@ void FAE::makeProduct(
 							|| (!lhsIsData && rhsIsData && rhsData->isRef()))
 						{ // ************* process jumps *************
 							// This is the case when one FA jumps to another TA and the other does not
-							FA_NOTE("jump!");
+							FA_DEBUG_AT(1,"jump!");
 
 							if (lhsIsData)
 							{
