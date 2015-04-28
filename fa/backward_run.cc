@@ -96,17 +96,27 @@ bool BackwardRun::isSpuriousCE(
 
 		SymState* resultState = instr->reverseAndIsect(execMan_, *fwdState, *bwdState);
 		assert(nullptr != resultState);
-		FA_DEBUG_AT(1, "bwd pred state: " << *resultState);
 
 		if (resultState->GetFAE()->Empty())
 		{	// in case the intersection is empty - spurious counterexample
 			failPoint = fwdState;
-		
+			
+			SymState* tmpState = execMan_.copyStateWithNewRegs(*bwdState, fwdState->GetInstr());
+			// perform intersection
+			tmpState->Intersect(*fwdState);
+
+			FA_NOTE(*(bwdState->GetFAE()));
 			std::shared_ptr<FAE> normFAEBwd = bwdState->newNormalizedFAE();
 			std::shared_ptr<FAE> normFAEFwd = fwdState->newNormalizedFAE();
 			assert(normFAEFwd->getRootCount() == normFAEBwd->getRootCount());
 			
 			predicate = getEmptyTrees(*normFAEFwd, *normFAEBwd);
+			if (predicate.empty())
+			{
+				predicate.insert(predicate.end(),
+						normFAEBwd->getRoots().begin(), normFAEBwd->getRoots().end());
+			}
+
 			assert(!predicate.empty()); // TODO this could be condition of spuriousness
 
 			return true;
