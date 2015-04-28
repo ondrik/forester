@@ -51,8 +51,12 @@ void ConnectionGraph::updateStateSignature(
 		for (size_t i = 0; i < v.size(); ++i)
 		{
 			// Assertions
-			assert(v[i].root == oldSig[i].root);
+			//assert(v[i].root == oldSig[i].root);
 			assert(v[i].defines == oldSig[i].defines);
+			if (v[i].root != oldSig[i].root)
+			{ // TODO is this correct?
+				oldSig[i].root = v[i].root;
+			}
 
 			oldSig[i].refCount = std::max(oldSig[i].refCount, v[i].refCount);
 			oldSig[i].selCount = std::max(oldSig[i].selCount, v[i].selCount);
