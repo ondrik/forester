@@ -10,7 +10,7 @@
 void Abstraction::predicateAbstraction(
 		const std::vector<std::shared_ptr<const TreeAut>>&    predicates)
 {
-	FA_NOTE("Predicate abstraction input: " << fae_);
+	FA_DEBUG_AT(1,"Predicate abstraction input: predicates " << predicates.size() << " FAE: " << fae_);
 
 	Index<size_t> faeStateIndex;
 	for (size_t i = 0; i < fae_.getRootCount(); ++i)
@@ -21,7 +21,7 @@ void Abstraction::predicateAbstraction(
 
 	const size_t numStates = faeStateIndex.size();
 
-	FA_NOTE("Index: " << faeStateIndex);
+	FA_DEBUG_AT(1,"Index: " << faeStateIndex);
 
 	// create the initial relation
 	// TODO: use boost::dynamic_bitset
@@ -30,18 +30,19 @@ void Abstraction::predicateAbstraction(
 	VATA::AutBase::ProductTranslMap translMap;
 	for (const auto& predicate : predicates)
 	{
-		FA_NOTE("Predicate: " << *predicate);
+		FA_DEBUG_AT(1,"Predicate: " << *predicate);
 		//assert(predicate->getRootCount() >= this->fae_.getRootCount());
 		//const size_t roots = predicate->getRootCount() >= this->fae_.getRootCount()
 		//	? this->fae_.getRootCount() : predicate->getRootCount();
 
 		for (size_t root = 0; root < this->fae_.getRootCount(); ++root)
 		{
-			FA_NOTE("ISECT1: " << *this->fae_.getRoot(root));
-			FA_NOTE("ISECT2: " << predicate /* *(predicate->getRoot(root)) */);
+			FA_DEBUG_AT(1,"ISECT1: " << *this->fae_.getRoot(root));
+			FA_DEBUG_AT(1,"ISECT2: " << predicate /* *(predicate->getRoot(root)) */);
 			const auto res = VATAAdapter::intersectionBU(*this->fae_.getRoot(root), /* *(predicate->getRoot(root)) */ *predicate, &translMap);
-			FA_NOTE("RES: " << res);
+			FA_DEBUG_AT(1,"RES: " << res);
 		}
+	}
 
 		std::vector<std::set<size_t>> matchWith(numStates, std::set<size_t>());
 		for (const auto& matchPair : translMap)
@@ -67,7 +68,7 @@ void Abstraction::predicateAbstraction(
 			oss << ", " << i << " -> ";
 			utils::printCont(oss, matchWith[i]);
 		}
-		FA_NOTE("matchWith: " << oss.str());
+		FA_DEBUG_AT(1,"matchWith: " << oss.str());
 		
 		// create the relation
 		rel.assign(numStates, std::vector<bool>(numStates, false));
@@ -84,7 +85,6 @@ void Abstraction::predicateAbstraction(
 				}
 			}
 		}
-	}
 	if (predicates.empty()) //else
 	{
 		// create universal relation
@@ -138,9 +138,9 @@ void Abstraction::predicateAbstraction(
 		}
 	}
 
-	std::ostringstream oss;
-	utils::relPrint(oss, rel);
-	FA_NOTE("Relation: \n" << oss.str());
+	std::ostringstream ossRel;
+	utils::relPrint(ossRel, rel);
+	FA_DEBUG_AT(1,"Relation: \n" << ossRel.str());
 
 	std::ostringstream ossInd;
 	ossInd << '[';
@@ -150,7 +150,7 @@ void Abstraction::predicateAbstraction(
 	}
 
 	ossInd << ']';
-	FA_NOTE("Index: " << ossInd.str());
+	FA_DEBUG_AT(1,"Index: " << ossInd.str());
 
 	// TODO: label states of fae_ by states of predicate
 	std::unordered_map<size_t, size_t> relCom;
@@ -182,11 +182,11 @@ void Abstraction::predicateAbstraction(
 	{
 		TreeAut ta = fae_.createTAWithSameBackend();
 		fae_.getRoot(i)->collapsed(ta, relCom);
-		FA_NOTE("NEW TA " << ta);
+		FA_DEBUG_AT(1,"NEW TA " << ta);
 		//fae_.setRoot(i, std::shared_ptr<TreeAut>(ta));
 		fae_.setRoot(i, std::shared_ptr<TreeAut>(fae_.allocTA()));
 		ta.uselessAndUnreachableFree(*fae_.getRoot(i));
 	}
 
-	FA_NOTE("Predicate abstraction output: " << fae_);
+	FA_DEBUG_AT(1,"Predicate abstraction output: " << fae_);
 }
