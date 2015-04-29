@@ -525,6 +525,7 @@ void FI_abs::execute(ExecutionManager& execMan, SymState& state)
 
 		execMan.enqueue(tmpState);
 	}
+	FA_DEBUG_AT_MSG(1, &this->insn()->loc, "AbsInt end " << *fae);
 }
 
 // FI_fix
