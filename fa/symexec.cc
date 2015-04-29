@@ -207,6 +207,9 @@ private:  // data members
 	volatile bool dbgFlag_;
 	volatile bool userRequestFlag_;
 
+	bool newPredicates_;
+	std::vector<std::shared_ptr<const TreeAut>> predicates_;
+
 protected:
 
 	/**
@@ -266,13 +269,20 @@ protected:
 		if (FA_USE_PREDICATE_ABSTRACTION)
 		{
 			FA_DEBUG_AT(0, "Running the analysis with the folowing predicates:");
-			for (const AbstractInstruction* instr : this->GetAssembly().code_)
+			for (AbstractInstruction* instr : this->GetAssembly().code_)
 			{
 				if (fi_type_e::fiFix == instr->getType())
 				{
-					const FI_abs* absInstr = dynamic_cast<const FI_abs*>(instr);
+					FI_abs* absInstr = dynamic_cast<FI_abs*>(instr);
 					if (nullptr != absInstr)
 					{
+						// TODO add a new predicate to other abstract instruction
+						if (newPredicates_)
+						{
+							absInstr->addPredicate(predicates_);
+						}
+
+						FA_DEBUG_AT(1, "Number of predicates " << absInstr->getPredicates().size() << " of " << *absInstr->insn());
 						for (const std::shared_ptr<const TreeAut>& pred : absInstr->getPredicates())
 						{
 							std::ostringstream os;
@@ -294,6 +304,7 @@ protected:
 					}
 				}
 			}
+			newPredicates_ = false;
 			FA_DEBUG_AT(0, "\n---------------------END---------------------------");
 		}
 
@@ -458,19 +469,19 @@ protected:
 				BackwardRun bwdRun(execMan_);
 				SymState::Trace trace = e.state()->getTrace();
 				SymState* failPoint = nullptr;
-				std::vector<std::shared_ptr<const TreeAut>> predicate;
+				predicates_.clear();
 
-				bool isSpurious = bwdRun.isSpuriousCE(trace, failPoint, predicate);
+				bool isSpurious = bwdRun.isSpuriousCE(trace, failPoint, predicates_);
 				if (isSpurious)
 				{
-					assert(!predicate.empty());
+					assert(!predicates_.empty());
 					assert(nullptr != failPoint);
 					assert(nullptr != failPoint->GetInstr());
 
 					FA_NOTE("The counterexample IS (PROBABLY) spurious");
 
 					FA_NOTE("Failing instruction: " << *failPoint->GetInstr());
-					for (const auto& p : predicate)
+					for (const auto& p : predicates_)
 					{
 						FA_NOTE("Learnt predicate: " << *p);
 					}
@@ -485,7 +496,9 @@ protected:
 					}
 
 					// set the new predicate for abstraction
-					absInstr->addPredicate(predicate);
+					//absInstr->addPredicate(predicate);
+
+					newPredicates_ = true;
 
 					clearFixpoints();
 
@@ -529,7 +542,9 @@ public:   // methods
 		execMan_{},
 		conf_(conf),
 		dbgFlag_{false},
-		userRequestFlag_{false}
+		userRequestFlag_{false},
+		newPredicates_{false},
+		predicates_()
 	{ }
 
 	/**
