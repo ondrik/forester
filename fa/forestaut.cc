@@ -129,7 +129,10 @@ std::ostream& operator<<(std::ostream& os, const FA& fa)
 	for (size_t i = 0; i < fa.getRootCount(); ++i)
 	{
 		if (!fa.getRoot(i))
+		{
+			os << std::endl << "root " << i << " nullptr" << '\n';
 			continue;
+		}
 
 		if (fa.connectionGraph.data.size() > i)
 		{
