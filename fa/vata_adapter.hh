@@ -300,7 +300,7 @@ public: // public methods
 	/**
 	 * @brief Remove all final states from TA
 	 */
-	size_t eraseFinalStates();
+	void eraseFinalStates();
     
     /**
      * @brief Returns a set of the final states of @vataAut_

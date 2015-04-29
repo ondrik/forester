@@ -179,7 +179,7 @@ size_t VATAAdapter::getFinalState() const
     return *finalStates.begin();
 }
 
-size_t VATAAdapter::eraseFinalStates()
+void VATAAdapter::eraseFinalStates()
 {
 	this->vataAut_.EraseFinalStates();
 }
