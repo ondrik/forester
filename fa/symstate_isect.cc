@@ -1137,7 +1137,7 @@ void SymState::Intersect(
 	// FIXME: do we really need this?
 //	fae->updateConnectionGraph();
 
-	FA_WARN("Underapproximating intersection");
+	FA_DEBUG_AT(0,"Underapproximating intersection");
 }
 
 

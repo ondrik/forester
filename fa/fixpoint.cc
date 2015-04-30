@@ -383,7 +383,7 @@ SymState* FixpointBase::reverseAndIsect(
 	// perform intersection
 	tmpState->Intersect(fwdPred);
 
-	FA_WARN("Executing !!VERY!! suspicious reverse operation FixpointBase");
+	FA_DEBUG_AT(0, "Executing !!VERY!! suspicious reverse operation FixpointBase");
 	return tmpState;
 }
 
