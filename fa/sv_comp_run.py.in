@@ -114,7 +114,7 @@ def execute(args):
     with p.stderr as f:
         lines = f.readlines()
         okf = lambda acc,x : acc or "The program is SAFE." in x
-        ff = lambda acc,x : acc or "FORESTER INTERNAL ERROR" in x or "Segmentation fault" in x
+        ff = lambda acc,x : acc or "FORESTER INTERNAL ERROR" in x or "Segmentation fault" in x or "internal compiler error" in x
         spuriousf = lambda acc,x : acc or SPURIOUS in x
         prop = getProperty(parseProps(formulas), lines)
         if reduce(okf, lines, False) and not prop == VALID_MEMTRACK:
