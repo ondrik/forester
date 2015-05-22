@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012  Ondrej Lengal
+ * Copyright (C) 2012  Ondrej Lengal, Martin Hruska
  *
  * This file is part of forester.
  *
