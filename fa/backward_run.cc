@@ -39,6 +39,7 @@ namespace
 			TreeAut isectTA = TreeAut::intersectionBU(
 					*(fwdFAE.getRoot(i)),*(bwdFAE.getRoot(i)));
 			TreeAut finalIsectTA;
+
 			isectTA.uselessAndUnreachableFree(finalIsectTA);
 			FA_DEBUG_AT(1, "empty " << isectTA);
 
@@ -50,6 +51,30 @@ namespace
 
 
 		return res;
+	}
+
+	void learnPredicates(
+		SymState*&			                             fwdState,
+		SymState*&			                             bwdState,
+		std::vector<std::shared_ptr<const TreeAut>>&     predicate)
+	{
+		//SymState* tmpState = execMan_.copyStateWithNewRegs(*bwdState, fwdState->GetInstr());
+		// perform intersection
+		//tmpState->Intersect(*fwdState);
+
+		FA_DEBUG_AT(1,*(bwdState->GetFAE()));
+		std::shared_ptr<FAE> normFAEBwd = bwdState->newNormalizedFAE();
+		std::shared_ptr<FAE> normFAEFwd = fwdState->newNormalizedFAE();
+		assert(normFAEFwd->getRootCount() == normFAEBwd->getRootCount());
+		
+		predicate = getEmptyTrees(*normFAEFwd, *normFAEBwd);
+		if (predicate.empty())
+		{
+			predicate.insert(predicate.end(),
+					normFAEBwd->getRoots().begin(), normFAEBwd->getRoots().end());
+		}
+
+		assert(!predicate.empty()); // TODO this could be condition of spuriousness
 	}
 }
 
@@ -100,25 +125,7 @@ bool BackwardRun::isSpuriousCE(
 		if (resultState->GetFAE()->Empty())
 		{	// in case the intersection is empty - spurious counterexample
 			failPoint = fwdState;
-			
-			SymState* tmpState = execMan_.copyStateWithNewRegs(*bwdState, fwdState->GetInstr());
-			// perform intersection
-			tmpState->Intersect(*fwdState);
-
-			FA_NOTE(*(bwdState->GetFAE()));
-			std::shared_ptr<FAE> normFAEBwd = bwdState->newNormalizedFAE();
-			std::shared_ptr<FAE> normFAEFwd = fwdState->newNormalizedFAE();
-			assert(normFAEFwd->getRootCount() == normFAEBwd->getRootCount());
-			
-			predicate = getEmptyTrees(*normFAEFwd, *normFAEBwd);
-			if (predicate.empty())
-			{
-				predicate.insert(predicate.end(),
-						normFAEBwd->getRoots().begin(), normFAEBwd->getRoots().end());
-			}
-
-			assert(!predicate.empty()); // TODO this could be condition of spuriousness
-
+			learnPredicates(fwdState, bwdState, predicate);
 			return true;
 		}
 
