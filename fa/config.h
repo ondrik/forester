@@ -63,7 +63,7 @@
 /**
  * use predicate abstraction (default abstraction is finite height abstraction)
  */
-#define FA_USE_PREDICATE_ABSTRACTION     0
+#define FA_USE_PREDICATE_ABSTRACTION     1
 
 /**
  * allow to use structures with zero size, e.g. pointers to undefined types
