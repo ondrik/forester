@@ -268,7 +268,7 @@ protected:
 	{
 		if (FA_USE_PREDICATE_ABSTRACTION)
 		{
-			FA_DEBUG_AT(0, "Running the analysis with the folowing predicates:");
+			FA_DEBUG_AT(1, "Running the analysis with the folowing predicates:");
 			for (AbstractInstruction* instr : this->GetAssembly().code_)
 			{
 				if (fi_type_e::fiFix == instr->getType())
@@ -299,13 +299,13 @@ protected:
 
 							os << ": " << *absInstr->insn() << "\n" << *pred;
 
-							FA_DEBUG_AT(0, os.str());
+							FA_DEBUG_AT(1, os.str());
 						}
 					}
 				}
 			}
 			newPredicates_ = false;
-			FA_DEBUG_AT(0, "\n---------------------END---------------------------");
+			FA_DEBUG_AT(1, "\n---------------------END---------------------------");
 		}
 
 		FA_DEBUG_AT(2, "creating empty heap ...");
@@ -362,14 +362,8 @@ protected:
 			const CodeStorage::Insn* insn = e.state()->GetInstr()->insn();
 			if (nullptr != insn)
 			{
-				FA_NOTE_MSG(&insn->loc, SSD_INLINE_COLOR(C_LIGHT_RED, *insn));
 				FA_DEBUG_AT(2, std::endl << *(e.state()->GetFAE()));
 			}
-
-			if (nullptr != e.location())
-				FA_ERROR_MSG(e.location(), e.what());
-			else
-				reportErrorNoLocation(e.what());
 
 			if (conf_.printTrace)
 			{
@@ -456,6 +450,12 @@ protected:
 				else
 				{
 					FA_NOTE("Is real");
+					if (nullptr != insn)
+						FA_NOTE_MSG(&insn->loc, SSD_INLINE_COLOR(C_LIGHT_RED, *insn));
+					if (nullptr != e.location())
+						FA_ERROR_MSG(e.location(), e.what());
+					else
+						reportErrorNoLocation(e.what());
 				}
 				throw;
 			}
@@ -478,12 +478,12 @@ protected:
 					assert(nullptr != failPoint);
 					assert(nullptr != failPoint->GetInstr());
 
-					FA_NOTE("The counterexample IS (PROBABLY) spurious");
+					FA_DEBUG_AT(1,"The counterexample IS (PROBABLY) spurious");
 
-					FA_NOTE("Failing instruction: " << *failPoint->GetInstr());
+					FA_DEBUG_AT(1,"Failing instruction: " << *failPoint->GetInstr());
 					for (const auto& p : predicates_)
 					{
-						FA_NOTE("Learnt predicate: " << *p);
+						FA_DEBUG_AT(1,"Learnt predicate: " << *p);
 					}
 
 					// now, we add 'predicate' to the set of predicates that are used for
@@ -507,12 +507,24 @@ protected:
 				else
 				{	// if the counterexample is not spurious
 					FA_NOTE("The counterexample IS real");
+					if (nullptr != insn)
+						FA_NOTE_MSG(&insn->loc, SSD_INLINE_COLOR(C_LIGHT_RED, *insn));
+					if (nullptr != e.location())
+						FA_ERROR_MSG(e.location(), e.what());
+					else
+						reportErrorNoLocation(e.what());
 
 					throw;
 				}
 			}
 			else
 			{	// in case we are using finite height abstraction
+				if (nullptr != insn)
+					FA_NOTE_MSG(&insn->loc, SSD_INLINE_COLOR(C_LIGHT_RED, *insn));
+				if (nullptr != e.location())
+					FA_ERROR_MSG(e.location(), e.what());
+				else
+					reportErrorNoLocation(e.what());
 				throw;
 			}
 		}

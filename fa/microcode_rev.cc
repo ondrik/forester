@@ -51,7 +51,7 @@ SymState* FI_acc_sel::reverseAndIsect(
 //	FA_DEBUG_AT(1,"Executing !!VERY!! suspicious reverse operation FI_acc_sel");
 //	return tmpState;
 
-	FA_DEBUG_AT(0,"Skipping reverse operation FI_acc_set");
+	FA_DEBUG_AT(1,"Skipping reverse operation FI_acc_set");
 	return execMan.copyState(bwdSucc);
 }
 
@@ -62,7 +62,7 @@ SymState* FI_acc_set::reverseAndIsect(
 {
 	(void)fwdPred;
 
-	FA_DEBUG_AT(0,"Skipping reverse operation FI_acc_set");
+	FA_DEBUG_AT(1,"Skipping reverse operation FI_acc_set");
 	return execMan.copyState(bwdSucc);
 }
 
@@ -73,7 +73,7 @@ SymState* FI_acc_all::reverseAndIsect(
 {
 	(void)fwdPred;
 
-	FA_DEBUG_AT(0,"Skipping reverse operation FI_acc_all");
+	FA_DEBUG_AT(1,"Skipping reverse operation FI_acc_all");
 	return execMan.copyState(bwdSucc);
 }
 
@@ -209,7 +209,7 @@ SymState* FI_node_free::reverseAndIsect(
 	// this is because when returning from the previous abstraction, the
 	// components should not change
 
-	FA_DEBUG_AT(0,"Executing !!VERY!! suspicious reverse operation FI_node_free");
+	FA_DEBUG_AT(1,"Executing !!VERY!! suspicious reverse operation FI_node_free");
 
 	return tmpState;
 }
@@ -277,7 +277,7 @@ SymState* FI_check::reverseAndIsect(
 
 	// TODO do we need renew a references? When it was garbage there were not probably any references.
 
-	FA_DEBUG_AT(0, "Executing !!VERY!! suspicious reverse operation FI_check");
+	FA_DEBUG_AT(1, "Executing !!VERY!! suspicious reverse operation FI_check");
 	return tmpState;
 }
 

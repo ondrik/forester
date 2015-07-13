@@ -901,11 +901,6 @@ void SymState::Intersect(
 		{
 			const auto& thisTrans = *thisIt;
 			
-			std::cerr << "Trans " << stateToString(thisState)
-				<< " " << TreeAut::GetSymbol(thisTrans) << " ";
-			for (const auto& state : thisTrans.GetChildren()) std::cerr 
-				<< stateToString(state) << " "; std::cerr << '\n';
-		
 			auto fwdIt = fwdTA->begin(fwdState);
 			for (; fwdIt != fwdEnd; ++fwdIt)
 			{
@@ -1137,7 +1132,7 @@ void SymState::Intersect(
 	// FIXME: do we really need this?
 //	fae->updateConnectionGraph();
 
-	FA_DEBUG_AT(0,"Underapproximating intersection");
+	FA_DEBUG_AT(1,"Underapproximating intersection");
 }
 
 
