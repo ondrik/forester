@@ -362,7 +362,6 @@ protected:
 				FI_abs *absInstr = dynamic_cast<FI_abs *>(instr);
 				if (nullptr != absInstr)
 				{
-					// TODO add a new predicate to other abstract instruction
 					absInstr->addPredicate(predicates_);
 					absInstr->printDebugInfoAboutPredicates();
 				}
