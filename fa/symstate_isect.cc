@@ -1136,6 +1136,7 @@ void SymState::Intersect(
 }
 
 
+/*
 void FAE::makeProduct(
 	const FAE&                             lhs,
 	const FAE&                             rhs,
@@ -1330,3 +1331,4 @@ void FAE::makeProduct(
 		result.insert(std::make_pair(prodState.first.state, prodState.second.state));
 	}
 }
+ */
