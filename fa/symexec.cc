@@ -207,7 +207,6 @@ private:  // data members
 	volatile bool dbgFlag_;
 	volatile bool userRequestFlag_;
 
-	bool newPredicates_;
 	std::vector<std::shared_ptr<const TreeAut>> predicates_;
 
 protected:
@@ -364,16 +363,11 @@ protected:
 				if (nullptr != absInstr)
 				{
 					// TODO add a new predicate to other abstract instruction
-					if (newPredicates_)
-					{
-						absInstr->addPredicate(predicates_);
-					}
-
+					absInstr->addPredicate(predicates_);
 					absInstr->printDebugInfoAboutPredicates();
 				}
 			}
 		}
-		newPredicates_ = false;
 		FA_DEBUG_AT(1, "\n---------------------END---------------------------");
 	}
 
@@ -429,11 +423,6 @@ protected:
 	 */
 	bool mainLoop()
 	{
-		if (FA_USE_PREDICATE_ABSTRACTION)
-		{
-			addNewPredicates();
-		}
-
 		FA_DEBUG_AT(2, "creating empty heap ...");
 
 		// create an empty heap
@@ -506,7 +495,7 @@ protected:
 					printRefinementInfo(failPoint);
 
 					assertAbstractionInstruction(failPoint->GetInstr());
-					newPredicates_ = true;
+					addNewPredicates();
 
 					clearFixpoints();
 
@@ -551,7 +540,6 @@ public:   // methods
 		conf_(conf),
 		dbgFlag_{false},
 		userRequestFlag_{false},
-		newPredicates_{false},
 		predicates_()
 	{ }
 
