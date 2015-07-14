@@ -179,7 +179,15 @@ public:   // methods
 	 * 
 	 * This methods prints the predicates
 	 */
-	void printPredicates() const;
+	void printPredicates(std::ostringstream& os) const;
+
+	/**
+	 * @brief Print info about predicates in this instruction.
+	 *
+	 * Print debug info about predicates in this instruction
+	 *
+	 */
+	void printDebugInfoAboutPredicates() const;
 
 	virtual void execute(ExecutionManager& execMan, SymState& state);
 

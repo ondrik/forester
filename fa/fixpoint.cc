@@ -594,12 +594,19 @@ void FI_fix::execute(ExecutionManager& execMan, SymState& state)
 	}
 }
 
-void FI_abs::printPredicates() const
+void FI_abs::printDebugInfoAboutPredicates() const
 {
-	FA_DEBUG_AT(1, "Number of predicates " << this->getPredicates().size() << " of " << *this);
+    FA_DEBUG_AT(1, "Number of predicates " <<
+            this->getPredicates().size() << " of " << this->insn());
+    std::ostringstream os;
+    this->printPredicates(os);
+    FA_DEBUG_AT(1, os.str());
+}
+
+void FI_abs::printPredicates(std::ostringstream& os) const
+{
 	for (const std::shared_ptr<const TreeAut>& pred : this->getPredicates())
 	{
-		std::ostringstream os;
 		os << "\n---------------------------------------------------\n"
 			<< *this << this->insn();
 
@@ -611,8 +618,6 @@ void FI_abs::printPredicates() const
 			os << " (" << clInsn->bb->name() << ")";
 		}
 
-		os << ": " << *this << "\n" << *pred;
-
-		FA_DEBUG_AT(1, os.str());
+		os << ": " << *this << "\n" << *pred << '\n';
 	}
 }

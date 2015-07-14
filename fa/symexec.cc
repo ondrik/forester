@@ -189,8 +189,7 @@ std::ostream& printUcodeTrace(
 } // namespace
 
 
-class SymExec::Engine
-{
+class SymExec::Engine {
 private:  // data members
 
 	TreeAut ta_;
@@ -202,7 +201,7 @@ private:  // data members
 
 	ExecutionManager execMan_;
 
-	const ProgramConfig& conf_;
+	const ProgramConfig &conf_;
 
 	volatile bool dbgFlag_;
 	volatile bool userRequestFlag_;
@@ -217,26 +216,23 @@ protected:
 	 *
 	 * Method that prints all boxes from the box manager.
 	 */
-	void printBoxes() const
-	{
-		std::vector<const Box*> boxes;
+	void printBoxes() const {
+		std::vector<const Box *> boxes;
 
 		boxMan_.boxDatabase().asVector(boxes);
 
-		std::map<std::string, const Box*> orderedBoxes;
+		std::map<std::string, const Box *> orderedBoxes;
 
 		// reorder according to the name
-		for (auto& box : boxes)
-		{
+		for (auto &box : boxes) {
 			std::stringstream ss;
 
-			ss << *static_cast<const AbstractBox*>(box);
+			ss << *static_cast<const AbstractBox *>(box);
 
 			orderedBoxes.insert(std::make_pair(ss.str(), box));
 		}
 
-		for (auto& nameBoxPair : orderedBoxes)
-		{
+		for (auto &nameBoxPair : orderedBoxes) {
 			FA_DEBUG_AT(1, nameBoxPair.first << ':' << std::endl << *nameBoxPair.second);
 		}
 	}
@@ -244,19 +240,49 @@ protected:
 	/**
 	 * @brief  Clears all fixpoints
 	 */
-	void clearFixpoints()
-	{
+	void clearFixpoints() {
 		// clear all fixpoints
-		for (auto instr : assembly_.code_)
-		{
-			if (instr->getType() == fi_type_e::fiFix)
-			{
+		for (auto instr : assembly_.code_) {
+			if (instr->getType() == fi_type_e::fiFix) {
 				// clear the fixpoint
-				static_cast<FixpointInstruction*>(instr)->clear();
+				static_cast<FixpointInstruction *>(instr)->clear();
 			}
 		}
 	}
 
+	void printDebugInfoAboutPredicates(FI_abs *absInstr)
+	{
+        FA_DEBUG_AT(1, "Number of predicates " <<
+          absInstr->getPredicates().size() << " of " << absInstr->insn());
+        std::ostringstream os;
+        absInstr->printPredicates(os);
+        FA_DEBUG_AT(1, os.str());
+	}
+
+
+	void addNewPredicates()
+	{
+		FA_DEBUG_AT(1, "Running the analysis with the folowing predicates:");
+        for (AbstractInstruction* instr : this->GetAssembly().code_)
+        {
+            if (fi_type_e::fiFix == instr->getType())
+            {
+                FI_abs* absInstr = dynamic_cast<FI_abs*>(instr);
+                if (nullptr != absInstr)
+                {
+                    // TODO add a new predicate to other abstract instruction
+                    if (newPredicates_)
+                    {
+                        absInstr->addPredicate(predicates_);
+                    }
+
+					absInstr->printDebugInfoAboutPredicates();
+                }
+            }
+        }
+		newPredicates_ = false;
+		FA_DEBUG_AT(1, "\n---------------------END---------------------------");
+	}
 
 	/**
 	 * @brief  The main execution loop
@@ -268,29 +294,7 @@ protected:
 	{
 		if (FA_USE_PREDICATE_ABSTRACTION)
 		{
-			FA_DEBUG_AT(1, "Running the analysis with the folowing predicates:");
-			for (AbstractInstruction* instr : this->GetAssembly().code_)
-			{
-				if (fi_type_e::fiFix == instr->getType())
-				{
-					FI_abs* absInstr = dynamic_cast<FI_abs*>(instr);
-					if (nullptr != absInstr)
-					{
-						// TODO add a new predicate to other abstract instruction
-						if (newPredicates_)
-						{
-							absInstr->addPredicate(predicates_);
-						}
-
-						FA_DEBUG_AT(1, "Number of predicates " <<
-								absInstr->getPredicates().size() << " of " << absInstr->insn());
-						absInstr->printPredicates();
-						
-					}
-				}
-			}
-			newPredicates_ = false;
-			FA_DEBUG_AT(1, "\n---------------------END---------------------------");
+			addNewPredicates();
 		}
 
 		FA_DEBUG_AT(2, "creating empty heap ...");
