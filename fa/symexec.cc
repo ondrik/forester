@@ -250,13 +250,9 @@ protected:
 		}
 	}
 
-	void printDebugInfoAboutPredicates(FI_abs *absInstr)
+	bool isAbstractionInstruction(AbstractInstruction* instr)
 	{
-        FA_DEBUG_AT(1, "Number of predicates " <<
-          absInstr->getPredicates().size() << " of " << absInstr->insn());
-        std::ostringstream os;
-        absInstr->printPredicates(os);
-        FA_DEBUG_AT(1, os.str());
+		return fi_type_e::fiFix == instr->getType();
 	}
 
 
@@ -265,7 +261,7 @@ protected:
 		FA_DEBUG_AT(1, "Running the analysis with the folowing predicates:");
         for (AbstractInstruction* instr : this->GetAssembly().code_)
         {
-            if (fi_type_e::fiFix == instr->getType())
+            if (isAbstractionInstruction(instr))
             {
                 FI_abs* absInstr = dynamic_cast<FI_abs*>(instr);
                 if (nullptr != absInstr)
@@ -282,6 +278,73 @@ protected:
         }
 		newPredicates_ = false;
 		FA_DEBUG_AT(1, "\n---------------------END---------------------------");
+	}
+
+	void printInstructionInfo(const CodeStorage::Insn* insn, const SymState* state)
+	{
+		if (nullptr != insn)
+		{    // in case current instruction IS an instruction
+			FA_DEBUG_AT(2, SSD_INLINE_COLOR(C_LIGHT_RED, insn->loc << *insn));
+			FA_DEBUG_AT(2, *state);
+		}
+		else
+		{
+			FA_DEBUG_AT(3, *state);
+		}
+	}
+
+	void printTrace(const cl_loc* location, const SymState::Trace& origTrace)
+	{
+		if (conf_.printSVTrace)
+        {
+            FA_LOG_MSG(location, "Printing SV-Comp trace");
+
+            // preprocess trace
+            std::vector<const CodeStorage::Insn*> trace;
+            for (const auto& state : origTrace)
+            {
+                const CodeStorage::Insn *s = state->GetInstr()->insn();
+                if (s != NULL)
+                {
+                    trace.insert(trace.begin()+0,s);
+                }
+            }
+
+            // prepare output
+            std::streambuf* buf;
+            std::ofstream of;
+            if (conf_.traceFile.length() > 0)
+            {
+                of.open(conf_.traceFile, std::ofstream::out);
+                buf = of.rdbuf();
+            }
+            else
+            {
+                buf = std::cerr.rdbuf();
+            }
+            std::ostream out(buf);
+
+            // get file name from a instruction. it is not neccessary to read it
+            // from the first instruction but it is needed to read the filename
+            //const char* filename = (trace.size() > 0) ? trace[0]->loc.file : NULL;
+
+            SVTraceLite svPrinter;
+            svPrinter.printTrace(trace, out);
+
+            if (conf_.traceFile.length() > 0)
+            {
+                of.close();
+            }
+        }
+
+        if (conf_.printUcodeTrace)
+        {
+            FA_LOG_MSG(location, "Printing microcode trace");
+
+            std::ostringstream oss;
+            printUcodeTrace(oss, origTrace);
+            Streams::traceUcode(oss.str().c_str());
+        }
 	}
 
 	/**
@@ -321,15 +384,7 @@ protected:
 				assert(nullptr != state);
 
 				const CodeStorage::Insn* insn = state->GetInstr()->insn();
-				if (nullptr != insn)
-				{	// in case current instruction IS an instruction
-					FA_DEBUG_AT(2, SSD_INLINE_COLOR(C_LIGHT_RED, insn->loc << *insn));
-					FA_DEBUG_AT(2, *state);
-				}
-				else
-				{
-					FA_DEBUG_AT(3, *state);
-				}
+				printInstructionInfo(insn, state);
 
 				if (testAndClearUserRequestFlag())
 				{
@@ -354,71 +409,7 @@ protected:
 				FA_DEBUG_AT(2, std::endl << *(e.state()->GetFAE()));
 			}
 
-			if (conf_.printTrace)
-			{
-				FA_LOG_MSG(e.location(), "Printing trace");
-				std::ostringstream oss;
-				printTrace(oss, e.state()->getTrace());
-				if (conf_.traceFile.length() == 0)
-				{
-					Streams::trace(oss.str().c_str());
-				}
-				else
-				{
-					Streams::traceFile(oss.str().c_str(), conf_.traceFile.c_str());
-				}
-			}
-
-			if (conf_.printSVTrace)
-			{
-				FA_LOG_MSG(e.location(), "Printing SV-Comp trace");
-				
-				// preprocess trace
-				std::vector<const CodeStorage::Insn*> trace;
-				for (const auto& state : e.state()->getTrace())
-				{
-					const CodeStorage::Insn *s = state->GetInstr()->insn();
-					if (s != NULL)
-					{
-						trace.insert(trace.begin()+0,s);
-					}
-				}
-
-				// prepare output
-				std::streambuf* buf;
-				std::ofstream of;
-				if (conf_.traceFile.length() > 0)
-				{
-					of.open(conf_.traceFile, std::ofstream::out);
-					buf = of.rdbuf();
-				}
-				else
-				{
-					buf = std::cerr.rdbuf();
-				}
-				std::ostream out(buf);
-
-				// get file name from a instruction. it is not neccessary to read it
-				// from the first instruction but it is needed to read the filename
-				//const char* filename = (trace.size() > 0) ? trace[0]->loc.file : NULL;
-				
-				SVTraceLite svPrinter;
-				svPrinter.printTrace(trace, out);
-				
-				if (conf_.traceFile.length() > 0)
-				{
-					of.close();
-				}
-			}
-
-			if (conf_.printUcodeTrace)
-			{
-				FA_LOG_MSG(e.location(), "Printing microcode trace");
-
-				std::ostringstream oss;
-				printUcodeTrace(oss, e.state()->getTrace());
-				Streams::traceUcode(oss.str().c_str());
-			}
+			printTrace(e.location(), e.state()->getTrace());
 
 			if (FA_BACKWARD_RUN && !FA_USE_PREDICATE_ABSTRACTION)
 			{
