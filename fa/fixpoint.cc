@@ -593,3 +593,26 @@ void FI_fix::execute(ExecutionManager& execMan, SymState& state)
 		execMan.enqueue(tmpState);
 	}
 }
+
+void FI_abs::printPredicates() const
+{
+	FA_DEBUG_AT(1, "Number of predicates " << this->getPredicates().size() << " of " << *this);
+	for (const std::shared_ptr<const TreeAut>& pred : this->getPredicates())
+	{
+		std::ostringstream os;
+		os << "\n---------------------------------------------------\n"
+			<< *this << this->insn();
+
+		const CodeStorage::Insn* clInsn = this->insn();
+		assert(nullptr != clInsn);
+		assert(nullptr != clInsn->bb);
+		if (clInsn->bb->front() == clInsn)
+		{
+			os << " (" << clInsn->bb->name() << ")";
+		}
+
+		os << ": " << *this << "\n" << *pred;
+
+		FA_DEBUG_AT(1, os.str());
+	}
+}

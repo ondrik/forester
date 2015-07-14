@@ -174,6 +174,13 @@ public:   // methods
 		return predicates_;
 	}
 
+	/**
+	 * @brief Print predicates
+	 * 
+	 * This methods prints the predicates
+	 */
+	void printPredicates() const;
+
 	virtual void execute(ExecutionManager& execMan, SymState& state);
 
 	virtual std::ostream& toStream(std::ostream& os) const {

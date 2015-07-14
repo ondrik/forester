@@ -282,25 +282,10 @@ protected:
 							absInstr->addPredicate(predicates_);
 						}
 
-						FA_DEBUG_AT(1, "Number of predicates " << absInstr->getPredicates().size() << " of " << *absInstr->insn());
-						for (const std::shared_ptr<const TreeAut>& pred : absInstr->getPredicates())
-						{
-							std::ostringstream os;
-							os << "\n---------------------------------------------------\n"
-								<< *absInstr << absInstr->insn();
-
-							const CodeStorage::Insn* clInsn = absInstr->insn();
-							assert(nullptr != clInsn);
-							assert(nullptr != clInsn->bb);
-							if (clInsn->bb->front() == clInsn)
-							{
-								os << " (" << clInsn->bb->name() << ")";
-							}
-
-							os << ": " << *absInstr->insn() << "\n" << *pred;
-
-							FA_DEBUG_AT(1, os.str());
-						}
+						FA_DEBUG_AT(1, "Number of predicates " <<
+								absInstr->getPredicates().size() << " of " << absInstr->insn());
+						absInstr->printPredicates();
+						
 					}
 				}
 			}
