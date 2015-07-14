@@ -272,13 +272,13 @@ protected:
 
 	void printRefinementInfo(const SymState *failPoint)
 	{
-		FA_DEBUG_AT(1,"The counterexample IS (PROBABLY) spurious");
+		FA_DEBUG_AT(1, "The counterexample IS (PROBABLY) spurious");
 
-        FA_DEBUG_AT(1,"Failing instruction: " << *failPoint->GetInstr());
-        for (const auto& p : predicates_)
-        {
-            FA_DEBUG_AT(1,"Learnt predicate: " << *p);
-        }
+		FA_DEBUG_AT(1, "Failing instruction: " << *failPoint->GetInstr());
+		for (const auto &p : predicates_)
+		{
+			FA_DEBUG_AT(1, "Learnt predicate: " << *p);
+		}
 	}
 
 	void printTrace(const cl_loc *location, const SymState::Trace &origTrace)
@@ -339,14 +339,14 @@ protected:
 	{
 		FA_NOTE("The counterexample IS real");
 		if (nullptr != insn)
-            FA_NOTE_MSG(&insn->loc, SSD_INLINE_COLOR(C_LIGHT_RED, *insn));
-        if (nullptr != e.location())
-            FA_ERROR_MSG(e.location(), e.what());
-        else
-            reportErrorNoLocation(e.what());
+			FA_NOTE_MSG(&insn->loc, SSD_INLINE_COLOR(C_LIGHT_RED, *insn));
+		if (nullptr != e.location())
+			FA_ERROR_MSG(e.location(), e.what());
+		else
+			reportErrorNoLocation(e.what());
 	}
 
-		bool isAbstractionInstruction(AbstractInstruction *instr)
+	bool isAbstractionInstruction(AbstractInstruction *instr)
 	{
 		return fi_type_e::fiFix == instr->getType();
 	}
@@ -372,9 +372,9 @@ protected:
 	}
 
 	bool isSpurious(
-			std::vector<std::shared_ptr<const TreeAut>>& predicate,
+			std::vector<std::shared_ptr<const TreeAut>> &predicate,
 			const SymState::Trace &origTrace,
-			SymState* &failPoint)
+			SymState *&failPoint)
 	{
 		// check whether the counterexample is spurious and in case it is collect
 		// some perhaps helpful information (failpoint and predicate)
@@ -387,12 +387,12 @@ protected:
 			const SymState::Trace &origTrace)
 	{
 		std::vector<std::shared_ptr<const TreeAut>> predicate;
-		SymState* failPoint = nullptr;
+		SymState *failPoint = nullptr;
 
 		return isSpurious(predicate, origTrace, failPoint);
 	}
 
-	void runBackwardRunAlone(const CodeStorage::Insn* insn, const ProgramError& e)
+	void runBackwardRunAlone(const CodeStorage::Insn *insn, const ProgramError &e)
 	{
 		FA_LOG("Executing backward run...");
 
@@ -406,14 +406,83 @@ protected:
 		}
 	}
 
-	void assertAbstractionInstruction(AbstractInstruction* insn)
+	void assertAbstractionInstruction(AbstractInstruction *insn)
 	{
-		FI_abs* absInstr = dynamic_cast<FI_abs*>(insn);
+		FI_abs *absInstr = dynamic_cast<FI_abs *>(insn);
 		if (nullptr == absInstr)
 		{
 			assert(false);
 		}
 	}
+
+	void symbolicExecutionRun()
+	{
+		SymState* state = nullptr;
+		while (nullptr != (state = execMan_.dequeueDFS()))
+        {	// process all states in the DFS order
+            assert(nullptr != state);
+
+            printInstructionInfo(state->GetInstr()->insn(), state);
+
+            if (testAndClearUserRequestFlag())
+            {
+                FA_NOTE("Executed " << std::setw(7) << execMan_.statesEvaluated()
+                    << " states and " << std::setw(7) << execMan_.pathsEvaluated()
+                    << " paths so far.");
+            }
+
+            // run the state
+            execMan_.execute(*state);
+        }
+	}
+
+	bool processProgramError(const ProgramError& e)
+	{
+		bool shouldRefineAndContinue = false;
+
+		const CodeStorage::Insn* insn = e.state()->GetInstr()->insn();
+        if (nullptr != insn)
+        {
+            FA_DEBUG_AT(2, std::endl << *(e.state()->GetFAE()));
+        }
+
+        printTrace(e.location(), e.state()->getTrace());
+
+        if (FA_BACKWARD_RUN && !FA_USE_PREDICATE_ABSTRACTION)
+        {
+            runBackwardRunAlone(insn, e);
+        }
+        else if (FA_USE_PREDICATE_ABSTRACTION)
+        {	// in case we are using predicate abstraction
+            FA_LOG("Executing backward run...");
+
+            SymState* failPoint = nullptr;
+            predicates_.clear();
+            if (isSpurious(predicates_, e.state()->getTrace(), failPoint))
+            {
+                assert(!predicates_.empty());
+                assert(nullptr != failPoint);
+                assert(nullptr != failPoint->GetInstr());
+
+                printRefinementInfo(failPoint);
+
+                assertAbstractionInstruction(failPoint->GetInstr());
+                addNewPredicates();
+
+                clearFixpoints();
+
+                shouldRefineAndContinue = true;
+            }
+        }
+
+		if (!shouldRefineAndContinue)
+		{
+			reportRealError(insn, e);
+		}
+
+		return shouldRefineAndContinue;
+	}
+
 
 	/**
 	 * @brief  The main execution loop
@@ -438,78 +507,23 @@ protected:
 			assembly_.code_.front()
 		);
 
-		SymState* state = nullptr;
-
 		try
 		{	// expecting problems...
-			while (nullptr != (state = execMan_.dequeueDFS()))
-			{	// process all states in the DFS order
-				assert(nullptr != state);
-
-				const CodeStorage::Insn* insn = state->GetInstr()->insn();
-				printInstructionInfo(insn, state);
-
-				if (testAndClearUserRequestFlag())
-				{
-					FA_NOTE("Executed " << std::setw(7) << execMan_.statesEvaluated()
-						<< " states and " << std::setw(7) << execMan_.pathsEvaluated()
-						<< " paths so far.");
-				}
-
-				// run the state
-				execMan_.execute(*state);
-			}
-
+			symbolicExecutionRun();
 			return true;
 		}
 		catch (ProgramError& e)
 		{
 			assert(nullptr != e.state());
 
-			const CodeStorage::Insn* insn = e.state()->GetInstr()->insn();
-			if (nullptr != insn)
+			const bool refineAndContinue = processProgramError(e);
+
+			if (refineAndContinue)
 			{
-				FA_DEBUG_AT(2, std::endl << *(e.state()->GetFAE()));
-			}
-
-			printTrace(e.location(), e.state()->getTrace());
-
-			if (FA_BACKWARD_RUN && !FA_USE_PREDICATE_ABSTRACTION)
-			{
-				runBackwardRunAlone(insn, e);
-				throw;
-			}
-
-			if (FA_USE_PREDICATE_ABSTRACTION)
-			{	// in case we are using predicate abstraction
-				FA_LOG("Executing backward run...");
-
-				SymState* failPoint = nullptr;
-				predicates_.clear();
-				if (isSpurious(predicates_, e.state()->getTrace(), failPoint))
-				{
-					assert(!predicates_.empty());
-					assert(nullptr != failPoint);
-					assert(nullptr != failPoint->GetInstr());
-
-					printRefinementInfo(failPoint);
-
-					assertAbstractionInstruction(failPoint->GetInstr());
-					addNewPredicates();
-
-					clearFixpoints();
-
-					return false;
-				}
-				else
-				{	// if the counterexample is not spurious
-					reportRealError(insn,e);
-					throw;
-				}
+				return false; // run was unsuccessful
 			}
 			else
-			{	// in case we are using finite height abstraction
-				reportRealError(insn, e);
+			{
 				throw;
 			}
 		}
@@ -521,6 +535,8 @@ protected:
 
 			return false;
 		}
+
+		assert(false);
 	}
 
 public:   // methods
