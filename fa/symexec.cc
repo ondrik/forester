@@ -189,7 +189,8 @@ std::ostream& printUcodeTrace(
 } // namespace
 
 
-class SymExec::Engine {
+class SymExec::Engine
+{
 private:  // data members
 
 	TreeAut ta_;
@@ -216,7 +217,8 @@ protected:
 	 *
 	 * Method that prints all boxes from the box manager.
 	 */
-	void printBoxes() const {
+	void printBoxes() const
+	{
 		std::vector<const Box *> boxes;
 
 		boxMan_.boxDatabase().asVector(boxes);
@@ -224,7 +226,8 @@ protected:
 		std::map<std::string, const Box *> orderedBoxes;
 
 		// reorder according to the name
-		for (auto &box : boxes) {
+		for (auto &box : boxes)
+		{
 			std::stringstream ss;
 
 			ss << *static_cast<const AbstractBox *>(box);
@@ -232,7 +235,8 @@ protected:
 			orderedBoxes.insert(std::make_pair(ss.str(), box));
 		}
 
-		for (auto &nameBoxPair : orderedBoxes) {
+		for (auto &nameBoxPair : orderedBoxes)
+		{
 			FA_DEBUG_AT(1, nameBoxPair.first << ':' << std::endl << *nameBoxPair.second);
 		}
 	}
@@ -240,47 +244,21 @@ protected:
 	/**
 	 * @brief  Clears all fixpoints
 	 */
-	void clearFixpoints() {
+	void clearFixpoints()
+	{
 		// clear all fixpoints
-		for (auto instr : assembly_.code_) {
-			if (instr->getType() == fi_type_e::fiFix) {
+		for (auto instr : assembly_.code_)
+		{
+			if (instr->getType() == fi_type_e::fiFix)
+			{
 				// clear the fixpoint
 				static_cast<FixpointInstruction *>(instr)->clear();
 			}
 		}
 	}
 
-	bool isAbstractionInstruction(AbstractInstruction* instr)
-	{
-		return fi_type_e::fiFix == instr->getType();
-	}
 
-
-	void addNewPredicates()
-	{
-		FA_DEBUG_AT(1, "Running the analysis with the folowing predicates:");
-        for (AbstractInstruction* instr : this->GetAssembly().code_)
-        {
-            if (isAbstractionInstruction(instr))
-            {
-                FI_abs* absInstr = dynamic_cast<FI_abs*>(instr);
-                if (nullptr != absInstr)
-                {
-                    // TODO add a new predicate to other abstract instruction
-                    if (newPredicates_)
-                    {
-                        absInstr->addPredicate(predicates_);
-                    }
-
-					absInstr->printDebugInfoAboutPredicates();
-                }
-            }
-        }
-		newPredicates_ = false;
-		FA_DEBUG_AT(1, "\n---------------------END---------------------------");
-	}
-
-	void printInstructionInfo(const CodeStorage::Insn* insn, const SymState* state)
+	void printInstructionInfo(const CodeStorage::Insn *insn, const SymState *state)
 	{
 		if (nullptr != insn)
 		{    // in case current instruction IS an instruction
@@ -293,58 +271,154 @@ protected:
 		}
 	}
 
-	void printTrace(const cl_loc* location, const SymState::Trace& origTrace)
+	void printRefinementInfo(const SymState *failPoint)
+	{
+		FA_DEBUG_AT(1,"The counterexample IS (PROBABLY) spurious");
+
+        FA_DEBUG_AT(1,"Failing instruction: " << *failPoint->GetInstr());
+        for (const auto& p : predicates_)
+        {
+            FA_DEBUG_AT(1,"Learnt predicate: " << *p);
+        }
+	}
+
+	void printTrace(const cl_loc *location, const SymState::Trace &origTrace)
 	{
 		if (conf_.printSVTrace)
-        {
-            FA_LOG_MSG(location, "Printing SV-Comp trace");
+		{
+			FA_LOG_MSG(location, "Printing SV-Comp trace");
 
-            // preprocess trace
-            std::vector<const CodeStorage::Insn*> trace;
-            for (const auto& state : origTrace)
-            {
-                const CodeStorage::Insn *s = state->GetInstr()->insn();
-                if (s != NULL)
-                {
-                    trace.insert(trace.begin()+0,s);
-                }
-            }
+			// preprocess trace
+			std::vector<const CodeStorage::Insn *> trace;
+			for (const auto &state : origTrace)
+			{
+				const CodeStorage::Insn *s = state->GetInstr()->insn();
+				if (s != NULL)
+				{
+					trace.insert(trace.begin() + 0, s);
+				}
+			}
 
-            // prepare output
-            std::streambuf* buf;
-            std::ofstream of;
-            if (conf_.traceFile.length() > 0)
-            {
-                of.open(conf_.traceFile, std::ofstream::out);
-                buf = of.rdbuf();
-            }
-            else
-            {
-                buf = std::cerr.rdbuf();
-            }
-            std::ostream out(buf);
+			// prepare output
+			std::streambuf *buf;
+			std::ofstream of;
+			if (conf_.traceFile.length() > 0)
+			{
+				of.open(conf_.traceFile, std::ofstream::out);
+				buf = of.rdbuf();
+			}
+			else
+			{
+				buf = std::cerr.rdbuf();
+			}
+			std::ostream out(buf);
 
-            // get file name from a instruction. it is not neccessary to read it
-            // from the first instruction but it is needed to read the filename
-            //const char* filename = (trace.size() > 0) ? trace[0]->loc.file : NULL;
+			// get file name from a instruction. it is not neccessary to read it
+			// from the first instruction but it is needed to read the filename
+			//const char* filename = (trace.size() > 0) ? trace[0]->loc.file : NULL;
 
-            SVTraceLite svPrinter;
-            svPrinter.printTrace(trace, out);
+			SVTraceLite svPrinter;
+			svPrinter.printTrace(trace, out);
 
-            if (conf_.traceFile.length() > 0)
-            {
-                of.close();
-            }
-        }
+			if (conf_.traceFile.length() > 0)
+			{
+				of.close();
+			}
+		}
 
-        if (conf_.printUcodeTrace)
-        {
-            FA_LOG_MSG(location, "Printing microcode trace");
+		if (conf_.printUcodeTrace)
+		{
+			FA_LOG_MSG(location, "Printing microcode trace");
 
-            std::ostringstream oss;
-            printUcodeTrace(oss, origTrace);
-            Streams::traceUcode(oss.str().c_str());
-        }
+			std::ostringstream oss;
+			printUcodeTrace(oss, origTrace);
+			Streams::traceUcode(oss.str().c_str());
+		}
+	}
+
+	void reportRealError(const CodeStorage::Insn *insn, const ProgramError &e)
+	{
+		FA_NOTE("The counterexample IS real");
+		if (nullptr != insn)
+            FA_NOTE_MSG(&insn->loc, SSD_INLINE_COLOR(C_LIGHT_RED, *insn));
+        if (nullptr != e.location())
+            FA_ERROR_MSG(e.location(), e.what());
+        else
+            reportErrorNoLocation(e.what());
+	}
+
+		bool isAbstractionInstruction(AbstractInstruction *instr)
+	{
+		return fi_type_e::fiFix == instr->getType();
+	}
+
+
+	void addNewPredicates()
+	{
+		FA_DEBUG_AT(1, "Running the analysis with the folowing predicates:");
+		for (AbstractInstruction *instr : this->GetAssembly().code_)
+		{
+			if (isAbstractionInstruction(instr))
+			{
+				FI_abs *absInstr = dynamic_cast<FI_abs *>(instr);
+				if (nullptr != absInstr)
+				{
+					// TODO add a new predicate to other abstract instruction
+					if (newPredicates_)
+					{
+						absInstr->addPredicate(predicates_);
+					}
+
+					absInstr->printDebugInfoAboutPredicates();
+				}
+			}
+		}
+		newPredicates_ = false;
+		FA_DEBUG_AT(1, "\n---------------------END---------------------------");
+	}
+
+	bool isSpurious(
+			std::vector<std::shared_ptr<const TreeAut>>& predicate,
+			const SymState::Trace &origTrace,
+			SymState* &failPoint)
+	{
+		// check whether the counterexample is spurious and in case it is collect
+		// some perhaps helpful information (failpoint and predicate)
+		BackwardRun bwdRun(execMan_);
+
+		return bwdRun.isSpuriousCE(origTrace, failPoint, predicate);
+	}
+
+	bool isSpurious(
+			const SymState::Trace &origTrace)
+	{
+		std::vector<std::shared_ptr<const TreeAut>> predicate;
+		SymState* failPoint = nullptr;
+
+		return isSpurious(predicate, origTrace, failPoint);
+	}
+
+	void runBackwardRunAlone(const CodeStorage::Insn* insn, const ProgramError& e)
+	{
+		FA_LOG("Executing backward run...");
+
+		if (isSpurious(e.state()->getTrace()))
+		{
+			FA_NOTE("The counterexample IS spurious");
+		}
+		else
+		{
+			reportRealError(insn, e);
+		}
+	}
+
+	void assertAbstractionInstruction(AbstractInstruction* insn)
+	{
+		FI_abs* absInstr = dynamic_cast<FI_abs*>(insn);
+		if (nullptr == absInstr)
+		{
+			assert(false);
+		}
 	}
 
 	/**
@@ -413,30 +487,7 @@ protected:
 
 			if (FA_BACKWARD_RUN && !FA_USE_PREDICATE_ABSTRACTION)
 			{
-				FA_LOG("Executing backward run...");
-
-				// check whether the counterexample is spurious and in case it is collect
-				// some perhaps helpful information (failpoint and predicate)
-				BackwardRun bwdRun(execMan_);
-				SymState::Trace trace = e.state()->getTrace();
-				SymState* failPoint = nullptr;
-				std::vector<std::shared_ptr<const TreeAut>> predicate;
-
-				bool isSpurious = bwdRun.isSpuriousCE(trace, failPoint, predicate);
-				if (isSpurious)
-				{
-					FA_NOTE("Is spurious");
-				}
-				else
-				{
-					FA_NOTE("Is real");
-					if (nullptr != insn)
-						FA_NOTE_MSG(&insn->loc, SSD_INLINE_COLOR(C_LIGHT_RED, *insn));
-					if (nullptr != e.location())
-						FA_ERROR_MSG(e.location(), e.what());
-					else
-						reportErrorNoLocation(e.what());
-				}
+				runBackwardRunAlone(insn, e);
 				throw;
 			}
 
@@ -444,40 +495,17 @@ protected:
 			{	// in case we are using predicate abstraction
 				FA_LOG("Executing backward run...");
 
-				// check whether the counterexample is spurious and in case it is collect
-				// some perhaps helpful information (failpoint and predicate)
-				BackwardRun bwdRun(execMan_);
-				SymState::Trace trace = e.state()->getTrace();
 				SymState* failPoint = nullptr;
 				predicates_.clear();
-
-				bool isSpurious = bwdRun.isSpuriousCE(trace, failPoint, predicates_);
-				if (isSpurious)
+				if (isSpurious(predicates_, e.state()->getTrace(), failPoint))
 				{
 					assert(!predicates_.empty());
 					assert(nullptr != failPoint);
 					assert(nullptr != failPoint->GetInstr());
 
-					FA_DEBUG_AT(1,"The counterexample IS (PROBABLY) spurious");
+					printRefinementInfo(failPoint);
 
-					FA_DEBUG_AT(1,"Failing instruction: " << *failPoint->GetInstr());
-					for (const auto& p : predicates_)
-					{
-						FA_DEBUG_AT(1,"Learnt predicate: " << *p);
-					}
-
-					// now, we add 'predicate' to the set of predicates that are used for
-					// abstraction at failPoint (which should BTW be abstraction)
-
-					FI_abs* absInstr = dynamic_cast<FI_abs*>(failPoint->GetInstr());
-					if (nullptr == absInstr)
-					{
-						assert(false);
-					}
-
-					// set the new predicate for abstraction
-					//absInstr->addPredicate(predicate);
-
+					assertAbstractionInstruction(failPoint->GetInstr());
 					newPredicates_ = true;
 
 					clearFixpoints();
@@ -486,25 +514,13 @@ protected:
 				}
 				else
 				{	// if the counterexample is not spurious
-					FA_NOTE("The counterexample IS real");
-					if (nullptr != insn)
-						FA_NOTE_MSG(&insn->loc, SSD_INLINE_COLOR(C_LIGHT_RED, *insn));
-					if (nullptr != e.location())
-						FA_ERROR_MSG(e.location(), e.what());
-					else
-						reportErrorNoLocation(e.what());
-
+					reportRealError(insn,e);
 					throw;
 				}
 			}
 			else
 			{	// in case we are using finite height abstraction
-				if (nullptr != insn)
-					FA_NOTE_MSG(&insn->loc, SSD_INLINE_COLOR(C_LIGHT_RED, *insn));
-				if (nullptr != e.location())
-					FA_ERROR_MSG(e.location(), e.what());
-				else
-					reportErrorNoLocation(e.what());
+				reportRealError(insn, e);
 				throw;
 			}
 		}
