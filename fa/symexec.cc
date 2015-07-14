@@ -510,7 +510,7 @@ protected:
 		try
 		{	// expecting problems...
 			symbolicExecutionRun();
-			return true;
+			return true; // program is safe
 		}
 		catch (ProgramError& e)
 		{
