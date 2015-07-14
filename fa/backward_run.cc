@@ -66,7 +66,7 @@ namespace
 		std::shared_ptr<FAE> normFAEBwd = bwdState->newNormalizedFAE();
 		std::shared_ptr<FAE> normFAEFwd = fwdState->newNormalizedFAE();
 		assert(normFAEFwd->getRootCount() == normFAEBwd->getRootCount());
-		
+
 		predicate = getEmptyTrees(*normFAEFwd, *normFAEBwd);
 		if (predicate.empty())
 		{
@@ -75,6 +75,21 @@ namespace
 		}
 
 		assert(!predicate.empty()); // TODO this could be condition of spuriousness
+	}
+
+	void printDebugInfo(
+			const AbstractInstruction *instr,
+			const SymState *fwdState,
+			const SymState *bwdState)
+	{
+		for (size_t i = 0; i < 10; ++i)
+		{
+			FA_DEBUG_AT(1, "");
+		}
+
+		FA_DEBUG_AT(1, "instruction: " << *instr);
+		FA_DEBUG_AT(1, "fwd pred state: " << *fwdState);
+		FA_DEBUG_AT(1, "bwd succ state: " << *bwdState);
 	}
 }
 
@@ -110,14 +125,7 @@ bool BackwardRun::isSpuriousCE(
 		const AbstractInstruction* instr = fwdState->GetInstr();
 		assert(nullptr != instr);
 
-		for (size_t i = 0; i < 10; ++i)
-		{
-			FA_DEBUG_AT(1, "");
-		}
-
-		FA_DEBUG_AT(1, "instruction: " << *instr);
-		FA_DEBUG_AT(1, "fwd pred state: " << *fwdState);
-		FA_DEBUG_AT(1, "bwd succ state: " << *bwdState);
+		printDebugInfo(instr, fwdState, bwdState);
 
 		SymState* resultState = instr->reverseAndIsect(execMan_, *fwdState, *bwdState);
 		assert(nullptr != resultState);
