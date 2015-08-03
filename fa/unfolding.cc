@@ -16,7 +16,7 @@ void Unfolding::boxMerge(
     tmp2.copyNotAcceptingTransitions(dst, tmp2);
     dst.addFinalStates(tmp2.getFinalStates());
 
-    for (size_t state : src.getFinalStates())
+    for (const size_t state : src.getFinalStates())
     {
         for (auto i = src.begin(state); i != src.end(state); ++i)
         {
