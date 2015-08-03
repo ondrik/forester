@@ -99,6 +99,7 @@ void Unfolding::unfoldBox(size_t root, const Box* box)
     size_t lhsOffset = 0;
     std::vector<size_t> index = { root };
 
+	// First initialize structures before unfolding
     for (const AbstractBox* aBox : TreeAut::GetSymbol(t)->getNode())
     {
         if (static_cast<const AbstractBox*>(box) != aBox)
@@ -121,6 +122,7 @@ void Unfolding::unfoldBox(size_t root, const Box* box)
         break;
     }
 
+	// Replace output ports
     auto ta = std::shared_ptr<TreeAut>(this->fae.allocTA());
 
     this->boxMerge(*ta, *this->fae.getRoot(root), *box->getOutput(), box, index);
@@ -128,6 +130,7 @@ void Unfolding::unfoldBox(size_t root, const Box* box)
     this->fae.setRoot(root, ta);
     this->fae.connectionGraph.invalidate(root);
 
+	// Replace input ports
     if (!box->getInput())
         return;
 
