@@ -293,7 +293,7 @@ bool VATAAdapter::subseteq(const VATAAdapter& a, const VATAAdapter& b)
 }
 
 VATAAdapter& VATAAdapter::unfoldAtRoot(
-  VATAAdapter&                   dst,
+	VATAAdapter&                   dst,
 	const size_t                   newState,
 	bool                           registerFinalState) const
 {
