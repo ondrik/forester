@@ -87,17 +87,12 @@ void Unfolding::getChildrenAndLabelFromBox(
     }
 }
 
-void Unfolding::unfoldBox(size_t root, const Box* box)
+void Unfolding::initIndex(
+		std::vector<size_t>&          index,
+		const Box*                    box,
+		const TreeAut::Transition&    t)
 {
-    assert(root < this->fae.getRootCount());
-    assert(nullptr != this->fae.getRoot(root));
-    assert(nullptr != box);
-
-    const TreeAut::Transition& t = 
-        this->fae.getRoot(root)->getAcceptingTransition();
-
     size_t lhsOffset = 0;
-    std::vector<size_t> index = { root };
 
 	// First initialize structures before unfolding
     for (const AbstractBox* aBox : TreeAut::GetSymbol(t)->getNode())
@@ -121,22 +116,27 @@ void Unfolding::unfoldBox(size_t root, const Box* box)
 
         break;
     }
+}
 
-	// Replace output ports
+void Unfolding::substituteOutputPorts(
+		const std::vector<size_t>&    index,
+		const size_t                  root,
+		const Box*                    box)
+{
     auto ta = std::shared_ptr<TreeAut>(this->fae.allocTA());
 
     this->boxMerge(*ta, *this->fae.getRoot(root), *box->getOutput(), box, index);
 
     this->fae.setRoot(root, ta);
     this->fae.connectionGraph.invalidate(root);
+}
 
-	// Replace input ports
-    if (!box->getInput())
-        return;
-
+void Unfolding::substituteInputPorts(
+		const std::vector<size_t>&    index,
+		const Box*                    box)
+{
     assert(box->getInputIndex() < index.size());
-
-    size_t aux = index[box->getInputIndex() + 1];
+	size_t aux = index.at(box->getInputIndex() + 1);
 
     assert(aux != static_cast<size_t>(-1));
     assert(aux < this->fae.getRootCount());
@@ -149,7 +149,27 @@ void Unfolding::unfoldBox(size_t root, const Box* box)
     this->boxMerge(*this->fae.getRoot(aux), tmp, *box->getInput(), nullptr, index);
 
     this->fae.connectionGraph.invalidate(aux);
+}
 
+
+void Unfolding::unfoldBox(size_t root, const Box* box)
+{
+    assert(root < this->fae.getRootCount());
+    assert(nullptr != this->fae.getRoot(root));
+    assert(nullptr != box);
+
+    const TreeAut::Transition& t = 
+        this->fae.getRoot(root)->getAcceptingTransition();
+
+    std::vector<size_t> index = { root };
+	initIndex(index, box, t);
+
+	substituteOutputPorts(index, root, box);
+
+    if (!box->getInput())
+        return;
+
+	substituteInputPorts(index, box);
 //		this->fae.updateConnectionGraph();
 }
 
