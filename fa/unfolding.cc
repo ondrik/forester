@@ -87,7 +87,7 @@ void Unfolding::getChildrenAndLabelFromBox(
     }
 }
 
-void Unfolding::initIndex(
+void Unfolding::initRootRefIndex(
 		std::vector<size_t>&          index,
 		const Box*                    box,
 		const TreeAut::Transition&    t)
@@ -100,21 +100,21 @@ void Unfolding::initIndex(
         if (static_cast<const AbstractBox*>(box) != aBox)
         {
             lhsOffset += aBox->getArity();
-
-            continue;
         }
+		else
+		{
+			for (size_t j = 0; j < box->getArity(); ++j)
+			{
+				const Data& data = this->fae.getData(t.GetNthChildren(lhsOffset + j));
 
-        for (size_t j = 0; j < box->getArity(); ++j)
-        {
-            const Data& data = this->fae.getData(t.GetNthChildren(lhsOffset + j));
+				if (data.isUndef())
+					index.push_back(static_cast<size_t>(-1));
+				else
+					index.push_back(data.d_ref.root);
+			}
 
-            if (data.isUndef())
-                index.push_back(static_cast<size_t>(-1));
-            else
-                index.push_back(data.d_ref.root);
-        }
-
-        break;
+	        return;
+		}
     }
 }
 
@@ -136,7 +136,7 @@ void Unfolding::substituteInputPorts(
 		const Box*                    box)
 {
     assert(box->getInputIndex() < index.size());
-	size_t aux = index.at(box->getInputIndex() + 1);
+	const size_t aux = index.at(box->getInputIndex() + 1);
 
     assert(aux != static_cast<size_t>(-1));
     assert(aux < this->fae.getRootCount());
@@ -162,7 +162,7 @@ void Unfolding::unfoldBox(size_t root, const Box* box)
         this->fae.getRoot(root)->getAcceptingTransition();
 
     std::vector<size_t> index = { root };
-	initIndex(index, box, t);
+	initRootRefIndex(index, box, t);
 
 	substituteOutputPorts(index, root, box);
 
@@ -170,7 +170,6 @@ void Unfolding::unfoldBox(size_t root, const Box* box)
         return;
 
 	substituteInputPorts(index, box);
-//		this->fae.updateConnectionGraph();
 }
 
 void Unfolding::unfoldBoxes(size_t root, const std::set<const Box*>& boxes)

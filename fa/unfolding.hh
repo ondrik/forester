@@ -50,6 +50,20 @@ private:
         std::vector<size_t>&               children,
         std::vector<const AbstractBox*>&   label);
 
+	void initRootRefIndex(
+		std::vector<size_t>&                   index,
+		const Box*                             box,
+		const TreeAut::Transition&             t);
+
+	void substituteOutputPorts(
+		const std::vector<size_t>&    index,
+		const size_t                  root,
+		const Box*                    box);
+
+	void substituteInputPorts(
+		const std::vector<size_t>&    index,
+		const Box*                    box);
+
 public:
 	Unfolding(FAE& fae) : fae(fae) {}
 
