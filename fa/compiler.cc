@@ -368,6 +368,7 @@ public:
 		_table{}
 	{
 		this->_table["malloc"]                  = builtin_e::biMalloc;
+		this->_table["__builtin_alloca"]        = builtin_e::biMalloc;
 		this->_table["free"]                    = builtin_e::biFree;
 		this->_table["abort"]                   = builtin_e::biAbort;
 		this->_table["___fa_get_nondet_int"]    = builtin_e::biNondet;
@@ -1136,7 +1137,7 @@ protected:
 	 *
 	 * @returns  Index of the register with the requested operand
 	 */
-	size_t lookupStoreReg(const cl_operand& op, size_t src)
+	size_t lookupStoreReg(const cl_operand& op, const size_t src)
 	{
 		switch (op.code)
 		{	// depending on the type of the operand
