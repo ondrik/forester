@@ -78,6 +78,11 @@ private:  // methods
 		std::set<size_t>&           selectors,
 		size_t                      target) const;
 
+	// Inteface to Unfolding class with the additional operations 
+	// specific for this class
+	inline void unfoldBox(FAE& fae, const size_t root, const Box* box);
+	inline void unfoldBoxes(
+			FAE& fae, const size_t root, const std::set<const Box*>& boxes);
 
 	/**
 	 * @brief  Adds redundant root points to allow further manipulation  
@@ -114,7 +119,7 @@ private:  // methods
 	void isolateAtRoot(
 		std::vector<FAE*>&                            dst,
 		size_t                                        root,
-		const std::vector<size_t>&                    offsets) const;
+		const std::vector<size_t>&                    offsets);
 
 	/**
 	 * @brief  TODO
@@ -126,7 +131,7 @@ private:  // methods
 		std::vector<FAE*>&                  dst,
 		size_t                              root,
 		size_t                              target,
-		size_t                              selector) const;
+		size_t                              selector);
 
 public:   // methods
 
@@ -146,7 +151,7 @@ public:   // methods
 	void isolateOne(
 		std::vector<FAE*>&                     dst,
 		size_t                                 target,
-		size_t                                 offset) const
+		size_t                                 offset)
 	{
 		this->isolateSet(dst, target, 0, { offset });
 	}
@@ -166,7 +171,7 @@ public:   // methods
 		std::vector<FAE*>&                 dst,
 		size_t                             target,
 		int                                base,
-		const std::vector<size_t>&         offsets) const;
+		const std::vector<size_t>&         offsets);
 
 
 };

@@ -313,11 +313,21 @@ void Splitting::enumerateSelectors(
 }
 
 
+inline void Splitting::unfoldBox(FAE& fae, const size_t root, const Box* box)
+{
+	Unfolding(fae).unfoldBox(root, box);
+}
+
+inline void Splitting::unfoldBoxes(FAE& fae, const size_t root, const std::set<const Box*>& boxes)
+{
+	Unfolding(fae).unfoldBoxes(root, boxes);
+}
+
 void Splitting::isolateAtLeaf(
 	std::vector<FAE*>&                  dst,
 	size_t                              root,
 	size_t                              target,
-	size_t                              selector) const
+	size_t                              selector)
 {
 	// Assertions
 	assert(root < fae_.getRootCount());
@@ -383,7 +393,7 @@ void Splitting::isolateAtLeaf(
 					boxes); // boxes to unfold
 			
 			assert(boxes.count(transBox.second));
-			Unfolding(fae).unfoldBox(root, transBox.second);
+			unfoldBox(fae, root, transBox.second);
 			splitting.isolateOne(dst, target, selector);
 
 			continue;
@@ -472,7 +482,7 @@ void Splitting::isolateAtLeaf(
 
 			assert(boxes.count(transBox.second));
 
-			Unfolding(fae2).unfoldBox(fae2.getRootCount() - 1, transBox.second);
+			unfoldBox(fae2, fae2.getRootCount() - 1, transBox.second);
 
 			splitting2.isolateOne(dst, target, selector);
 		}
@@ -576,7 +586,7 @@ void Splitting::isolateAtRoot(
 void Splitting::isolateAtRoot(
 	std::vector<FAE*>&                            dst,
 	size_t                                        root,
-	const std::vector<size_t>&                    offsets) const
+	const std::vector<size_t>&                    offsets)
 {
 	// Assertions
 	assert(root < fae_.getRootCount());
@@ -598,7 +608,7 @@ void Splitting::isolateAtRoot(
 
 			if (!boxes.empty())
 			{	// in case there were some hierarchical boxes, process further
-				Unfolding(fae).unfoldBoxes(root, boxes);
+				unfoldBoxes(fae, root, boxes);
 				splitting.isolateSet(dst, root, 0, offsets);
 			} else
 			{	// in case there were no hierarchical boxes, simply take the result
@@ -613,7 +623,7 @@ void Splitting::isolateSet(
 	std::vector<FAE*>&                 dst,
 	size_t                             target,
 	int                                base,
-	const std::vector<size_t>&         offsets) const
+	const std::vector<size_t>&         offsets)
 {
 	// Assertions
 	assert(target < fae_.getRootCount());
