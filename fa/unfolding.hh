@@ -67,8 +67,8 @@ private:
 public:
 	Unfolding(FAE& fae) : fae(fae) {}
 
-	void unfoldBox(size_t root, const Box* box);
-	void unfoldBoxes(size_t root, const std::set<const Box*>& boxes);
+	void unfoldBox(const size_t root, const Box* box);
+	void unfoldBoxes(const size_t root, const std::set<const Box*>& boxes);
 };
 
 #endif

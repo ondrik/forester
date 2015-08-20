@@ -152,7 +152,7 @@ void Unfolding::substituteInputPorts(
 }
 
 
-void Unfolding::unfoldBox(size_t root, const Box* box)
+void Unfolding::unfoldBox(const size_t root, const Box* box)
 {
     assert(root < this->fae.getRootCount());
     assert(nullptr != this->fae.getRoot(root));
@@ -172,7 +172,7 @@ void Unfolding::unfoldBox(size_t root, const Box* box)
 	substituteInputPorts(index, box);
 }
 
-void Unfolding::unfoldBoxes(size_t root, const std::set<const Box*>& boxes)
+void Unfolding::unfoldBoxes(const size_t root, const std::set<const Box*>& boxes)
 {
     for (std::set<const Box*>::const_iterator i = boxes.begin(); i != boxes.end(); ++i)
         this->unfoldBox(root, *i);
