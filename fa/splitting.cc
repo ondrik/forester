@@ -375,7 +375,13 @@ void Splitting::isolateAtLeaf(
 			fae.setRoot(root, std::shared_ptr<TreeAut>(&ta2.uselessAndUnreachableFree(*fae.allocTA())));
 			fae.connectionGraph.invalidate(root);
 			std::set<const Box*> boxes;
-            splitting.isolateAtRoot(root, t, IsolateBoxF(transBox.second), boxes);
+
+            splitting.isolateAtRoot(
+					root, // Indexed of the desired TA
+					t, // transition to be handled
+					IsolateBoxF(transBox.second), // functor
+					boxes); // boxes to unfold
+			
 			assert(boxes.count(transBox.second));
 			Unfolding(fae).unfoldBox(root, transBox.second);
 			splitting.isolateOne(dst, target, selector);
@@ -458,8 +464,11 @@ void Splitting::isolateAtLeaf(
 
 			std::set<const Box*> boxes;
 
-			splitting2.isolateAtRoot(fae2.getRootCount() - 1, t,
-				IsolateBoxF(transBox.second), boxes);
+			splitting2.isolateAtRoot(
+					fae2.getRootCount() - 1, // Indexed of the desired TA
+					t, // transition to be handled
+					IsolateBoxF(transBox.second), // functor
+					boxes); // boxes to unfold
 
 			assert(boxes.count(transBox.second));
 
@@ -581,7 +590,11 @@ void Splitting::isolateAtRoot(
 			FAE fae(fae_);
 			Splitting splitting(fae);
 			std::set<const Box*> boxes;
-			splitting.isolateAtRoot(root, *i, IsolateSetF(offsets), boxes);
+			
+			splitting.isolateAtRoot(root, // Indexed of the desired TA
+					*i, // transition to be handled
+					IsolateSetF(offsets), // functor
+					boxes); // boxes to unfold
 
 			if (!boxes.empty())
 			{	// in case there were some hierarchical boxes, process further
@@ -621,7 +634,9 @@ void Splitting::isolateSet(
 
 	if (offsU.empty())
 	{ // in case there is no upward selector for isolation
-		this->isolateAtRoot(dst, target, offsD);
+		this->isolateAtRoot(dst, // The vector for storing results of the operation
+				target, // The index of the desired tree automaton
+				offsD); // Offsets to be isolated
 		return;
 	}
 
@@ -672,7 +687,11 @@ void Splitting::isolateSet(
 					splitting.enumerateSelectorsAtLeaf(tmpS, k, target);
 					if (tmpS.count(i))
 					{
-						splitting.isolateAtLeaf(tmp2, k, target, i);
+						splitting.isolateAtLeaf(
+								tmp2, // destination where the result is stored
+								k, // index of the desired TA
+								target, // TODO: ??
+								i); // selector for unfolding
 						found = true;
 						break;
 					}
