@@ -369,6 +369,7 @@ public:
 	{
 		this->_table["malloc"]                  = builtin_e::biMalloc;
 		this->_table["__builtin_alloca"]        = builtin_e::biMalloc;
+		//this->_table["__builtin_alloca_with_align"] = builtin_e::biMalloc;
 		this->_table["free"]                    = builtin_e::biFree;
 		this->_table["abort"]                   = builtin_e::biAbort;
 		this->_table["___fa_get_nondet_int"]    = builtin_e::biNondet;
