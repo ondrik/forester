@@ -299,7 +299,7 @@ bool Folding::discover1(
 
 	if (forbidden.count(root))
 	{	// in the case the root is not to be folded
-		return nullptr;
+		return false;
 	}
 
 	bool found = false;
@@ -355,7 +355,7 @@ bool Folding::discover2(
 
 	if (forbidden.count(root))
 	{	// in the case the root is not to be folded
-		return nullptr;
+		return false;
 	}
 
 	bool found = false;
@@ -430,7 +430,7 @@ bool Folding::discover3(
 
 	if (forbidden.count(root))
 	{	// in the case the root is not to be folded
-		return nullptr;
+		return false;
 	}
 
 	bool found = false;

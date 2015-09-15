@@ -166,7 +166,7 @@ void Streams::callPrintFnc(
 	std::ostringstream os;
 	std::string str;
 
-	if (loc)
+	if (loc != nullptr)
 	{
 		os << *loc;
 		str = os.str();
