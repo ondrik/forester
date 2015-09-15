@@ -35,7 +35,7 @@ extern "C" {
 //#include "llvm/Transforms/IPO/PassManagerBuilder.h"
 
 #include "llvm/Support/CommandLine.h" // namespace cl
-#include "llvm/DebugInfo.h" // loc
+#include "llvm/IR/DebugInfo.h" // loc
 
 #include <fstream>
 #include <cstring> // memcpy
@@ -251,7 +251,7 @@ void CLPass::setup(void) {
     appendListener("listener=\"locator\"");
 #endif
 
-    const char *cfg = ((CLDryRun)? "unfold_switch,unify_labels_gl" : "unify_labels_fnc");
+	const std::string cfg = ((CLDryRun)? "unfold_switch,unify_labels_gl" : "unify_labels_fnc");
     std::string configCL;
 
     if (CLPPFilename != "-") {
@@ -277,14 +277,15 @@ void CLPass::setup(void) {
     }
 
 
-    if (!CLArgs.empty()) {
-        configCL = "listener=\"easy\" listener_args=\""+ CLArgs
-            +"\" clf=\""+ cfg +"\"";
+    if (!CLDryRun) {
+        configCL = "listener=\"easy\"";
+        if (!CLArgs.empty()) {
+            configCL += " listener_args=\""+ CLArgs + "\"";
+        }
+        configCL += " clf=\""+ cfg +"\"";
         appendListener(configCL.c_str());
         configCL.clear();
-    }
-
-
+    } 
 }
 
 /// append CL object 
