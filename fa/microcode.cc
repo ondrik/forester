@@ -101,11 +101,14 @@ void FI_acc_sel::execute(ExecutionManager& execMan, SymState& state)
 
 	std::vector<FAE*> res;
 
-	Splitting(*state.GetFAE()).isolateOne(
+	Splitting splitting(*state.GetFAE());
+	splitting.isolateOne(
 		/* vector for results */ res,
 		/* index of the desired TA */ data.d_ref.root,
 		/* offset of the selector */ data.d_ref.displ + offset_
 	);
+	roots_ = splitting.getUnfoldedRoots();
+
 
 	for (auto fae : res)
 	{
@@ -129,12 +132,15 @@ void FI_acc_set::execute(ExecutionManager& execMan, SymState& state)
 
 	std::vector<FAE*> res;
 
-	Splitting(*state.GetFAE()).isolateSet(
+	Splitting splitting(*state.GetFAE());
+	splitting.isolateSet(
 		/* vector for results */ res,
 		/* index of the desired TA */ data.d_ref.root,
 		/* base of offsets */ data.d_ref.displ + base_,
 		/* offsets of selectors */ offsets_
 	);
+	roots_ = splitting.getUnfoldedRoots();
+
 
 	for (auto fae : res)
 	{
@@ -158,12 +164,14 @@ void FI_acc_all::execute(ExecutionManager& execMan, SymState& state)
 
 	std::vector<FAE*> res;
 
-	Splitting(*state.GetFAE()).isolateSet(
+	Splitting splitting(*state.GetFAE());
+	splitting.isolateSet(
 		/* vector for results */ res,
 		/* index of the desired TA */ data.d_ref.root,
 		/* base of offsets */ 0,
 		/* offsets of selectors */ state.GetFAE()->getType(data.d_ref.root)->getSelectors()
 	);
+	roots_ = splitting.getUnfoldedRoots();
 
 	for (auto fae : res)
 	{

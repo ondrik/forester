@@ -93,12 +93,15 @@ class FI_acc_sel : public SequentialInstruction
 
 	/// offset of the selector
 	size_t offset_;
+	
+	/// The roots of TA where unfolding was done
+	std::vector<size_t> roots_;
 
 public:
 
 	FI_acc_sel(const CodeStorage::Insn* insn, size_t dst, size_t offset)
 		: SequentialInstruction(insn, fi_type_e::fiUnspec),
-		dst_(dst), offset_(offset) {}
+		dst_(dst), offset_(offset), roots_() {}
 
 	virtual void execute(ExecutionManager& execMan, SymState& state);
 
@@ -128,12 +131,16 @@ class FI_acc_set : public SequentialInstruction
 
 	/// offsets of the selectors
 	std::vector<size_t> offsets_;
+	
+	/// The roots of TA where unfolding was done
+	std::vector<size_t> roots_;
 
 public:
 
 	FI_acc_set(const CodeStorage::Insn* insn, size_t dst, int base,
 		const std::vector<size_t>& offsets)
-		: SequentialInstruction(insn), dst_(dst), base_(base), offsets_(offsets) {}
+		: SequentialInstruction(insn), dst_(dst), base_(base),
+		offsets_(offsets), roots_() {}
 
 	virtual void execute(ExecutionManager& execMan, SymState& state);
 
@@ -158,11 +165,14 @@ class FI_acc_all : public SequentialInstruction
 {
 	/// register holding the reference to the tree automaton
 	size_t dst_;
+	
+	/// The roots of TA where unfolding was done
+	std::vector<size_t> roots_;
 
 public:
 
 	FI_acc_all(const CodeStorage::Insn* insn, size_t dst)
-		: SequentialInstruction(insn), dst_(dst) {}
+		: SequentialInstruction(insn), dst_(dst), roots_() {}
 
 	virtual void execute(ExecutionManager& execMan, SymState& state);
 

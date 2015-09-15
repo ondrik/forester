@@ -315,11 +315,13 @@ void Splitting::enumerateSelectors(
 
 inline void Splitting::unfoldBox(FAE& fae, const size_t root, const Box* box)
 {
+	roots_.push_back(root);
 	Unfolding(fae).unfoldBox(root, box);
 }
 
 inline void Splitting::unfoldBoxes(FAE& fae, const size_t root, const std::set<const Box*>& boxes)
 {
+	roots_.push_back(root);
 	Unfolding(fae).unfoldBoxes(root, boxes);
 }
 

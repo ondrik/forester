@@ -48,6 +48,9 @@ private:  // data members
 	/// The Forest Automaton that will be split
 	FAE& fae_;
 
+	/// The roots of TA where unfolding was done
+	std::vector<size_t> roots_;
+
 private:  // methods
 
 	/**
@@ -135,8 +138,21 @@ private:  // methods
 
 public:   // methods
 
-	Splitting(FAE& fae) : fae_(fae) {}
-	Splitting(const FAE& fae) : fae_(const_cast<FAE&>(fae)) {}
+	Splitting(FAE& fae) : fae_(fae), roots_() {}
+	Splitting(const FAE& fae) : fae_(const_cast<FAE&>(fae)), roots_() {}
+
+	/**
+	 * @brief Returns a vector of the roots of TA under which
+	 *        box unfolding was done
+	 *
+	 *  Returns a vector of the roots of TA of FA fae_ under which
+	 *  box unfolding was done
+	 */
+	std::vector<size_t> getUnfoldedRoots()
+	{
+		return roots_;
+	}
+
 
 	/**
 	 * @brief  Isolates a single selector from a root
