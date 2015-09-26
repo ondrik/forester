@@ -46,6 +46,7 @@
 #include "microcode.hh"
 #include "regdef.hh"
 #include "compiler.hh"
+#include "types.hh"
 
 
 // anonymous namespace
@@ -333,6 +334,7 @@ enum class builtin_e
 {
 	biNone,
 	biMalloc,
+	biAlloca,
 	biFree,
 	biNondet,
 	biFix,
@@ -368,7 +370,7 @@ public:
 		_table{}
 	{
 		this->_table["malloc"]                  = builtin_e::biMalloc;
-		this->_table["__builtin_alloca"]        = builtin_e::biMalloc;
+		this->_table["__builtin_alloca"]        = builtin_e::biAlloca;
 		//this->_table["__builtin_alloca_with_align"] = builtin_e::biMalloc;
 		this->_table["free"]                    = builtin_e::biFree;
 		this->_table["abort"]                   = builtin_e::biAbort;
@@ -1543,7 +1545,7 @@ protected:
 	 *
 	 * @param[in]  insn  The corresponding instruction in the code storage
 	 */
-	void compileMalloc(const CodeStorage::Insn& insn)
+	void compileAllocation(const CodeStorage::Insn& insn, const alloc_type_e allocType)
 	{
 		const cl_operand& dst = insn.operands[0];
 		const cl_operand& src = insn.operands[2];
@@ -1568,7 +1570,7 @@ protected:
 
 			// build a node with proper selectors
 			std::vector<SelData> sels;
-			NodeBuilder::buildNode(sels, dst.type->items[0].type);
+			NodeBuilder::buildNode(sels, dst.type->items[0].type, 0, "", allocType);
 
 			// get the name of the target type
 			std::string typeName;
@@ -2063,7 +2065,10 @@ protected:
 		switch (builtinTable_[insn.operands[1].data.cst.data.cst_fnc.name])
 		{	// switch according to the name of the function
 			case builtin_e::biMalloc:
-				compileMalloc(insn);
+				compileAllocation(insn, alloc_type_e::t_malloc);
+				return;
+			case builtin_e::biAlloca:
+				compileAllocation(insn, alloc_type_e::t_alloca);
 				return;
 			case builtin_e::biFree:
 				compileFree(insn);

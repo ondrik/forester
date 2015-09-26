@@ -52,7 +52,8 @@ struct NodeBuilder {
 		std::vector<SelData>&                    nodeInfo,
 		const cl_type*                           type,
 		int                                      offset = 0,
-		const std::string&                       name = "");
+		const std::string&                       name = "",
+		const alloc_type_e                       allocType = alloc_type_e::t_malloc);
 
 
 	/**
@@ -70,7 +71,8 @@ struct NodeBuilder {
 	static void buildNode(
 		std::vector<size_t>&                     nodeInfo,
 		const cl_type*                           type,
-		int                                      offset = 0);
+		int                                      offset = 0,
+		const alloc_type_e                       allocType = alloc_type_e::t_malloc);
 
 
 	/**

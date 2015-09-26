@@ -45,9 +45,10 @@ void NodeBuilder::buildNode(
 	std::vector<SelData>&                   nodeInfo,
 	const cl_type*                          type,
 	int                                     offset,
-	const std::string&                      name)
+	const std::string&                      name,
+	const alloc_type_e                      allocType)
 {
-	auto structFunct = [&nodeInfo, &type, &offset, &name](int i) -> void {
+	auto structFunct = [&nodeInfo, &type, &offset, &name, &allocType](int i) -> void {
 		const cl_type_item& item = type->items[i];
 
 		std::string ndName = name + '.';
@@ -64,11 +65,11 @@ void NodeBuilder::buildNode(
 			ndName += "(anon union)";
 		}
 
-		NodeBuilder::buildNode(nodeInfo, item.type, offset + item.offset, ndName);
+		NodeBuilder::buildNode(nodeInfo, item.type, offset + item.offset, ndName, allocType);
 	};
 
-	auto defaultFunct = [&nodeInfo, &type, &offset, &name] () -> void {
-			nodeInfo.push_back(SelData(offset, type->size, 0, name));
+	auto defaultFunct = [&nodeInfo, &type, &offset, &name, &allocType] () -> void {
+			nodeInfo.push_back(SelData(offset, type->size, 0, name, allocType));
 	};
 
 	internalBuildNode(type, structFunct, defaultFunct);
@@ -78,11 +79,12 @@ void NodeBuilder::buildNode(
 void NodeBuilder::buildNode(
 	std::vector<size_t>&                      nodeInfo,
 	const cl_type*                            type,
-	int                                       offset)
+	int                                       offset,
+	const alloc_type_e                        allocType)
 {
-	auto structFunct = [&nodeInfo, &type, &offset](int i) -> void {
+	auto structFunct = [&nodeInfo, &type, &offset, &allocType](int i) -> void {
 			NodeBuilder::buildNode(nodeInfo, type->items[i].type,
-				offset + type->items[i].offset);
+				offset + type->items[i].offset, allocType);
 	};
 
 	auto defaultFunct = [&nodeInfo, &offset] () -> void {

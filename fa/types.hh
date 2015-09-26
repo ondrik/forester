@@ -36,6 +36,19 @@
  */
 
 /**
+ * @brief Enumeration for type of allocation of memory
+ *
+ * Determines whether a memory was allocated by
+ * malloc on heap or alloca on stack
+ */
+enum class alloc_type_e
+{
+	t_malloc,
+	t_alloca
+};
+
+
+/**
  * @brief  Structure describing selectors
  *
  * This structure describes data selectors.
@@ -48,6 +61,7 @@ struct SelData
 	int          size;    ///< size of the type
 	int          displ;   ///< @todo write dox
 	std::string  name;    ///< name of the selector
+	alloc_type_e allocType; ///< type of allocation - malloc, alloca, etc.
 
 	/**
 	 * @brief  Constructor
@@ -63,18 +77,21 @@ struct SelData
 		size_t                   offset,
 		int                      size,
 		int                      displ,
-		const std::string&       name) :
+		const std::string&       name,
+		const alloc_type_e       alloc = alloc_type_e::t_malloc) :
 		offset(offset),
 		size(size),
 		displ(displ),
-		name(name)
+		name(name),
+		allocType(alloc)
 	{ }
 
 	SelData(const SelData&     copySel) :
 		offset(copySel.offset),
 		size(copySel.size),
 		displ(copySel.displ),
-		name(copySel.name)
+		name(copySel.name),
+		allocType(copySel.allocType)
 	{ }
 
 
@@ -83,7 +100,8 @@ struct SelData
 		offset(tempSel.offset),
 		size(tempSel.size),
 		displ(tempSel.displ),
-		name(std::move(tempSel.name))
+		name(std::move(tempSel.name)),
+		allocType(tempSel.allocType)
 	{ }
 
 #if 0
@@ -161,7 +179,8 @@ struct SelData
 			os << '+';
 		}
 
-		return os << x.displ << ']';
+		os << x.displ << ']';
+		return os << ":" << ((x.allocType == alloc_type_e::t_malloc) ? "malloc" : "alloca");
 	}
 };
 
