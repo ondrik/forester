@@ -20,7 +20,6 @@
 // Forester headers
 #include "virtualmachine.hh"
 
-
 void VirtualMachine::transitionLookup(
 	const Transition&              transition,
 	size_t                         base,
@@ -465,4 +464,73 @@ void VirtualMachine::nodeCopy(
 	TreeAut* tmp = fae_.allocTA();
 	*tmp = *srcVM.fae_.getRoot(srcRoot);
 	fae_.setRoot(dstRoot, std::shared_ptr<TreeAut>(tmp));
+}
+
+template<class C, class F>
+C VirtualMachine::traverseTARootSelectors(F processSelector, const TreeAut& ta)
+{
+	C cumulative;
+
+	for (const auto& trans : ta)
+	{
+		if (ta.isFinalState(trans.GetParent()) && TreeAut::GetSymbol(trans)->isNode())
+		{ // it is under a root and it is a common label, not a box
+			const auto sels = TreeAut::GetSymbol(trans)->getSels();
+			if (sels == nullptr)
+			{
+				continue;
+			}
+
+			for (const SelData& sel : *sels)
+			{
+				cumulative = processSelector(sel, cumulative);
+			}
+		}
+	}
+
+	return cumulative;
+}
+
+template<class C, class F, class G>
+void VirtualMachine::traverseFARootSelectors(F processSelector, G processTA)
+{
+	for (size_t root = 0; root < this->fae_.getRootCount(); ++root)
+	{
+		const auto& ta = this->fae_.getRoot(root);
+		if (ta == nullptr)
+		{
+			continue;
+		}
+
+		const C cumulative = traverseTARootSelectors<C>(processSelector, *ta);
+
+		processTA(root, cumulative);
+	}
+}
+
+void VirtualMachine::removeAlloca()
+{
+	std::vector<size_t> allocaRoots;
+
+	auto processTA = [&allocaRoots] (const size_t& root, const AllocationTypeDetector atd) {
+		if (atd.isAllocaPresented && !atd.isMallocPresented)
+		{
+			allocaRoots.push_back(root);
+		}
+	};
+
+
+	traverseFARootSelectors<AllocationTypeDetector>(this->detectSelectorAllocation, processTA);
+	for (const size_t root : allocaRoots)
+	{
+		this->nodeDelete(root);
+	}
+}
+
+bool VirtualMachine::isAllocaTA(const size_t root)
+{
+	const AllocationTypeDetector atd = traverseTARootSelectors<AllocationTypeDetector>(
+			this->detectSelectorAllocation, *this->fae_.getRoot(root));
+
+	return atd.isAllocaPresented && !atd.isMallocPresented;
 }

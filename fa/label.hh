@@ -152,6 +152,13 @@ public:   // methods
 		return this->data.id;
 	}
 
+	const std::vector<SelData>* getSels() const
+	{
+		assert(node_type::n_node == type_);
+
+		return this->node.sels;
+	}
+
 	const AbstractBox* boxLookup(size_t offset, const AbstractBox* def) const
 	{
 		assert(node_type::n_node == type_);

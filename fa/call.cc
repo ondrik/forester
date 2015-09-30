@@ -21,6 +21,7 @@
 #include "call.hh"
 #include "executionmanager.hh"
 #include "streams.hh"
+#include "virtualmachine.hh"
 
 // FI_ret
 void FI_ret::execute(ExecutionManager& execMan, SymState& state)
@@ -31,6 +32,10 @@ void FI_ret::execute(ExecutionManager& execMan, SymState& state)
 
 	SymState* tmpState = execMan.createChildState(state,
 		static_cast<AbstractInstruction*>(state.GetReg(dst_).d_native_ptr));
+
+	std::shared_ptr<FAE> fae = std::shared_ptr<FAE>(new FAE(*(tmpState->GetFAE())));
+	VirtualMachine(*fae).removeAlloca();
+	tmpState->SetFAE(fae);
 
 	execMan.enqueue(tmpState);
 }

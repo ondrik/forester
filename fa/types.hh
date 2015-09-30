@@ -159,6 +159,11 @@ struct SelData
 			this->displ == rhs.displ;
 	}
 
+	bool isAlloca() const
+	{
+		return this->allocType == alloc_type_e::t_alloca;
+	}
+
 	/**
 	 * @brief  The output stream operator
 	 *
@@ -179,8 +184,8 @@ struct SelData
 			os << '+';
 		}
 
-		os << x.displ << ']';
-		return os << ":" << ((x.allocType == alloc_type_e::t_malloc) ? "malloc" : "alloca");
+		os << x.displ;
+		return os << ":" << ((x.allocType == alloc_type_e::t_malloc) ? "malloc" : "alloca") << ']';
 	}
 };
 

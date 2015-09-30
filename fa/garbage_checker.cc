@@ -28,6 +28,7 @@
 #include "error_messages.hh"
 #include "programerror.hh"
 #include "streams.hh"
+#include "virtualmachine.hh"
 
 
 void GarbageChecker::traverse(
@@ -67,7 +68,7 @@ void GarbageChecker::checkGarbage(
 		if (!fae.getRoot(i))
 			continue;
 
-		if (!visited[i])
+		if (!visited[i] && !VirtualMachine(fae).isAllocaTA(i))
 		{
 			FA_DEBUG_AT(1, "the root " << i << " is not referenced anymore ... "
 				<< fae.connectionGraph.data[i]);

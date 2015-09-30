@@ -102,11 +102,40 @@ public:   // data types
 		{}
 	};
 
+	struct AllocationTypeDetector
+	{
+		bool isMallocPresented;
+		bool isAllocaPresented;
+
+		AllocationTypeDetector() : isMallocPresented(false), isAllocaPresented(false) {}
+		AllocationTypeDetector(const AllocationTypeDetector& atd) :
+			isMallocPresented(atd.isMallocPresented),
+			isAllocaPresented(atd.isAllocaPresented) {}
+	};
 
 private:   // data members
 
 	/// Reference to the forest automaton representing the environment
 	FAE& fae_;
+
+	// Functor checks whether a given selector is allocated by alloca or malloc
+	// and returns this information in structure AllocationTypeDetector
+	const std::function<AllocationTypeDetector(const SelData&, AllocationTypeDetector)> detectSelectorAllocation = [](
+			const SelData& sel,
+			AllocationTypeDetector atd) -> AllocationTypeDetector
+	{
+		if (sel.isAlloca())
+		{
+			atd.isAllocaPresented = true;
+		}
+		else
+		{ // so it is malloc
+			atd.isMallocPresented = true;
+		}
+
+		return atd;
+	};
+
 
 private:// methods
 
@@ -561,6 +590,32 @@ public:
 		size_t                          root,
 		std::set<size_t>&               out) const;
 
+
+	/**
+	 * @brief Removes all pure alloca TA
+	 *
+	 * Removes all TA that represents only memory
+	 * allocated by alloca
+	 */
+	void removeAlloca();
+
+	bool isAllocaTA(const size_t root);
+
+	/*
+	 * @brief Function traverse over all selectors under roots of each TA
+	 *
+	 * Functions traveses over all selectors under roots of each TA.
+	 * For each selector @p processSelector functor is called.
+	 * This functor has two parameter, the selector and cumulative of type C
+	 * what is a value which cumulated over selectors.
+	 * For each finished TA is then called processTA functor called
+	 * with cumulated value in cumulative.
+	 */
+	template<class C, class F, class G>
+	void traverseFARootSelectors(F processSelector, G processTA);
+	
+	template<class C, class F>
+	C traverseTARootSelectors(F processSelector, const TreeAut& ta);
 
 public:
 
