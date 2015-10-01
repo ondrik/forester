@@ -1,0 +1,2 @@
+test-f0121.c:59: note: free (t)
+test-f0121.c:59: error: dereferenced value is not a valid reference [(undef)]

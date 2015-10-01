@@ -1,0 +1,2 @@
+test-f0119.c:63: note: end = end->next
+test-f0119.c:63: error: dereferenced value is not a valid reference [(int)0]
