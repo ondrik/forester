@@ -127,8 +127,8 @@ def execute(args):
             if prop is None or prop not in [VALID_FREE, VALID_DEREF, VALID_MEMTRACK]:
                 print "FALSE" if args[FALSE_PARAM] else "UNKNOWN"
             else:
-                if VALID_DEREF in getProperties(parseProps(formulas), lines):
-                    print "FALSE("+VALID_DEREF+")" if args[FALSE_PARAM] else "UNKNOWN"
+                if VALID_MEMTRACK in getProperties(parseProps(formulas), lines):
+                    print "FALSE("+VALID_MEMTRACK+")" if args[FALSE_PARAM] else "UNKNOWN"
                 else:
                     print "FALSE("+prop+")" if args[FALSE_PARAM] else "UNKNOWN"
     if args[TIME_PARAM]:
