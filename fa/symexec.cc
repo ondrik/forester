@@ -453,7 +453,7 @@ protected:
         }
         else if (FA_USE_PREDICATE_ABSTRACTION)
         {	// in case we are using predicate abstraction
-            FA_LOG("Executing backward run...");
+            FA_LOG("Executing backward run because of " << e.what());
 
             SymState* failPoint = nullptr;
             predicates_.clear();
