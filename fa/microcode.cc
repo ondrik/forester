@@ -465,7 +465,7 @@ void FI_node_create::execute(ExecutionManager& execMan, SymState& state)
 	const Data& srcData = state.GetReg(src_);
 
 	// TODO: is this alright? Shouldn't dst_ be modified?
-	if (srcData.isRef() || srcData.isNull())
+	if (srcData.isRef() || srcData.isNull() || !srcData.isVoidPtr())
 	{	// this is to handle the special case that appears e.g. in test-p0001.c
 		// Jiri claims it is a horrible solution of the issue and suggests to do it
 		// in a better way :-)
