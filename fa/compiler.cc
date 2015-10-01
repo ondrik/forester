@@ -335,6 +335,7 @@ enum class builtin_e
 	biNone,
 	biMalloc,
 	biAlloca,
+	biMemset,
 	biFree,
 	biNondet,
 	biFix,
@@ -371,6 +372,7 @@ public:
 	{
 		this->_table["malloc"]                  = builtin_e::biMalloc;
 		this->_table["__builtin_alloca"]        = builtin_e::biAlloca;
+		this->_table["memset"]                  = builtin_e::biMemset;
 		//this->_table["__builtin_alloca_with_align"] = builtin_e::biMalloc;
 		this->_table["free"]                    = builtin_e::biFree;
 		this->_table["abort"]                   = builtin_e::biAbort;
@@ -1445,8 +1447,7 @@ protected:
 		size_t srcReg = cLoadOperand(dstReg, src, insn);
 
 		if (src.type->code == cl_type_e::CL_TYPE_PTR &&
-			src.type->items[0].type->code == cl_type_e::CL_TYPE_VOID &&
-			dst.type->items[0].type->code != cl_type_e::CL_TYPE_VOID)
+			src.type->items[0].type->code == cl_type_e::CL_TYPE_VOID)
 		{	// in case the source is a void pointer and the destination is not;
 			// this happens for example at the call of malloc, when conversion from
 			// a void pointer to a typed pointer is done
@@ -1475,7 +1476,8 @@ protected:
 					/* reg with the value from which the node is to be created */ srcReg,
 					/* size of the created node */ dst.type->items[0].type->size,
 					/* type information */ boxMan_.getTypeInfo(typeName),
-					/* selectors of the node */ sels
+					/* selectors of the node */ sels,
+					/* check size */ dst.type->items[0].type->code != cl_type_e::CL_TYPE_VOID
 				)
 			);
 		}
@@ -1567,7 +1569,6 @@ protected:
 
 		if (dst.type->items[0].type->code != cl_type_e::CL_TYPE_VOID)
 		{	// in case the destination pointer is not a void pointer
-
 			// build a node with proper selectors
 			std::vector<SelData> sels;
 			NodeBuilder::buildNode(sels, dst.type->items[0].type, 0, "", allocType);
@@ -2069,6 +2070,10 @@ protected:
 				return;
 			case builtin_e::biAlloca:
 				compileAllocation(insn, alloc_type_e::t_alloca);
+				return;
+			case builtin_e::biMemset:
+				throw NotImplementedException(
+						insn.operands[1].data.cst.data.cst_fnc.name);
 				return;
 			case builtin_e::biFree:
 				compileFree(insn);
