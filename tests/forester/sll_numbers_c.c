@@ -29,6 +29,7 @@ int main() {
     p->n = t;
     p = p->n;
   }
+  p->h = 2;
   while (__VERIFIER_nondet_int()) {
     p->h = 2;
     t = (List) malloc(sizeof(struct node));
