@@ -36,6 +36,7 @@ usage_long() {
   echo "  -c,   --compile-only             only compile, do not run the analysis"
   echo "  -t,   --print-trace              print the trace for detected errors"
   echo "  -tu,  --print-trace-ucode        print the microcode trace for detected errors"
+  echo "  -sv,  --print-svcomp-trace       print the sv-comp trace for detected errors"
   echo "  -op,  --output-ucode       FILE  write the output microcode (for -p) to FILE"
   echo "  -opo, --output-orig-code   FILE  write the input code (for -po) to FILE"
   echo "  -ot,  --output-trace       FILE  write the trace (for -t) to FILE"
@@ -100,6 +101,8 @@ while [ "$1" != "" ]; do
     -t   | --print-trace )          FA_ARGS="${FA_ARGS};print-trace"
                                     ;;
     -tu  | --print-trace-ucode )    FA_ARGS="${FA_ARGS};print-ucode-trace"
+                                    ;;
+    -sv  | --print-trace-svcomp )   FA_ARGS="${FA_ARGS};print-trace-svcomp"
                                     ;;
     -op  | --output-ucode )         check_present $1 $2
                                     shift
