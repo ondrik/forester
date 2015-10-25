@@ -59,6 +59,7 @@ void reportErrorNoLocation(const char* errMsg)
 #include "fixpointinstruction.hh"
 #include "forestautext.hh"
 #include "memplot.hh"
+#include "microcode.hh"
 #include "programconfig.hh"
 #include "programerror.hh"
 #include "restart_request.hh"
@@ -281,6 +282,32 @@ protected:
 		}
 	}
 
+	void printTraceInternal(
+			const std::vector<const CodeStorage::Insn *> trace)
+	{
+		// prepare output
+		std::streambuf *buf;
+		std::ofstream of;
+		if (conf_.traceFile.length() > 0)
+		{
+			of.open(conf_.traceFile, std::ofstream::out);
+			buf = of.rdbuf();
+		}
+		else
+		{
+			buf = std::cerr.rdbuf();
+		}
+
+		std::ostream out(buf);
+		SVTraceLite svPrinter;
+		svPrinter.printTrace(trace, out);
+
+		if (conf_.traceFile.length() > 0)
+		{
+			of.close();
+		}
+	}
+
 	void printTrace(const cl_loc *location, const SymState::Trace &origTrace)
 	{
 		if (conf_.printSVTrace)
@@ -298,31 +325,7 @@ protected:
 				}
 			}
 
-			// prepare output
-			std::streambuf *buf;
-			std::ofstream of;
-			if (conf_.traceFile.length() > 0)
-			{
-				of.open(conf_.traceFile, std::ofstream::out);
-				buf = of.rdbuf();
-			}
-			else
-			{
-				buf = std::cerr.rdbuf();
-			}
-			std::ostream out(buf);
-
-			// get file name from a instruction. it is not neccessary to read it
-			// from the first instruction but it is needed to read the filename
-			//const char* filename = (trace.size() > 0) ? trace[0]->loc.file : NULL;
-
-			SVTraceLite svPrinter;
-			svPrinter.printTrace(trace, out);
-
-			if (conf_.traceFile.length() > 0)
-			{
-				of.close();
-			}
+			printTraceInternal(trace);
 		}
 
 		if (conf_.printUcodeTrace)
@@ -695,7 +698,17 @@ public:   // methods
 			this->printBoxes();
 
 			for (auto instr : assembly_.code_)
-			{	// print out all fixpoints
+			{
+				if (instr->getType() == fi_type_e::fiCheck)
+				{
+					if ((static_cast<FI_check *>(instr))->wasGarbageFound())
+					{
+						std::vector<const CodeStorage::Insn *> trace;
+						printTraceInternal(trace);
+					}
+				}
+
+				// print out all fixpoints
 				if (instr->getType() != fi_type_e::fiFix)
 				{
 					continue;

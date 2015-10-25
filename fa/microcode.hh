@@ -831,6 +831,9 @@ public:
 		return os << "check ";
 	}
 
+	bool wasGarbageFound() {
+		return garbageRoots_.size() != 0;
+	}
 };
 
 /**
