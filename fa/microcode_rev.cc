@@ -230,7 +230,11 @@ SymState* FI_node_create::reverseAndIsect(
 	assert(oldVal.isVoidPtr());
 
 	// assert that the sizes are OK
-	assert(oldVal.d_void_ptr_size == size_);
+	// Don't if this is really true everytime
+	// Consider allocation void *i = malloc(16); and another allocation
+	// with different size and a spurious path where an assignemnt
+	// between these pointers is done
+	// assert(oldVal.d_void_ptr_size == size_);
 
 	// retrieve the reference to the created node
 	const Data& nodeRef = bwdSucc.GetReg(dst_);
