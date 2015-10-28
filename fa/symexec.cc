@@ -699,7 +699,7 @@ public:   // methods
 
 			for (auto instr : assembly_.code_)
 			{
-				if (instr->getType() == fi_type_e::fiCheck)
+				if (conf_.printSVTrace && instr->getType() == fi_type_e::fiCheck)
 				{
 					if ((static_cast<FI_check *>(instr))->wasGarbageFound())
 					{
