@@ -1447,11 +1447,13 @@ protected:
 		size_t srcReg = cLoadOperand(dstReg, src, insn);
 
 		if (src.type->code == cl_type_e::CL_TYPE_PTR &&
-			src.type->items[0].type->code == cl_type_e::CL_TYPE_VOID)
-		{	// in case the source is a void pointer and the destination is not;
+			src.type->items[0].type->code == cl_type_e::CL_TYPE_VOID
+			/* && dst.type->items[0].type->code != cl_type_e::CL_TYPE_VOID*/)
+		{	// in case the source is a void pointer;
 			// this happens for example at the call of malloc, when conversion from
 			// a void pointer to a typed pointer is done
 
+			// TODO refactore creating a node to a function
 			// build a node according to the destination type
 			std::vector<SelData> sels;
 			NodeBuilder::buildNode(sels, dst.type->items[0].type);
@@ -1567,8 +1569,19 @@ protected:
 			/* reg with the number of allocated bytes */ srcReg
 		));
 
-		if (dst.type->items[0].type->code != cl_type_e::CL_TYPE_VOID)
+		const int nodeSize = (
+				dst.type->items[0].type->code == cl_type_e::CL_TYPE_VOID &&
+				src.code == cl_operand_e::CL_OPERAND_CST &&
+				src.type->is_unsigned &&
+				src.data.cst.code ==  cl_type_e::CL_TYPE_INT)
+			? src.data.cst.data.cst_uint.value
+			: dst.type->items[0].type->size;
+
+		if ((dst.type->items[0].type->code != cl_type_e::CL_TYPE_VOID ||
+			!dst.data.var->artificial) && nodeSize > 0)
 		{	// in case the destination pointer is not a void pointer
+			// or is a void pointer but there is an assigment to
+			// not auxilliary variable, e.g. void x = malloc()
 			// build a node with proper selectors
 			std::vector<SelData> sels;
 			NodeBuilder::buildNode(sels, dst.type->items[0].type, 0, "", allocType);
@@ -1588,7 +1601,7 @@ protected:
 				&insn,
 				/* dst reg for the pointer to the node */ srcReg,
 				/* reg with the value from which the node is to be created */ srcReg,
-				/* size of the created node*/ dst.type->items[0].type->size,
+				/* size of the created node*/ nodeSize,
 				/* type information */ boxMan_.getTypeInfo(typeName),
 				/* selectors of the node */ sels,
 				dst.type->items[0].type->code != cl_type_e::CL_TYPE_VOID
