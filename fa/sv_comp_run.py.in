@@ -67,7 +67,7 @@ def getPropertyFile(filePath):
     else:
         dirname = os.path.dirname(filePath)
         if not os.path.isfile(os.path.join(dirname, ALL_PRP)):
-                raise Exception('Properties file does not exists')
+                raise Exception('Properties file ' + os.path.join(dirname, ALL_PRP) + ' does not exists')
         else:
             return os.path.join(dirname, ALL_PRP)
 
