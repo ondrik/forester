@@ -206,6 +206,7 @@ enum class data_type_e
 	t_int,            ///< integer
 	t_bool,           ///< Boolean
 	t_struct,         ///< structure
+	t_fnc,            ///< function
 	t_other           ///< other type
 };
 
@@ -248,6 +249,7 @@ struct Data
 	{
 		void*	d_native_ptr;               ///< real memory pointer
 		size_t	d_void_ptr_size;            ///< void pointer size
+		const char*   d_fnc_name;                 ///< name of a function
 
 		/// information about reference
 		struct {
@@ -301,6 +303,8 @@ struct Data
 				this->d_bool = data.d_bool; break;
 			case data_type_e::t_struct:
 				this->d_struct = new std::vector<item_info>(*data.d_struct); break;
+			case data_type_e::t_fnc:
+				this->d_fnc_name = data.d_fnc_name; break;
 			default: break;
 		}
 	}
@@ -346,6 +350,8 @@ struct Data
 				this->d_bool = rhs.d_bool; break;
 			case data_type_e::t_struct:
 				this->d_struct = new std::vector<item_info>(*rhs.d_struct); break;
+			case data_type_e::t_fnc:
+				this->d_fnc_name = rhs.d_fnc_name; break;
 			default: break;
 		}
 
@@ -471,6 +477,13 @@ struct Data
 		return data;
 	}
 
+	static Data createFnc(const char *name)
+	{
+		Data data(data_type_e::t_fnc);
+		data.d_fnc_name = name;
+		return data;
+	}
+
 	/**
 	 * @brief Creates new data with old data and new value
 	 *
@@ -501,6 +514,10 @@ struct Data
 			case (data_type_e::t_ref):
 			{
 				return createUndef();
+			}
+			case (data_type_e::t_fnc):
+			{
+				return createFnc(oldData.d_fnc_name);
 			}
 			default:
 			{

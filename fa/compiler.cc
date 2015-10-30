@@ -716,8 +716,8 @@ protected:
 						append(new FI_load_cst(&insn, dst, Data::createUnknw()));
 						break;
 
+					case cl_type_e::CL_TYPE_FNC:
 					default:
-						std::cerr << op.data.cst.code << '\n';
 						throw NotImplementedException(translTypeCode(op.data.cst.code) +
 							": pointer constant type", &insn.loc);
 				}
