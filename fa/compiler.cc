@@ -717,6 +717,7 @@ protected:
 						break;
 
 					default:
+						std::cerr << op.data.cst.code << '\n';
 						throw NotImplementedException(translTypeCode(op.data.cst.code) +
 							": pointer constant type", &insn.loc);
 				}
@@ -1644,12 +1645,18 @@ protected:
 		const size_t valToSetReg = cLoadOperand(1, valToSet, insn);
 		const size_t bytesCountReg = cLoadOperand(2, bytesCount, insn);
 
+		if (ptrToMemory.type->items[0].type->code == cl_type_e::CL_TYPE_VOID)
+		{
+			throw NotImplementedException("Memset of void");
+		}
+
 		append(new FI_memset(
 				&insn,
 				/* dst register the pointer to the node */ memReg,
 				/* reg with the ref to memory to be set */ memReg,
 				/* value to be set */ valToSetReg,
-				/* number of bytes to be set */ bytesCountReg
+				/* number of bytes to be set */ bytesCountReg,
+				/* size of underlying structure */ ptrToMemory.type->items[0].type->size
 		));
 
 		// add an instruction to check invariants of the virtual machine
@@ -2126,6 +2133,7 @@ protected:
 				return;
 			case builtin_e::biMemset:
 				compileMemset(insn);
+				++allocationCount_;
 				return;
 				//throw NotImplementedException(
 				//		insn.operands[1].data.cst.data.cst_fnc.name);

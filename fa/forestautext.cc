@@ -109,6 +109,9 @@ TreeAut& FAE::invalidateReference(
 }
 
 
+// TODO: I really need refactore 
+// TODO: Error: You have to relable all states that
+// were changed because of new data value
 void FAE::setLabelsToValue(
 	const size_t           root,
 	const int              value,
@@ -150,6 +153,7 @@ void FAE::setLabelsToValue(
 
 	};
 
+	// Copy transitions except the accepting ones and the ones under root
 	std::shared_ptr<TreeAut> newTa = std::shared_ptr<TreeAut>(new TreeAut());
 	ta->copyTransitionsWithFunctor(*newTa, CopyFunctor(underRoot, ta->getFinalStates()));
 	newTa->addFinalStates(ta->getFinalStates());
@@ -179,8 +183,7 @@ void FAE::setLabelsToValue(
 				}
 				else
 				{
-					//newTa->addTransition((*childIter).GetChildren(), this->boxMan->lookupLabel(Data::createInt(value), true), childState);
-					childState = this->addData(*newTa, Data::createInt(value));
+					childState = this->addData(*newTa, Data::createNewValue(childLabel.getData(), value));
 				}
 			}
 			

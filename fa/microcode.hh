@@ -667,12 +667,16 @@ class FI_memset : public RegisterAssignment
 	/// Reg with number of bytes in memory to set
 	size_t bytesCountReg_;
 
+	/// Size of underlying data
+	size_t size_;
+
 public:
 
 	FI_memset(const CodeStorage::Insn* insn, const size_t dst,
-			const size_t src, const int valToSetReg, const size_t bytesCountReg)
+			const size_t src, const int valToSetReg, const size_t bytesCountReg,
+			const int size)
 		: RegisterAssignment(insn, dst), src_(src), valToSetReg_(valToSetReg),
-		  bytesCountReg_(bytesCountReg)
+		  bytesCountReg_(bytesCountReg), size_(size)
 	{ }
 
 	virtual void execute(ExecutionManager& execMan, SymState& state);

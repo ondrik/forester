@@ -30,6 +30,8 @@
 // Boost headers
 #include <boost/functional/hash.hpp>
 
+#include "notimpl_except.hh"
+
 /**
  * @file types.hh
  * Data and SelData - data types for describing program data and selectors
@@ -467,6 +469,44 @@ struct Data
 		Data data(data_type_e::t_bool);
 		data.d_bool = x;
 		return data;
+	}
+
+	/**
+	 * @brief Creates new data with old data and new value
+	 *
+	 * Creates a new data object with old value and new value
+	 *
+	 * @returns A created data object
+	 */
+	static Data createNewValue(const Data& oldData, const int value)
+	{
+		switch (oldData.type)
+		{
+			case (data_type_e::t_bool):
+			{
+				return createBool(value != 0);
+			}
+			case (data_type_e::t_int):
+			{
+				return createInt(value);
+			}
+			case (data_type_e::t_void_ptr):
+			{
+				return createVoidPtr(oldData.d_void_ptr_size);
+			}
+			case (data_type_e::t_struct):
+			{
+				throw NotImplementedException("Memset of structure");
+			}
+			case (data_type_e::t_ref):
+			{
+				return createUndef();
+			}
+			default:
+			{
+				return Data(oldData);
+			}
+		}
 	}
 
 #if 0
