@@ -1581,7 +1581,7 @@ protected:
 			!dst.data.var->artificial) && nodeSize > 0)
 		{	// in case the destination pointer is not a void pointer
 			// or is a void pointer but there is an assigment to
-			// not auxilliary variable, e.g. void x = malloc()
+			// a non-auxilliary variable, e.g. void x = malloc()
 			// build a node with proper selectors
 			std::vector<SelData> sels;
 			NodeBuilder::buildNode(sels, dst.type->items[0].type, 0, "", allocType);
@@ -1618,6 +1618,46 @@ protected:
 		cKillDeadVariables(insn.varsToKill, insn);
 	}
 
+	/**
+	 * @brief Compile allocation of memory
+	 *
+	 * Compiles instructions modelling memset
+	 * behaviour
+	 *
+	 * @param[in]  insn  The corresponding instruction in the code storage
+	 */
+	void compileMemset(const CodeStorage::Insn& insn)
+	{
+		const cl_operand& dst = insn.operands[0];
+		const cl_operand& ptrToMemory = insn.operands[2];
+		const cl_operand& valToSet = insn.operands[3];
+		const cl_operand& bytesCount = insn.operands[4];
+
+		assert(dst.code == cl_operand_e::CL_OPERAND_VOID);
+		assert(ptrToMemory.type->code == cl_type_e::CL_TYPE_PTR);
+		assert(valToSet.type->code == cl_type_e::CL_TYPE_INT);
+		assert(bytesCount.type->code == cl_type_e::CL_TYPE_INT);
+		assert(bytesCount.type->is_unsigned);
+
+		const size_t dstReg = lookupStoreReg(ptrToMemory, 0);
+		const size_t memReg = cLoadOperand(dstReg, ptrToMemory, insn);
+		const size_t valToSetReg = cLoadOperand(1, valToSet, insn);
+		const size_t bytesCountReg = cLoadOperand(2, bytesCount, insn);
+
+		append(new FI_memset(
+				&insn,
+				/* dst register the pointer to the node */ memReg,
+				/* reg with the ref to memory to be set */ memReg,
+				/* value to be set */ valToSetReg,
+				/* number of bytes to be set */ bytesCountReg
+		));
+
+		// add an instruction to check invariants of the virtual machine
+		append(new FI_check(&insn));
+
+		// kill dead variables
+		cKillDeadVariables(insn.varsToKill, insn);
+	}
 
 	/**
 	 * @brief  Compile freeing of memory
@@ -2085,8 +2125,10 @@ protected:
 				compileAllocation(insn, alloc_type_e::t_alloca);
 				return;
 			case builtin_e::biMemset:
-				throw NotImplementedException(
-						insn.operands[1].data.cst.data.cst_fnc.name);
+				compileMemset(insn);
+				return;
+				//throw NotImplementedException(
+				//		insn.operands[1].data.cst.data.cst_fnc.name);
 				return;
 			case builtin_e::biFree:
 				compileFree(insn);

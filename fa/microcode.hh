@@ -651,6 +651,40 @@ public:
 };
 
 /**
+ * @brief  Sets a memory block of given size to given value
+ *
+ * Sets a memory block of given size to given value.
+ */
+class FI_memset : public RegisterAssignment
+{
+	/// Index of the register with reference to memory
+	/// in which value is going to be set
+	size_t src_;
+
+	/// Value to be set in memory
+	int valToSetReg_;
+
+	/// Reg with number of bytes in memory to set
+	size_t bytesCountReg_;
+
+public:
+
+	FI_memset(const CodeStorage::Insn* insn, const size_t dst,
+			const size_t src, const int valToSetReg, const size_t bytesCountReg)
+		: RegisterAssignment(insn, dst), src_(src), valToSetReg_(valToSetReg),
+		  bytesCountReg_(bytesCountReg)
+	{ }
+
+	virtual void execute(ExecutionManager& execMan, SymState& state);
+
+	virtual std::ostream& toStream(std::ostream& os) const {
+		return os << "memset\tr" << this->src_
+			<< ", r" << this->valToSetReg_ << ", r" << this->bytesCountReg_;
+	}
+
+};
+
+/**
  * @brief  Builds a new memory node
  *
  * Creates a new tree automaton in the forest automaton. This new single-level

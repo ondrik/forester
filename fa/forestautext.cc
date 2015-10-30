@@ -20,6 +20,7 @@
 // Forester headers
 #include "forestautext.hh"
 #include "streams.hh"
+#include "vata_adapter.hh"
 
 bool FAE::subseteq(const FAE& lhs, const FAE& rhs)
 {
@@ -106,6 +107,95 @@ TreeAut& FAE::invalidateReference(
 	}
 	return dst;
 }
+
+
+void FAE::setLabelsToValue(
+	const size_t           root,
+	const int              value,
+	const size_t           bytesToSet)
+{
+	const auto& ta = this->getRoot(root);
+	std::unordered_set<size_t> underRoot; 
+
+	for (auto transIter = ta->accBegin(); transIter != ta->accEnd(); ++transIter)
+	{
+		const auto children = (*transIter).GetChildren();
+		underRoot.insert(children.begin(), children.end());
+	}
+
+	class CopyFunctor : public VATA::ExplicitTreeAut::AbstractCopyF
+	{
+	private:
+		const std::unordered_set<size_t>& underRoot_;
+		const std::unordered_set<size_t>& finalStates_;
+
+    public:
+        CopyFunctor(
+				const std::unordered_set<size_t>& underRoot,
+				const std::unordered_set<size_t>& finalStates) :
+			underRoot_ (underRoot), finalStates_(finalStates)
+        {}
+
+        bool operator()(const Transition& t)
+        {
+			const auto& label = *(TreeAut::GetSymbol(t));
+
+			if ((underRoot_.count(t.GetParent()) && label.isData()) || finalStates_.count(t.GetParent()))
+			{
+				return false;
+			}
+			
+			return true;
+        }
+
+	};
+
+	std::shared_ptr<TreeAut> newTa = std::shared_ptr<TreeAut>(new TreeAut());
+	ta->copyTransitionsWithFunctor(*newTa, CopyFunctor(underRoot, ta->getFinalStates()));
+	newTa->addFinalStates(ta->getFinalStates());
+
+	size_t setBytes = 0;
+	for (auto transIter = ta->accBegin(); transIter != ta->accEnd(); ++transIter)
+	{
+		const auto& sels = *(TreeAut::GetSymbol(*transIter)->getSels());
+		assert(sels.size() == (*transIter).GetChildren().size() || sels.size() - 1 == (*transIter).GetChildren().size());
+
+		std::vector<size_t> children;
+		size_t i = 0;
+		for (const SelData& sel : sels)
+		{
+			auto childState = (*transIter).GetChildren().at(i);
+
+			for (auto childIter = ta->begin(childState); childIter != ta->end(childState); ++childIter)
+			{
+				const auto& childLabel = *(TreeAut::GetSymbol(*childIter));
+				if (!childLabel.isData())
+				{
+					continue; // wrong transition
+				}
+				else if (setBytes >= bytesToSet)
+				{
+					newTa->addTransition((*childIter).GetChildren(), TreeAut::GetSymbol(*childIter), childState);
+				}
+				else
+				{
+					//newTa->addTransition((*childIter).GetChildren(), this->boxMan->lookupLabel(Data::createInt(value), true), childState);
+					childState = this->addData(*newTa, Data::createInt(value));
+				}
+			}
+			
+			children.push_back(childState);
+			++i;
+			setBytes += sel.size;
+		}
+		newTa->addTransition(children, TreeAut::GetSymbol(*transIter), (*transIter).GetParent());
+	}
+
+	this->setRoot(root, newTa);
+
+	return;
+}
+
 
 void FAE::freePosition(size_t root)
 {

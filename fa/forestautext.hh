@@ -484,6 +484,18 @@ public:
 		std::set<std::pair<size_t, size_t>>&   result);
 
 
+	/*
+	 * @brief Iterates over nodes under root and set values to given value
+	 *
+	 * This method iterates over nodes in label under the root
+	 * and sets the related values (representing memory bytes) to given value
+	 */
+	void setLabelsToValue(
+		const size_t                           root,
+		const int                              value,
+		const size_t                           bytesToSet);
+
+
 public:
 
 	// state 0 should never be allocated by FAE (?)

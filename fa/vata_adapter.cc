@@ -267,7 +267,8 @@ VATAAdapter& VATAAdapter::copyTransitions(VATAAdapter& dst) const
     //FA_DEBUG_AT(1,"TA copy transitions\n");
     CopyAllFunctor copyAllFunctor;
     dst.vataAut_.CopyTransitionsFrom(vataAut_, copyAllFunctor);
-		return dst;
+
+	return dst;
 }
 
 VATAAdapter& VATAAdapter::copyNotAcceptingTransitions(
@@ -279,7 +280,7 @@ VATAAdapter& VATAAdapter::copyNotAcceptingTransitions(
     dst.vataAut_.CopyTransitionsFrom(vataAut_, copyFunctor);
 		return dst;
 }
-
+	
 void VATAAdapter::clear()
 {
     //FA_DEBUG_AT(1,"TA clear\n");

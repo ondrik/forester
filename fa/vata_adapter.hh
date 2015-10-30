@@ -132,7 +132,7 @@ public: // public methods
      */
     static VATAAdapter createTAWithSameFinalStates(
 				const VATAAdapter&         ta,
-        bool                       copyFinalStates=true);
+				bool                       copyFinalStates=true);
 
 
     /**
@@ -148,7 +148,7 @@ public: // public methods
      */
     static VATAAdapter* allocateTAWithSameFinalStates(
 				const VATAAdapter&         ta,
-        bool                       copyFinalStates=true);
+			    bool                       copyFinalStates=true);
 
 
     /**
@@ -189,7 +189,7 @@ public: // public methods
      * @return Iterator over a set of the accpeting transitions of @vataAut_
      */
     AcceptTrans::Iterator accBegin() const;
-		AcceptTrans::Iterator accEnd() const;
+	AcceptTrans::Iterator accEnd() const;
 
 
     /**
@@ -424,6 +424,22 @@ public: // public methods
 	VATAAdapter& copyNotAcceptingTransitions(
 		VATAAdapter& dst,
 		const VATAAdapter& ta) const;
+
+	/**
+	 * @brief Copy all transitions confirmed by functor
+	 *
+	 * Copy all transitions of this TA to the @dst
+	 * if they are confirmed to be copied by given functor.
+	 */
+	template<class CopyFunctor>
+	VATAAdapter& copyTransitionsWithFunctor(
+		VATAAdapter& dst,
+		CopyFunctor functor) const
+	{
+		dst.vataAut_.CopyTransitionsFrom(vataAut_, functor);
+
+		return dst;
+	}
 
 	
 	/**

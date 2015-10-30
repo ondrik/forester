@@ -458,6 +458,48 @@ void FI_alloc::execute(ExecutionManager& execMan, SymState& state)
 	execMan.enqueue(tmpState);
 }
 
+// FI_memset
+void FI_memset::execute(ExecutionManager& execMan, SymState& state)
+{
+	// Assertions
+	assert(state.GetReg(src_).isRef());
+	assert(state.GetReg(valToSetReg_).isInt());
+	assert(state.GetReg(bytesCountReg_).isInt());
+
+	SymState* tmpState = execMan.createChildStateWithNewRegs(state, next_);
+	// create a new forest automaton
+	std::shared_ptr<FAE> fae = std::shared_ptr<FAE>(new FAE(*(tmpState->GetFAE())));
+	fae->setLabelsToValue(
+			state.GetReg(src_).d_ref.root,
+			state.GetReg(valToSetReg_).d_int,
+			state.GetReg(bytesCountReg_).d_int);
+
+	tmpState->SetFAE(fae);
+	execMan.enqueue(tmpState);
+
+	/*
+
+	const Data& srcData = tmpState->GetReg(src_);
+
+	if (0 > srcData.d_int)
+	{	// negative allocation size
+		FA_ERROR_MSG(&(tmpState->GetInstr()->insn()->loc),
+			"negative size arg of malloc(): " << srcData.d_int);
+	}
+	if (0 == srcData.d_int)
+	{	// zero allocation size
+		FA_WARN_MSG(&(tmpState->GetInstr()->insn()->loc),
+			"POSIX says that, given zero size, the behaviour of "
+			"malloc/calloc is implementation-defined");
+	}
+
+	// create a void pointer of given size, i.e. it points to a block of the size
+	Data dstData = Data::createVoidPtr(srcData.d_int);
+	tmpState->SetReg(dstReg_, dstData);
+
+	execMan.enqueue(tmpState);
+	*/
+}
 
 // FI_node_create
 void FI_node_create::execute(ExecutionManager& execMan, SymState& state)
