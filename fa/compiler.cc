@@ -2133,7 +2133,6 @@ protected:
 				return;
 			case builtin_e::biMemset:
 				compileMemset(insn);
-				++allocationCount_;
 				return;
 				//throw NotImplementedException(
 				//		insn.operands[1].data.cst.data.cst_fnc.name);
