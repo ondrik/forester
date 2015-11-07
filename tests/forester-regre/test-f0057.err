@@ -1,0 +1,2 @@
+test-f0057.c:11: note: memset (x, (int)1, (int)8U)
+test-f0057.c:11: error: dereferenced value is not a valid reference

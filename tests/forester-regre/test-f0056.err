@@ -1,0 +1,3 @@
+test-f0056.c:11: error: garbage detected
+test-f0056.c:13: note: _ = *x.1
+test-f0056.c:13: error: dereferenced value is not a valid reference [(int)0]
