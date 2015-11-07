@@ -54,7 +54,7 @@ def parseParams(params):
                        help='Path to a file with properties to be verified. Default is defined by the rules of the competition')
     
     parser.add_argument('--'+FALSE_PARAM, action='store_true',
-                       help='Print FALSE when a bug found')
+                       help='Print FALSE when a bug found (this parameter is obsolete, do not use it)')
     
     parser.add_argument('--'+TIME_PARAM, action='store_true',
                        help='Print consumed CPU time')
@@ -125,12 +125,12 @@ def execute(args):
         else:
             res=1
             if prop is None or prop not in [VALID_FREE, VALID_DEREF, VALID_MEMTRACK]:
-                print "FALSE" if args[FALSE_PARAM] else "UNKNOWN"
+                print "FALSE"
             else:
                 if VALID_MEMTRACK in getProperties(parseProps(formulas), lines):
-                    print "FALSE("+VALID_MEMTRACK+")" if args[FALSE_PARAM] else "UNKNOWN"
+                    print "FALSE("+VALID_MEMTRACK+")"
                 else:
-                    print "FALSE("+prop+")" if args[FALSE_PARAM] else "UNKNOWN"
+                    print "FALSE("+prop+")"
     if args[TIME_PARAM]:
         print resource.getrusage(resource.RUSAGE_CHILDREN)[0]
     return res

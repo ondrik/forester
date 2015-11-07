@@ -1,0 +1,83 @@
+Instructions for SV-COMP'16
+===========================
+
+0) Dependencies:
+
+   * GCC and G++
+    - on Ubuntu/Debian provided by packages called 'g++' and 'gcc'.
+    We tested our tool using 'gcc-4.8' for compiling test cases
+	and 'g++-4.8' and the newer for compiling Forester.
+
+   * CMake 2.8+
+     - available at http://www.cmake.org
+     - the executable is called 'cmake'
+     - usually provided by a package called 'cmake'
+
+   * Boost libraries 1.37+
+     - available at http://www.boost.org/
+     - the package is usually called 'boost' o 'lib-boost'
+     - on binary distros you may need also the 'boost-devel' (or 'lib-all-dev') sub-package
+
+   * 32bit system headers, especially in the case of a 64bit OS
+     - on Ubuntu/Debian provided by a package called 'libc6-dev-i386'
+     - you can try to check their presence by
+       'gcc -m32 -o /dev/null /usr/include/stdlib.h'
+
+   * GCC plugin devel
+     - on Ubuntu/Debian provided by a package called 'gcc-X-multilib' 'gcc-X-plugin-dev'
+       where X is version of gcc, e.g. gcc-4.8-multilib for gcc version 4.8.
+
+   * Python 2.7
+     - on Ubuntu/Debian provided by a package called 'python2.7'
+
+1) Build Forester from the sources against your GCC system; we recommend to use gcc 4.8.
+   For building Forester, use the following command:
+
+                 ./switch-host-gcc.sh PATH_TO_GCC
+
+  E.g. for gcc 4.8 in the standard path use
+
+                 ./switch-host-gcc.sh /usr/bin/gcc-4.8
+
+  Please check 'README' for further information about Forester compilation or
+  'fa/libvata/README' for further information about the compilation of libVATA
+  (libVATA is a tree automata library used by Forester).
+
+2) Use the script './sv_comp_run.py' (also located in 'fa_build/sv_comp_run.py')
+   to run Forester on a test-case:
+
+    Usage: sv_comp_run.py [-h] --trace TRACE [--properties PROPERTIES] [--time] file
+
+      -h
+          Print help 
+
+      --trace TRACE
+          The file to print the witness to (for the answer FALSE)
+
+      --properties PROPERTIES
+          The file with the specified verification properties. When not
+          specified, the default path for a property file in case of verified
+		  file 'path/file' is 'path/ALL.prp'.
+
+      --time
+          Print consumed CPU time
+
+      file
+          The path to the file with program under verification
+
+   Since Forester participates only in the HeapMemSafety category
+   the 32-bit architecture is used by default and cannot be changed
+   by any parameter of the script.
+
+   A result of a verification task is an item from { TRUE, FALSE, UNKNOWN } and
+   is printed to the standard output. When the result of a verification task is
+   FALSE, the related witness trace is printed to the file specified by the
+   --trace option. When there are more verification properties to be checked
+   and one of them is violated, the answer has the format FALSE(p) where p is
+   the violated property.
+
+3) For evalutation of Forester with 'Benchexec' use 'rundefinition' XML item
+   for definition of parameter '--trace' in XML configuration file.
+   The other attributes are set in function 'cmdline' in Forester wrapping script for 'Benchexec'.
+   An example of configuration XML file for Benchexec is 'benchmark-example-forester.xml'
+   in this folder.
