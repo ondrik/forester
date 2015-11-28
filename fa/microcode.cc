@@ -107,7 +107,7 @@ void FI_acc_sel::execute(ExecutionManager& execMan, SymState& state)
 		/* index of the desired TA */ data.d_ref.root,
 		/* offset of the selector */ data.d_ref.displ + offset_
 	);
-	roots_ = splitting.getUnfoldedRoots();
+	roots_ = splitting.copyUnfoldedRoots();
 
 
 	for (auto fae : res)
@@ -139,7 +139,7 @@ void FI_acc_set::execute(ExecutionManager& execMan, SymState& state)
 		/* base of offsets */ data.d_ref.displ + base_,
 		/* offsets of selectors */ offsets_
 	);
-	roots_ = splitting.getUnfoldedRoots();
+	roots_ = splitting.copyUnfoldedRoots();
 
 
 	for (auto fae : res)
@@ -171,7 +171,7 @@ void FI_acc_all::execute(ExecutionManager& execMan, SymState& state)
 		/* base of offsets */ 0,
 		/* offsets of selectors */ state.GetFAE()->getType(data.d_ref.root)->getSelectors()
 	);
-	roots_ = splitting.getUnfoldedRoots();
+	roots_ = splitting.copyUnfoldedRoots();
 
 	for (auto fae : res)
 	{

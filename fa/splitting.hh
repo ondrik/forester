@@ -148,7 +148,13 @@ public:   // methods
 	 *  Returns a vector of the roots of TA of FA fae_ under which
 	 *  box unfolding was done
 	 */
-	std::vector<size_t> getUnfoldedRoots()
+	const std::vector<size_t>& getUnfoldedRoots()
+	{
+		return roots_;
+	}
+
+
+	std::vector<size_t> copyUnfoldedRoots()
 	{
 		return roots_;
 	}
