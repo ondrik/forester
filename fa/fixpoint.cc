@@ -327,47 +327,6 @@ void getCandidates(
 			candidates.insert(tmp.second.begin(), tmp.second.end());
 	}
 }
-
-void learn1(FAE& fae, BoxMan& boxMan)
-{
-	fae.unreachableFree();
-
-	std::set<size_t> forbidden = Normalization::computeForbiddenSet(fae);
-
-	Folding folding(fae, boxMan);
-
-	for (size_t i = 0; i < fae.getRootCount(); ++i)
-	{
-		if (forbidden.count(i))
-			continue;
-
-		assert(fae.getRoot(i));
-
-		folding.discover1(i, forbidden, false);
-		folding.discover2(i, forbidden, false);
-	}
-}
-
-void learn2(
-	FAE&       fae,
-	BoxMan&    boxMan)
-{
-	fae.unreachableFree();
-
-	std::set<size_t> forbidden = Normalization::computeForbiddenSet(fae);
-
-	Folding folding(fae, boxMan);
-
-	for (size_t i = 0; i < fae.getRootCount(); ++i)
-	{
-		if (forbidden.count(i))
-			continue;
-
-		assert(fae.getRoot(i));
-
-		folding.discover3(i, forbidden, false);
-	}
-}
 } // namespace
 
 
@@ -476,7 +435,7 @@ void FI_abs::execute(ExecutionManager& execMan, SymState& state)
 		fold(*fae, boxMan_, forbidden);
 	}
 
-	learn2(*fae, boxMan_);
+	Folding::learn2(*fae, boxMan_);
 #endif
 	forbidden = Normalization::computeForbiddenSet(*fae);
 
@@ -484,7 +443,7 @@ void FI_abs::execute(ExecutionManager& execMan, SymState& state)
 
 	abstract(*fae);
 #if FA_ALLOW_FOLDING
-	learn1(*fae, boxMan_);
+	Folding::learn1(*fae, boxMan_);
 
 	if (boxMan_.boxDatabase().size())
 	{

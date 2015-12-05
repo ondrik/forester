@@ -26,9 +26,6 @@
 #include "executionmanager.hh"
 #include "folding.hh"
 #include "microcode.hh"
-#include "normalization.hh"
-#include "splitting.hh"
-#include "streams.hh"
 #include "virtualmachine.hh"
 
 SymState* FI_acc_sel::reverseAndIsect(
@@ -55,9 +52,9 @@ SymState* FI_acc_sel::reverseAndIsect(
 
 	SymState* tmpState = execMan.copyState(bwdSucc);
 	std::shared_ptr<FAE> fae = std::shared_ptr<FAE>(new FAE(*(tmpState->GetFAE())));
-	auto forbidden = Normalization::computeForbiddenSet(*fae);
 
-	//Folding folding(fae, boxMan_);
+	//Folding::learn2(*fae, boxMan_);
+	//Folding::learn1(*fae, boxMan_);
 
 	FA_DEBUG_AT(1,"Skipping reverse operation FI_acc_set");
 	return execMan.copyState(bwdSucc);

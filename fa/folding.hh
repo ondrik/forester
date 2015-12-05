@@ -408,6 +408,9 @@ public:
 		const std::set<size_t>&     forbidden,
 		bool                        conditional);
 
+	static void learn1(FAE& fae, BoxMan& boxMan);
+	static void learn2(FAE& fae, BoxMan& boxMan);
+
 public:
 
 	Folding(

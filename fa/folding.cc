@@ -21,6 +21,7 @@
 #include "folding.hh"
 
 #include "config.h"
+#include "normalization.hh"
 
 namespace
 {	// anonymous namespace
@@ -1008,4 +1009,43 @@ bool Folding::computeSelectorMap(
 	// check whether the computed selector map is the same for all transitions
 	// leaving 'state'
 	return this->checkSelectorMap(selectorMap, root, state);
+}
+
+void Folding::learn1(FAE& fae, BoxMan& boxMan)
+{
+	fae.unreachableFree();
+
+	std::set<size_t> forbidden = Normalization::computeForbiddenSet(fae);
+
+	Folding folding(fae, boxMan);
+
+	for (size_t i = 0; i < fae.getRootCount(); ++i)
+	{
+		if (forbidden.count(i))
+			continue;
+
+		assert(fae.getRoot(i));
+
+		folding.discover1(i, forbidden, false);
+		folding.discover2(i, forbidden, false);
+	}
+}
+
+void Folding::learn2(FAE& fae, BoxMan& boxMan)
+{
+	fae.unreachableFree();
+
+	std::set<size_t> forbidden = Normalization::computeForbiddenSet(fae);
+
+	Folding folding(fae, boxMan);
+
+	for (size_t i = 0; i < fae.getRootCount(); ++i)
+	{
+		if (forbidden.count(i))
+			continue;
+
+		assert(fae.getRoot(i));
+
+		folding.discover3(i, forbidden, false);
+	}
 }

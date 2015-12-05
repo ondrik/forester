@@ -97,11 +97,16 @@ class FI_acc_sel : public SequentialInstruction
 	/// The roots of TA where unfolding was done
 	std::vector<size_t> roots_;
 
+	/// Boxman needed for reversing this instruction
+	/// via folding
+	BoxMan& boxMan_;
+
 public:
 
-	FI_acc_sel(const CodeStorage::Insn* insn, size_t dst, size_t offset)
+	FI_acc_sel(const CodeStorage::Insn* insn, size_t dst, size_t offset,
+		BoxMan& boxMan)
 		: SequentialInstruction(insn, fi_type_e::fiUnspec),
-		dst_(dst), offset_(offset), roots_() {}
+		dst_(dst), offset_(offset), roots_(), boxMan_(boxMan) {}
 
 	virtual void execute(ExecutionManager& execMan, SymState& state);
 
@@ -135,12 +140,16 @@ class FI_acc_set : public SequentialInstruction
 	/// The roots of TA where unfolding was done
 	std::vector<size_t> roots_;
 
+	/// Boxman needed for reversing this instruction
+	/// via folding
+	BoxMan& boxMan_;
+
 public:
 
 	FI_acc_set(const CodeStorage::Insn* insn, size_t dst, int base,
-		const std::vector<size_t>& offsets)
+		const std::vector<size_t>& offsets, BoxMan& boxMan)
 		: SequentialInstruction(insn), dst_(dst), base_(base),
-		offsets_(offsets), roots_() {}
+		offsets_(offsets), roots_(), boxMan_(boxMan) {}
 
 	virtual void execute(ExecutionManager& execMan, SymState& state);
 
@@ -169,10 +178,16 @@ class FI_acc_all : public SequentialInstruction
 	/// The roots of TA where unfolding was done
 	std::vector<size_t> roots_;
 
+	/// Boxman needed for reversing this instruction
+	/// via folding
+	BoxMan& boxMan_;
+
 public:
 
-	FI_acc_all(const CodeStorage::Insn* insn, size_t dst)
-		: SequentialInstruction(insn), dst_(dst), roots_() {}
+	FI_acc_all(const CodeStorage::Insn* insn, size_t dst,
+		BoxMan& boxMan)
+		: SequentialInstruction(insn), dst_(dst), roots_(),
+		boxMan_(boxMan){}
 
 	virtual void execute(ExecutionManager& execMan, SymState& state);
 

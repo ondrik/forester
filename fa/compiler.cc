@@ -834,14 +834,14 @@ protected:
 				NodeBuilder::buildNode(offs, op.type);
 
 				// add an instruction to access the set of all selectors of the structure
-				append(new FI_acc_set(&insn, dst, offset, offs));
+				append(new FI_acc_set(&insn, dst, offset, offs, boxMan_));
 				// add an instruction to load all selectors of the structure
 				append(new FI_loads(&insn, dst, dst, offset, offs));
 			} else
 			{	// in case the operand is not a structure
 
 				// add an instruction to access a single selector
-				append(new FI_acc_sel(&insn, dst, offset));
+				append(new FI_acc_sel(&insn, dst, offset, boxMan_));
 				// add an instruction to load a single selector
 				append(new FI_load(&insn, dst, dst, offset));
 			}
@@ -903,14 +903,14 @@ protected:
 				NodeBuilder::buildNode(offs, op.type);
 
 				// add an instruction to access the set of all selectors of the structure
-				append(new FI_acc_set(&insn, tmp, offset, offs));
+				append(new FI_acc_set(&insn, tmp, offset, offs, boxMan_));
 				// add an instruction to store all selectors of the structure
 				append(new FI_stores(&insn, tmp, src, offset));
 			} else
 			{	// in case the operand is not a structure
 
 				// add an instruction to access a single selector
-				append(new FI_acc_sel(&insn, tmp, offset));
+				append(new FI_acc_sel(&insn, tmp, offset, boxMan_));
 				// add an instruction to store a single selector
 				append(new FI_store(&insn, tmp, src, offset));
 			}
@@ -1020,13 +1020,13 @@ protected:
 							NodeBuilder::buildNode(offs, op.type);
 
 							// append an instruction to isolate the root
-							append(new FI_acc_set(&insn, dst, offset, offs));
+							append(new FI_acc_set(&insn, dst, offset, offs, boxMan_));
 							// append an instruction to load the root
 							append(new FI_loads(&insn, dst, dst, offset, offs));
 						} else
 						{
 							// append an instruction to isolate the element
-							append(new FI_acc_sel(&insn, dst, offset));
+							append(new FI_acc_sel(&insn, dst, offset, boxMan_));
 							// append an instruction to load the element
 							append(new FI_load(&insn, dst, dst, offset));
 						}
@@ -1041,7 +1041,7 @@ protected:
 
 						append(new FI_get_ABP(&insn, dst, 0));
 						// append an instruction to isolate the root
-						append(new FI_acc_set(&insn, dst, offset, offs));
+						append(new FI_acc_set(&insn, dst, offset, offs, boxMan_));
 						// append an instruction to load the root
 						append(new FI_loads(&insn, dst, dst, offset, offs));
 					} else
@@ -1294,7 +1294,7 @@ protected:
 						if (needsAcc)
 						{	// in case separation is needed
 							// append separation of a set of nodes
-							append(new FI_acc_set(&insn, tmp, offset, offs));
+							append(new FI_acc_set(&insn, tmp, offset, offs, boxMan_));
 						}
 
 						// append store of the value into register
@@ -1305,7 +1305,7 @@ protected:
 						if (needsAcc)
 						{	// in case separation is needed
 							// append separation of a node
-							append(new FI_acc_sel(&insn, tmp, offset));
+							append(new FI_acc_sel(&insn, tmp, offset, boxMan_));
 						}
 
 						// append store of the value into register
@@ -1684,7 +1684,8 @@ protected:
 		// append an instruction to isolate all selectors
 		append(new FI_acc_all(
 			&insn,
-			/* reg with ref to the tree to have selectors isolated */ srcReg
+			/* reg with ref to the tree to have selectors isolated */ srcReg,
+			boxMan_
 		));
 
 		// append an instruction to free a symbolic memory node
@@ -1929,7 +1930,7 @@ protected:
 		));
 
 		// isolate adjacent nodes (current ABP)
-		append(new FI_acc_all(&insn, 1));
+		append(new FI_acc_all(&insn, 1, boxMan_));
 
 		// fixpoint
 		if (FA_ALLOW_STACK_FRAME_ABSTRACTION)
