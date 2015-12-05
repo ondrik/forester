@@ -49,7 +49,7 @@ private:  // data members
 	FAE& fae_;
 
 	/// The roots of TA where unfolding was done
-	std::vector<size_t> roots_;
+	std::set<size_t> roots_;
 
 private:  // methods
 
@@ -148,13 +148,13 @@ public:   // methods
 	 *  Returns a vector of the roots of TA of FA fae_ under which
 	 *  box unfolding was done
 	 */
-	const std::vector<size_t>& getUnfoldedRoots()
+	const std::set<size_t>& getUnfoldedRoots()
 	{
 		return roots_;
 	}
 
 
-	std::vector<size_t> copyUnfoldedRoots()
+	std::set<size_t> copyUnfoldedRoots()
 	{
 		return roots_;
 	}

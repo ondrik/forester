@@ -408,8 +408,30 @@ public:
 		const std::set<size_t>&     forbidden,
 		bool                        conditional);
 
-	static void learn1(FAE& fae, BoxMan& boxMan);
-	static void learn2(FAE& fae, BoxMan& boxMan);
+	static void learn1(FAE& fae,
+					   BoxMan& boxMan,
+					   std::set<size_t> forbidden = std::set<size_t>());
+	static void learn2(FAE& fae,
+					   BoxMan& boxMan,
+					   std::set<size_t> forbidden = std::set<size_t>());
+
+	/**
+     * @brief  Folds a FA without learning
+     *
+     * This function folds a FA @p fae using boxes in the box manager @p boxMan, but
+     * avoiding the folding of cutpoints from @p forbidden. Note than no new boxes
+     * are learnt, only boxes already in @p boxMan are applied.
+     *
+     * @param[in]  fae        The forest automaton to be folded
+     * @param[in]  boxMan     The database of boxes
+     * @param[in]  forbidden  The set of cutpoints not allowed for folding
+     *
+     * @returns  @p true in the case something has been folded, @p false otherwise
+     */
+    static bool fold(
+        FAE&                         fae,
+        BoxMan&                      boxMan,
+        const std::set<size_t>&      forbidden);
 
 public:
 

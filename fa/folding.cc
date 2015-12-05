@@ -1011,11 +1011,9 @@ bool Folding::computeSelectorMap(
 	return this->checkSelectorMap(selectorMap, root, state);
 }
 
-void Folding::learn1(FAE& fae, BoxMan& boxMan)
+void Folding::learn1(FAE& fae, BoxMan& boxMan, std::set<size_t> forbidden)
 {
 	fae.unreachableFree();
-
-	std::set<size_t> forbidden = Normalization::computeForbiddenSet(fae);
 
 	Folding folding(fae, boxMan);
 
@@ -1031,11 +1029,9 @@ void Folding::learn1(FAE& fae, BoxMan& boxMan)
 	}
 }
 
-void Folding::learn2(FAE& fae, BoxMan& boxMan)
+void Folding::learn2(FAE& fae, BoxMan& boxMan, std::set<size_t> forbidden)
 {
 	fae.unreachableFree();
-
-	std::set<size_t> forbidden = Normalization::computeForbiddenSet(fae);
 
 	Folding folding(fae, boxMan);
 
@@ -1048,4 +1044,50 @@ void Folding::learn2(FAE& fae, BoxMan& boxMan)
 
 		folding.discover3(i, forbidden, false);
 	}
+}
+
+bool Folding::fold(
+        FAE&                         fae,
+        BoxMan&                      boxMan,
+        const std::set<size_t>&      forbidden)
+{
+	Folding folding(fae, boxMan);
+
+	bool matched = false;
+
+	for (size_t i = 0; i < fae.getRootCount(); ++i)
+	{
+		if (forbidden.end() != forbidden.find(i))
+		{	// in the case the cutpoint is not allowed for folding
+			continue;
+		}
+
+		assert(nullptr != fae.getRoot(i));
+
+		// Try to fold the 3 types of cutpoints starting from cutpoint 'i', but
+		// _ONLY_ using boxes which are _ALREADY_ in 'boxMan'. No learning of new
+		// boxes is allowed
+
+		if (folding.discover1(i, forbidden, true))
+		{
+			matched = true;
+		}
+
+		if (folding.discover2(i, forbidden, true))
+		{
+			matched = true;
+		}
+
+		if (folding.discover3(i, forbidden, true))
+		{
+			matched = true;
+		}
+	}
+
+	if (matched)
+	{
+		FA_DEBUG_AT(3, "after folding: " << std::endl << fae);
+	}
+
+	return matched;
 }

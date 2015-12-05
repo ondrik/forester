@@ -95,7 +95,7 @@ class FI_acc_sel : public SequentialInstruction
 	size_t offset_;
 	
 	/// The roots of TA where unfolding was done
-	std::vector<size_t> roots_;
+	std::set<size_t> roots_;
 
 	/// Boxman needed for reversing this instruction
 	/// via folding
@@ -138,7 +138,7 @@ class FI_acc_set : public SequentialInstruction
 	std::vector<size_t> offsets_;
 	
 	/// The roots of TA where unfolding was done
-	std::vector<size_t> roots_;
+	std::set<size_t> roots_;
 
 	/// Boxman needed for reversing this instruction
 	/// via folding
@@ -176,7 +176,7 @@ class FI_acc_all : public SequentialInstruction
 	size_t dst_;
 	
 	/// The roots of TA where unfolding was done
-	std::vector<size_t> roots_;
+	std::set<size_t> roots_;
 
 	/// Boxman needed for reversing this instruction
 	/// via folding

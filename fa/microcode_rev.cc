@@ -28,6 +28,46 @@
 #include "microcode.hh"
 #include "virtualmachine.hh"
 
+namespace
+{
+	std::set<size_t> getUnusedRoots(std::set<size_t> usedRoots,
+								   const size_t rootsNumber)
+	{
+		std::set<size_t> unusedRoots;
+
+		for (size_t i = 0; i < rootsNumber; ++i)
+		{
+			if (!usedRoots.count(i))
+			{
+				unusedRoots.insert(i);
+			}
+		}
+
+		return unusedRoots;
+	}
+
+	SymState* revertFolding(ExecutionManager& execMan,
+		const SymState& bwdSucc,
+		BoxMan& boxMan,
+		const std::set<size_t>& roots)
+	{
+        SymState* tmpState = execMan.copyState(bwdSucc);
+        std::shared_ptr<FAE> fae = std::shared_ptr<FAE>(new FAE(*(tmpState->GetFAE())));
+
+        std::set<size_t> forbidden = getUnusedRoots(roots, fae->getRootCount());
+        forbidden.insert(roots.begin(), roots.end());
+
+        Folding::learn2(*fae, boxMan, forbidden);
+        Folding::learn1(*fae, boxMan, forbidden);
+
+		Folding::fold(*fae, boxMan, forbidden);
+		// TODO: while here??
+
+		return tmpState;
+	}
+}
+
+
 SymState* FI_acc_sel::reverseAndIsect(
 	ExecutionManager&                      execMan,
 	const SymState&                        fwdPred,
@@ -50,14 +90,10 @@ SymState* FI_acc_sel::reverseAndIsect(
 //	FA_DEBUG_AT(1,"Executing !!VERY!! suspicious reverse operation FI_acc_sel");
 //	return tmpState;
 
-	SymState* tmpState = execMan.copyState(bwdSucc);
-	std::shared_ptr<FAE> fae = std::shared_ptr<FAE>(new FAE(*(tmpState->GetFAE())));
-
-	//Folding::learn2(*fae, boxMan_);
-	//Folding::learn1(*fae, boxMan_);
+	SymState* tmpState = revertFolding(execMan, bwdSucc, boxMan_, roots_);
 
 	FA_DEBUG_AT(1,"Skipping reverse operation FI_acc_set");
-	return execMan.copyState(bwdSucc);
+	return tmpState;
 }
 
 SymState* FI_acc_set::reverseAndIsect(
@@ -67,8 +103,10 @@ SymState* FI_acc_set::reverseAndIsect(
 {
 	(void)fwdPred;
 
+	SymState* tmpState = revertFolding(execMan, bwdSucc, boxMan_, roots_);
+
 	FA_DEBUG_AT(1,"Skipping reverse operation FI_acc_set");
-	return execMan.copyState(bwdSucc);
+	return tmpState;
 }
 
 SymState* FI_acc_all::reverseAndIsect(
@@ -78,8 +116,10 @@ SymState* FI_acc_all::reverseAndIsect(
 {
 	(void)fwdPred;
 
+	SymState* tmpState = revertFolding(execMan, bwdSucc, boxMan_, roots_);
+
 	FA_DEBUG_AT(1,"Skipping reverse operation FI_acc_all");
-	return execMan.copyState(bwdSucc);
+	return tmpState;
 }
 
 SymState* FI_pop_greg::reverseAndIsect(

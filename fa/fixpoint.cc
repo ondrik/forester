@@ -183,68 +183,6 @@ struct FuseNonFixedF
 	}
 };
 
-/**
- * @brief  Folds a FA without learning
- *
- * This function folds a FA @p fae using boxes in the box manager @p boxMan, but
- * avoiding the folding of cutpoints from @p forbidden. Note than no new boxes
- * are learnt, only boxes already in @p boxMan are applied.
- *
- * @param[in]  fae        The forest automaton to be folded
- * @param[in]  boxMan     The database of boxes
- * @param[in]  forbidden  The set of cutpoints not allowed for folding
- *
- * @returns  @p true in the case something has been folded, @p false otherwise
- */
-bool fold(
-	FAE&                         fae,
-	BoxMan&                      boxMan,
-	const std::set<size_t>&      forbidden)
-{
-	std::vector<size_t> order;
-	std::vector<bool> marked;
-
-	Folding folding(fae, boxMan);
-
-	bool matched = false;
-
-	for (size_t i = 0; i < fae.getRootCount(); ++i)
-	{
-		if (forbidden.end() != forbidden.find(i))
-		{	// in the case the cutpoint is not allowed for folding
-			continue;
-		}
-
-		assert(nullptr != fae.getRoot(i));
-
-		// Try to fold the 3 types of cutpoints starting from cutpoint 'i', but
-		// _ONLY_ using boxes which are _ALREADY_ in 'boxMan'. No learning of new
-		// boxes is allowed
-
-		if (folding.discover1(i, forbidden, true))
-		{
-			matched = true;
-		}
-
-		if (folding.discover2(i, forbidden, true))
-		{
-			matched = true;
-		}
-
-		if (folding.discover3(i, forbidden, true))
-		{
-			matched = true;
-		}
-	}
-
-	if (matched)
-	{
-		FA_DEBUG_AT(3, "after folding: " << std::endl << fae);
-	}
-
-	return matched;
-}
-
 
 /**
  * @brief  Reorders components into the canonical order
@@ -432,10 +370,10 @@ void FI_abs::execute(ExecutionManager& execMan, SymState& state)
 		}
 
 		// fold already discovered boxes
-		fold(*fae, boxMan_, forbidden);
+		Folding::fold(*fae, boxMan_, forbidden);
 	}
 
-	Folding::learn2(*fae, boxMan_);
+	Folding::learn2(*fae, boxMan_, Normalization::computeForbiddenSet(*fae));
 #endif
 	forbidden = Normalization::computeForbiddenSet(*fae);
 
@@ -443,7 +381,7 @@ void FI_abs::execute(ExecutionManager& execMan, SymState& state)
 
 	abstract(*fae);
 #if FA_ALLOW_FOLDING
-	Folding::learn1(*fae, boxMan_);
+	Folding::learn1(*fae, boxMan_, Normalization::computeForbiddenSet(*fae));
 
 	if (boxMan_.boxDatabase().size())
 	{
@@ -465,7 +403,7 @@ void FI_abs::execute(ExecutionManager& execMan, SymState& state)
 
 			old = *fae;
 
-		} while (fold(*fae, boxMan_, forbidden) && !FAE::subseteq(*fae, old));
+		} while (Folding::fold(*fae, boxMan_, forbidden) && !FAE::subseteq(*fae, old));
 
 	}
 #endif
@@ -505,7 +443,7 @@ void FI_fix::execute(ExecutionManager& execMan, SymState& state)
 			forbidden.insert(VirtualMachine(*fae).varGet(i).d_ref.root);
 		}
 
-		fold(*fae, boxMan_, forbidden);
+		Folding::fold(*fae, boxMan_, forbidden);
 	}
 #endif
 	forbidden = Normalization::computeForbiddenSet(*fae);
@@ -521,7 +459,7 @@ void FI_fix::execute(ExecutionManager& execMan, SymState& state)
 			forbidden.insert(VirtualMachine(*fae).varGet(i).d_ref.root);
 		}
 
-		while (fold(*fae, boxMan_, forbidden))
+		while (Folding::fold(*fae, boxMan_, forbidden))
 		{
 			forbidden = Normalization::computeForbiddenSet(*fae);
 
