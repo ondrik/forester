@@ -1046,14 +1046,14 @@ void Folding::learn2(FAE& fae, BoxMan& boxMan, std::set<size_t> forbidden)
 	}
 }
 
-bool Folding::fold(
+std::set<size_t> Folding::fold(
         FAE&                         fae,
         BoxMan&                      boxMan,
         const std::set<size_t>&      forbidden)
 {
-	Folding folding(fae, boxMan);
+	std::set<size_t> foldedRoots;
 
-	bool matched = false;
+	Folding folding(fae, boxMan);
 
 	for (size_t i = 0; i < fae.getRootCount(); ++i)
 	{
@@ -1070,24 +1070,24 @@ bool Folding::fold(
 
 		if (folding.discover1(i, forbidden, true))
 		{
-			matched = true;
+			foldedRoots.insert(i);
 		}
 
 		if (folding.discover2(i, forbidden, true))
 		{
-			matched = true;
+			foldedRoots.insert(i);
 		}
 
 		if (folding.discover3(i, forbidden, true))
 		{
-			matched = true;
+			foldedRoots.insert(i);
 		}
 	}
 
-	if (matched)
+	if (foldedRoots.size())
 	{
 		FA_DEBUG_AT(3, "after folding: " << std::endl << fae);
 	}
 
-	return matched;
+	return foldedRoots;
 }

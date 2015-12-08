@@ -267,6 +267,25 @@ void getCandidates(
 }
 } // namespace
 
+void FixpointBase::initFoldedRoots()
+{
+	abstrIteration_ = 0;
+	foldedRoots_.clear();
+}
+
+
+size_t FixpointBase::fold(
+		const std::shared_ptr<FAE>&       fae,
+		std::set<size_t>&                 forbidden)
+{
+	foldedRoots_[abstrIteration_] =
+			std::set<size_t>(Folding::fold(*fae, boxMan_, forbidden));
+	++abstrIteration_;
+
+	return foldedRoots_.at(abstrIteration_-1).size();
+}
+
+
 
 SymState* FixpointBase::reverseAndIsect(
 	ExecutionManager&                      execMan,
@@ -352,6 +371,8 @@ void FI_abs::abstract(
 // FI_abs
 void FI_abs::execute(ExecutionManager& execMan, SymState& state)
 {
+	this->initFoldedRoots();
+
 	std::shared_ptr<FAE> fae = std::shared_ptr<FAE>(new FAE(*(state.GetFAE())));
 
 	fae->updateConnectionGraph();
@@ -370,7 +391,7 @@ void FI_abs::execute(ExecutionManager& execMan, SymState& state)
 		}
 
 		// fold already discovered boxes
-		Folding::fold(*fae, boxMan_, forbidden);
+		this->fold(fae, forbidden);
 	}
 
 	Folding::learn2(*fae, boxMan_, Normalization::computeForbiddenSet(*fae));
@@ -403,7 +424,8 @@ void FI_abs::execute(ExecutionManager& execMan, SymState& state)
 
 			old = *fae;
 
-		} while (Folding::fold(*fae, boxMan_, forbidden) && !FAE::subseteq(*fae, old));
+
+		} while (this->fold(fae, forbidden) && !FAE::subseteq(*fae, old));
 
 	}
 #endif
@@ -428,6 +450,8 @@ void FI_abs::execute(ExecutionManager& execMan, SymState& state)
 // FI_fix
 void FI_fix::execute(ExecutionManager& execMan, SymState& state)
 {
+	this->initFoldedRoots();
+
 	std::shared_ptr<FAE> fae = std::shared_ptr<FAE>(new FAE(*(state.GetFAE())));
 
 	fae->updateConnectionGraph();
@@ -443,7 +467,7 @@ void FI_fix::execute(ExecutionManager& execMan, SymState& state)
 			forbidden.insert(VirtualMachine(*fae).varGet(i).d_ref.root);
 		}
 
-		Folding::fold(*fae, boxMan_, forbidden);
+		this->fold(fae, forbidden);
 	}
 #endif
 	forbidden = Normalization::computeForbiddenSet(*fae);
@@ -459,7 +483,7 @@ void FI_fix::execute(ExecutionManager& execMan, SymState& state)
 			forbidden.insert(VirtualMachine(*fae).varGet(i).d_ref.root);
 		}
 
-		while (Folding::fold(*fae, boxMan_, forbidden))
+		while (this->fold(fae, forbidden))
 		{
 			forbidden = Normalization::computeForbiddenSet(*fae);
 

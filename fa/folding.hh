@@ -422,13 +422,13 @@ public:
      * avoiding the folding of cutpoints from @p forbidden. Note than no new boxes
      * are learnt, only boxes already in @p boxMan are applied.
      *
-     * @param[in]  fae        The forest automaton to be folded
-     * @param[in]  boxMan     The database of boxes
-     * @param[in]  forbidden  The set of cutpoints not allowed for folding
+     * @param[in]  fae         The forest automaton to be folded
+     * @param[in]  boxMan      The database of boxes
+     * @param[in]  forbidden   The set of cutpoints not allowed for folding
      *
-     * @returns  @p true in the case something has been folded, @p false otherwise
+     * @returns  @p Set of roots of TAs where folding was done
      */
-    static bool fold(
+    static std::set<size_t> fold(
         FAE&                         fae,
         BoxMan&                      boxMan,
         const std::set<size_t>&      forbidden);

@@ -44,9 +44,20 @@ protected:
 
 	std::vector<std::shared_ptr<const FAE>> fixpoint_;
 
-	TreeAut& ta_;
+	TreeAut &ta_;
 
-	BoxMan& boxMan_;
+	BoxMan &boxMan_;
+
+	size_t abstrIteration_;
+
+	std::unordered_map<size_t, std::set<size_t>> foldedRoots_;
+
+protected:
+
+	void initFoldedRoots();
+	size_t fold(
+			const std::shared_ptr<FAE>&  fae,
+			std::set<size_t>&            forbidden);
 
 public:
 
@@ -95,7 +106,9 @@ public:
 		fwdConfWrapper_(fwdConf_, boxMan),
 		fixpoint_{},
 		ta_(ta),
-		boxMan_(boxMan)
+		boxMan_(boxMan),
+		abstrIteration_(0),
+		foldedRoots_()
 	{ }
 
 	virtual ~FixpointBase()
