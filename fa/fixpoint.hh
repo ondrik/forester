@@ -35,6 +35,11 @@
  */
 class FixpointBase : public FixpointInstruction
 {
+private:
+	using Boxes = std::vector<const Box*>;
+	using BoxesAtRoot = std::unordered_map<size_t, Boxes>;
+	using BoxesAtIteration = std::unordered_map<size_t, BoxesAtRoot>;
+
 protected:
 
 	/// Fixpoint configuration obtained in the forward run
@@ -50,7 +55,7 @@ protected:
 
 	size_t abstrIteration_;
 
-	std::unordered_map<size_t, std::set<size_t>> foldedRoots_;
+	BoxesAtIteration foldedRoots_;
 
 protected:
 

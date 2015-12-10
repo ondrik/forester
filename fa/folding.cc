@@ -288,7 +288,8 @@ const ConnectionGraph::StateToCutpointSignatureMap& Folding::getSignatures(
 bool Folding::discover1(
 	size_t                       root,
 	const std::set<size_t>&      forbidden,
-	bool                         conditional)
+	bool                         conditional,
+	std::vector<const Box*>*     discoveredBoxes)
 {
 	// Preconditions
 	assert(fae_.getRootCount() == fae_.connectionGraph.data.size());
@@ -330,6 +331,10 @@ dis1_start:
 		if (nullptr != boxPtr)
 		{	// in the case folding was successful
 			found = true;
+			if (discoveredBoxes != nullptr)
+			{
+				discoveredBoxes->push_back(boxPtr);
+			}
 
 			goto dis1_start;
 		}
@@ -344,7 +349,8 @@ dis1_start:
 bool Folding::discover2(
 	size_t                       root,
 	const std::set<size_t>&      forbidden,
-	bool                         conditional)
+	bool                         conditional,
+	std::vector<const Box *>     *discoveredBoxes)
 {
 	// Preconditions
 	assert(fae_.getRootCount() == fae_.connectionGraph.data.size());
@@ -403,6 +409,10 @@ dis2_start:
 				if (nullptr != boxPtr)
 				{	// in the case folding was successful
 					found = true;
+					if (discoveredBoxes != nullptr)
+					{
+						discoveredBoxes->push_back(boxPtr);
+					}
 
 					goto dis2_start;
 				}
@@ -419,7 +429,8 @@ dis2_start:
 bool Folding::discover3(
 	size_t                      root,
 	const std::set<size_t>&     forbidden,
-	bool                        conditional)
+	bool                        conditional,
+	std::vector<const Box *> *discoveredBoxes)
 {
 	// Preconditions
 	assert(fae_.getRootCount() == fae_.connectionGraph.data.size());
@@ -483,6 +494,10 @@ dis3_start:
 		if (nullptr != boxPtr)
 		{	// in the case folding was successful
 			found = true;
+			if (discoveredBoxes != nullptr)
+			{
+				discoveredBoxes->push_back(boxPtr);
+			}
 
 			goto dis3_start;
 		}
@@ -1046,19 +1061,19 @@ void Folding::learn2(FAE& fae, BoxMan& boxMan, std::set<size_t> forbidden)
 	}
 }
 
-std::set<size_t> Folding::fold(
+std::unordered_map<size_t, std::vector<const Box *>> Folding::fold(
         FAE&                         fae,
         BoxMan&                      boxMan,
         const std::set<size_t>&      forbidden)
 {
-	std::set<size_t> foldedRoots;
+	std::unordered_map<size_t, std::vector<const Box *>> foldedRoots;
 
 	Folding folding(fae, boxMan);
 
 	for (size_t i = 0; i < fae.getRootCount(); ++i)
 	{
 		if (forbidden.end() != forbidden.find(i))
-		{	// in the case the cutpoint is not allowed for folding
+		{    // in the case the cutpoint is not allowed for folding
 			continue;
 		}
 
@@ -1068,19 +1083,14 @@ std::set<size_t> Folding::fold(
 		// _ONLY_ using boxes which are _ALREADY_ in 'boxMan'. No learning of new
 		// boxes is allowed
 
-		if (folding.discover1(i, forbidden, true))
-		{
-			foldedRoots.insert(i);
-		}
+		foldedRoots[i] = std::vector<const Box *>();
+		folding.discover1(i, forbidden, true, &foldedRoots.at(i));
+		folding.discover2(i, forbidden, true, &foldedRoots.at(i));
+		folding.discover3(i, forbidden, true, &foldedRoots.at(i));
 
-		if (folding.discover2(i, forbidden, true))
+		if (foldedRoots.at(i).size() == 0)
 		{
-			foldedRoots.insert(i);
-		}
-
-		if (folding.discover3(i, forbidden, true))
-		{
-			foldedRoots.insert(i);
+			foldedRoots.erase(i);
 		}
 	}
 

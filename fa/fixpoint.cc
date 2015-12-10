@@ -279,7 +279,7 @@ size_t FixpointBase::fold(
 		std::set<size_t>&                 forbidden)
 {
 	foldedRoots_[abstrIteration_] =
-			std::set<size_t>(Folding::fold(*fae, boxMan_, forbidden));
+			BoxesAtRoot(Folding::fold(*fae, boxMan_, forbidden));
 	++abstrIteration_;
 
 	return foldedRoots_.at(abstrIteration_-1).size();
@@ -293,8 +293,21 @@ SymState* FixpointBase::reverseAndIsect(
 	const SymState&                        bwdSucc) const
 {
 	(void)fwdPred;
+	SymState* tmpState = execMan.copyState(bwdSucc);
+	std::shared_ptr<FAE> fae = std::shared_ptr<FAE>(new FAE(*(tmpState->GetFAE())));
 
-	SymState* tmpState = execMan.copyStateWithNewRegs(bwdSucc, fwdPred.GetInstr());
+	for (int i = abstrIteration_ - 1; i >= 0; --i)
+	{
+		assert(i < foldedRoots_.size());
+
+		for (const auto& rootToBoxes : foldedRoots_.at(i))
+		{
+			for (const auto& boxes : rootToBoxes.second)
+			{
+				Unfolding(*fae).unfoldBox(rootToBoxes.first, boxes);
+			}
+		}
+	}
 
 	// perform intersection
 	tmpState->Intersect(fwdPred);
