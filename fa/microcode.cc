@@ -595,6 +595,7 @@ void FI_imul::execute(ExecutionManager& execMan, SymState& state)
 // FI_check
 void FI_check::execute(ExecutionManager& execMan, SymState& state)
 {
+	garbageRoots_.clear();
 	state.GetFAE()->updateConnectionGraph();
 	SymState* tmpState = execMan.createChildState(state, next_);
 

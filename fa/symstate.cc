@@ -27,6 +27,7 @@
 #include "streams.hh"
 #include "symstate.hh"
 #include "virtualmachine.hh"
+#include "garbage_checker.hh"
 
 
 void SymState::init(
@@ -146,6 +147,7 @@ void SymState::recycle(Recycler<SymState>& recycler)
 std::shared_ptr<FAE> SymState::newNormalizedFAE()
 {
 	std::shared_ptr<FAE> normFae = std::shared_ptr<FAE>(new FAE(*fae_));
+	GarbageChecker::checkAndRemoveGarbage(*normFae, this, false);
 	normFae->updateConnectionGraph();
 	Normalization::normalize(*normFae, this, Normalization::computeForbiddenSet(*normFae));
 
