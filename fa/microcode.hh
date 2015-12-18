@@ -867,6 +867,7 @@ class FI_check : public VoidInstruction
 {
 private:
 	std::unordered_set<size_t> garbageRoots_; // list of roots removed from FA as a garbage
+
 public:
 
 	FI_check(const CodeStorage::Insn* insn)
