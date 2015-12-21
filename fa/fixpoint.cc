@@ -552,6 +552,13 @@ void FI_abs::printPredicates(std::ostringstream& os) const
 			os << " (" << clInsn->bb->name() << ")";
 		}
 
-		os << ": " << *this << "\n" << *pred << '\n';
+		if (pred != nullptr)
+		{
+			os << ": " << *this << "\n" << *pred << '\n';
+		}
+		else
+		{
+			os << ": " << *this << "\n" << "nullptr" << '\n';
+		}
 	}
 }

@@ -59,7 +59,8 @@ void GarbageChecker::checkGarbage(
 	const SymState*                   state,
 	const std::vector<bool>&          visited,
 	std::unordered_set<size_t>&       unvisited,
-	const bool                        endCheck)
+	const bool                        endCheck,
+	const bool                        silentMode)
 {
 	bool garbage = false;
 
@@ -93,7 +94,7 @@ void GarbageChecker::checkGarbage(
 		{
 			throw ProgramError(msg, state, loc);
 		}
-		else
+		else if (!silentMode)
 		{
 			FA_ERROR_MSG(loc, msg);
 		}
@@ -130,25 +131,27 @@ void GarbageChecker::checkAndRemoveGarbage(
 	FAE&                              fae,
 	const SymState*                   state,
 	const bool                        endCheck,
-	std::unordered_set<size_t>&       unvisited)
+	std::unordered_set<size_t>&       unvisited,
+	const bool                        silentMode)
 {
 	// compute reachable roots
 	std::vector<bool> visited(fae.getRootCount(), false);
 	traverse(fae, visited);
 
 	// check garbage
-	checkGarbage(fae, state, visited, unvisited, endCheck);
+	checkGarbage(fae, state, visited, unvisited, endCheck, silentMode);
 	removeGarbage(fae, unvisited);
 }
 
 void GarbageChecker::checkAndRemoveGarbage(
 	FAE&                              fae,
 	const SymState*                   state,
-	const bool                        endCheck)
+	const bool                        endCheck,
+	const bool                        silentMode)
 {
 	std::unordered_set<size_t> unvisited;
 
-	checkAndRemoveGarbage(fae, state, endCheck, unvisited);
+	checkAndRemoveGarbage(fae, state, endCheck, unvisited, silentMode);
 }
 
 void GarbageChecker::nontraverseCheckAndRemoveGarbage(

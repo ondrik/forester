@@ -39,8 +39,13 @@ void Abstraction::predicateAbstraction(
 		{
 			FA_DEBUG_AT(1,"ISECT1: " << *this->fae_.getRoot(root));
 			FA_DEBUG_AT(1,"ISECT2: " << predicate /* *(predicate->getRoot(root)) */);
-			const auto res = VATAAdapter::intersectionBU(*this->fae_.getRoot(root), /* *(predicate->getRoot(root)) */ *predicate, &translMap);
-			FA_DEBUG_AT(1,"RES: " << res);
+			if (this->fae_.getRoot(root) != nullptr && predicate != nullptr)
+			{
+				const auto res = VATAAdapter::intersectionBU(
+						*this->fae_.getRoot(root),
+						/* *(predicate->getRoot(root)) */ *predicate, &translMap);
+				FA_DEBUG_AT(1, "RES: " << res);
+			}
 		}
 	}
 

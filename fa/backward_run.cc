@@ -36,6 +36,10 @@ namespace
 
 		for (size_t i = 0; i < fwdFAE.getRootCount(); ++i)
 		{
+			if (bwdFAE.getRoot(i) == nullptr || fwdFAE.getRoot(i) == nullptr)
+			{
+				  continue;
+			}
 			TreeAut isectTA = TreeAut::intersectionBU(
 					*(fwdFAE.getRoot(i)),*(bwdFAE.getRoot(i)));
 			TreeAut finalIsectTA;
@@ -68,6 +72,7 @@ namespace
 		assert(normFAEFwd->getRootCount() == normFAEBwd->getRootCount());
 
 		predicate = getEmptyTrees(*normFAEFwd, *normFAEBwd);
+
 		if (predicate.empty())
 		{
 			predicate.insert(predicate.end(),

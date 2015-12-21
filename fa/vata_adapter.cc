@@ -410,7 +410,10 @@ VATAAdapter VATAAdapter::intersectionBU(
 		const VATAAdapter&                   rhs,
 		VATA::AutBase::ProductTranslMap*     pTranslMap)
 {
-	return VATAAdapter(VATA::ExplicitTreeAut::IntersectionBU(lhs.vataAut_, rhs.vataAut_, pTranslMap));
+    //std::cerr << "Final states l " << lhs.getFinalStates().size() << std::endl;
+    //std::cerr << "Final states r " << rhs.getFinalStates().size() << std::endl;
+    //std::cerr << "rhs " << rhs << std::endl;
+    return VATAAdapter(VATA::ExplicitTreeAut::IntersectionBU(lhs.vataAut_, rhs.vataAut_, pTranslMap));
 }
 
 namespace
