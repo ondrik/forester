@@ -46,7 +46,8 @@ private:
 		const SymState*                   state,
 		const std::vector<bool>&          visited,
 		std::unordered_set<size_t>&       unvisited,
-		const bool                        endCheck=false);
+		const bool                        endCheck = false,
+		const bool                        silentMode = false);
 
 
 	static void removeGarbage(
@@ -83,7 +84,8 @@ public:
 		FAE&                             fae,
 		const SymState*                  state,
 		const bool                       endCheck,
-		std::unordered_set<size_t>&      unvisited);
+		std::unordered_set<size_t>&      unvisited,
+		const bool                       silentMode = false);
 
 	/**
 	 * Just an interface to checkAndRemoveGargabe with the forth parameter.
@@ -93,7 +95,8 @@ public:
 	static void checkAndRemoveGarbage(
 		FAE&                             fae,
 		const SymState*                  state,
-		const bool                       endCheck);
+		const bool                       endCheck,
+		const bool                       silentMode = false);
 
 	/**
 	 * This function checks and removes garbage but does not perform
