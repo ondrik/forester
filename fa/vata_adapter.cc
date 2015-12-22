@@ -384,14 +384,14 @@ void VATAAdapter::copyReachableTransitionsFromRoot(
         visited.insert(state);
         for (const auto& t : src.vataAut_[state])
         {
-        		this->addTransition(t);
-						for (const auto& ch : t.GetChildren())
-						{
-									if (visited.count(ch) == 0)
-									{
-											stack.push_back(ch);
-									}
-						}
+            this->addTransition(t);
+            for (const auto& ch : t.GetChildren())
+            {
+                if (visited.count(ch) == 0)
+                {
+                    stack.push_back(ch);
+                }
+            }
         }
     }
 }
