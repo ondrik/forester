@@ -36,6 +36,15 @@ class Unfolding
 	FAE& fae;
 
 protected:
+
+	/**
+	 * @brief Merges two boxes to a new label
+	 *
+	 * Function takes two labels and joins them creating a new label.
+	 * This is basically done during unfolding when a box is unfolded and
+	 * the selectors to content of the box are added to
+	 * a label of the wrapping automaton.
+	 */
 	void boxMerge(
 		TreeAut&                       dst,
 		const TreeAut&                 src,
