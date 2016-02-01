@@ -280,6 +280,8 @@ protected:
 		{
 			FA_DEBUG_AT(1, "Learnt predicate: " << *p);
 		}
+
+		FA_DEBUG_AT(1, "Predicates printed");
 	}
 
 	void printTraceInternal(
