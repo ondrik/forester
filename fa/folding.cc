@@ -320,12 +320,12 @@ dis1_start:
 
 		FA_DEBUG_AT(3, "type 1 cutpoint detected at root " << root);
 
-		const Box* boxPtr = this->makeType1Box(
-			/* index of the TA to be folded */ root,
-			/* the state where to fold */ fae_.getRoot(root)->getFinalState(),
-			/* index of the other TA to be folded */ root,
-			/* set of cutpoints with forbidden folding */ forbidden,
-			/* if true do not create the box if not present */ conditional
+		const Box* boxPtr = this->makeBox1Component(
+				/* index of the TA to be folded */ root,
+				/* the state where to fold */ fae_.getRoot(root)->getFinalState(),
+				/* index of the other TA to be folded */ root,
+				/* set of cutpoints with forbidden folding */ forbidden,
+				/* if true do not create the box if not present */ conditional
 		);
 
 		if (nullptr != boxPtr)
@@ -398,12 +398,12 @@ dis2_start:
 				FA_DEBUG_AT(3, "type 2 cutpoint detected inside component " << root
 					<< " at state q" << stateSignaturePair.first);
 
-				const Box* boxPtr = this->makeType1Box(
-					/* index of the TA to be folded */ root,
-					/* the state where to fold */ stateSignaturePair.first,
-					/* index of the other TA to be folded */ cutpoint.root,
-					/* set of cutpoints with forbidden folding */ forbidden,
-					/* if true do not create the box if not present */ conditional
+				const Box* boxPtr = this->makeBox1Component(
+						/* index of the TA to be folded */ root,
+						/* the state where to fold */ stateSignaturePair.first,
+						/* index of the other TA to be folded */ cutpoint.root,
+						/* set of cutpoints with forbidden folding */ forbidden,
+						/* if true do not create the box if not present */ conditional
 				);
 
 				if (nullptr != boxPtr)
@@ -471,12 +471,12 @@ dis3_start:
 
 		assert(!cutpoint.fwdSelectors.empty());
 
-		if (this->makeType2Box(
-			/* index of the TA to be folded */ cutpoint.root,
-			/* index of the other TA to be folded */ root,
-			/* set of cutpoints with forbidden folding */ forbidden,
-			/* if true do not create the box if not present */ true,
-			/* only testing that we can make the box? */ true))
+		if (this->makeBox2Components(
+				/* index of the TA to be folded */ cutpoint.root,
+				/* index of the other TA to be folded */ root,
+				/* set of cutpoints with forbidden folding */ forbidden,
+				/* if true do not create the box if not present */ true,
+				/* only testing that we can make the box? */ true))
 		{	// in the case the box can be created in the reverse way
 			continue;
 		}
@@ -484,11 +484,11 @@ dis3_start:
 		FA_DEBUG_AT(3, "type 3 cutpoint detected at roots " << root << " and "
 			<< cutpoint.root);
 
-		const Box* boxPtr = this->makeType2Box(
-			/* index of the TA to be folded */ root,
-			/* index of the other TA to be folded */ cutpoint.root,
-			/* set of cutpoints with forbidden folding */ forbidden,
-			/* if true do not create the box if not present */ conditional
+		const Box* boxPtr = this->makeBox2Components(
+				/* index of the TA to be folded */ root,
+				/* index of the other TA to be folded */ cutpoint.root,
+				/* set of cutpoints with forbidden folding */ forbidden,
+				/* if true do not create the box if not present */ conditional
 		);
 
 		if (nullptr != boxPtr)
@@ -649,13 +649,13 @@ void Folding::componentCut(
 }
 
 
-const Box* Folding::makeType1Box(
-	size_t                        root,
-	size_t                        state,
-	size_t                        aux,
-	const std::set<size_t>&       forbidden,
-	bool                          conditional,
-	bool                          test)
+const Box* Folding::makeBox1Component(
+		size_t root,
+		size_t state,
+		size_t aux,
+		const std::set<size_t> &forbidden,
+		bool conditional,
+		bool test)
 {
 	// Preconditions
 	assert(root < fae_.getRootCount());
@@ -757,12 +757,12 @@ const Box* Folding::makeType1Box(
 }
 
 
-const Box* Folding::makeType2Box(
-	size_t                      root,
-	size_t                      aux,
-	const std::set<size_t>&     forbidden,
-	bool                        conditional,
-	bool                        test)
+const Box* Folding::makeBox2Components(
+		size_t root,
+		size_t aux,
+		const std::set<size_t> &forbidden,
+		bool conditional,
+		bool test)
 {
 	// Preconditions
 	assert(root < fae_.getRootCount());
@@ -861,6 +861,7 @@ const Box* Folding::makeType2Box(
 	if (!Folding::computeSelectorMap(selectorMap, aux,
 		fae_.getRoot(aux)->getFinalState()))
 	{
+		std::cerr << *(fae_.getRoot(aux)) << '\n';
 		assert(false);           // fail gracefully
 	}
 
@@ -1010,6 +1011,7 @@ bool Folding::computeSelectorMap(
 	// Preconditions
 	assert(root < fae_.getRootCount());
 	assert(nullptr != fae_.getRoot(root));
+	assert(selectorMap.empty());
 
 	const TreeAut& ta = *fae_.getRoot(root);
 
