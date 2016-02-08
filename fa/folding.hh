@@ -320,7 +320,7 @@ protected:
 	 * @returns  The created box (or @p nullptr if it is not in the box database
 	 *           and @p conditional is set to @p true or something bad happened)
 	 */
-	const Box*makeBox1Component(
+	const Box* makeBox1Component(
             size_t root,
             size_t state,
             size_t aux,
