@@ -20,7 +20,6 @@
 // Forester headers
 #include "connection_graph.hh"
 #include "config.h"
-#include "forestaut.hh"
 
 
 bool ConnectionGraph::CutpointInfo::operator%(const CutpointInfo& rhs) const
