@@ -477,6 +477,11 @@ public:
 	{
 		return boxes_;
 	}
+
+	size_t size() const
+	{
+		return boxes_.size();
+	}
 };
 
 #endif
