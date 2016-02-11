@@ -133,7 +133,7 @@ public:
 /**
  * @brief  Computes a fixpoint with abstraction
  *
- * Computes a fixpoint, emplying abstraction. During computation, new
+ * Computes a fixpoint, employing abstraction. During computation, new
  * convenient boxes are learnt.
  */
 class FI_abs : public FixpointBase
