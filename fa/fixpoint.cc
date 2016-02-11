@@ -353,7 +353,7 @@ void FI_abs::abstract(
 	// abstract
 	Abstraction abstraction(fae);
 
-	if (!predicates_.empty() && FA_USE_PREDICATE_ABSTRACTION)
+	if ((FA_START_WITH_PREDICATE_ABSTRACTION || !predicates_.empty()) && FA_USE_PREDICATE_ABSTRACTION)
 	{	// for predicate abstraction
 		abstraction.predicateAbstraction(this->getPredicates());
 	}
