@@ -49,47 +49,47 @@ void Abstraction::predicateAbstraction(
 		}
 	}
 
-		std::vector<std::set<size_t>> matchWith(numStates, std::set<size_t>());
-		for (const auto& matchPair : translMap)
-		{
-			matchWith[faeStateIndex[matchPair.first.first]].insert(matchPair.first.second);
-		}
-		
-		/*
-		std::set<std::pair<size_t, size_t>> product;
-		FAE::makeProduct(fae_, *predicates.back(), product);
+    std::vector<std::set<size_t>> matchWith(numStates, std::set<size_t>());
+    for (const auto& matchPair : translMap)
+    {
+        matchWith[faeStateIndex[matchPair.first.first]].insert(matchPair.first.second);
+    }
 
-		// create a map of states of 'fae_' on sets of states of 'predicate'
-		std::vector<std::set<size_t>> matchWith(numStates, std::set<size_t>());
-		for (const std::pair<size_t, size_t>& statePair : product)
-		{
-			matchWith[faeStateIndex[statePair.first]].insert(statePair.second);
-		}
-		*/
+    /*
+    std::set<std::pair<size_t, size_t>> product;
+    FAE::makeProduct(fae_, *predicates.back(), product);
 
-		std::ostringstream oss;
-		for (size_t i = 0; i < matchWith.size(); ++i)
-		{
-			oss << ", " << i << " -> ";
-			utils::printCont(oss, matchWith[i]);
-		}
-		FA_DEBUG_AT(1,"matchWith: " << oss.str());
-		
-		// create the relation
-		rel.assign(numStates, std::vector<bool>(numStates, false));
-		for (size_t i = 0; i < numStates; ++i)
-		{
-			rel[i][i] = true;
+    // create a map of states of 'fae_' on sets of states of 'predicate'
+    std::vector<std::set<size_t>> matchWith(numStates, std::set<size_t>());
+    for (const std::pair<size_t, size_t>& statePair : product)
+    {
+        matchWith[faeStateIndex[statePair.first]].insert(statePair.second);
+    }
+    */
 
-			for (size_t j = 0 ; j < i; ++j)
-			{
-				if (matchWith[i] == matchWith[j])
-				{
-					rel[i][j] = true;
-					rel[j][i] = true;
-				}
-			}
-		}
+    std::ostringstream oss;
+    for (size_t i = 0; i < matchWith.size(); ++i)
+    {
+        oss << ", " << i << " -> ";
+        utils::printCont(oss, matchWith[i]);
+    }
+    FA_DEBUG_AT(1,"matchWith: " << oss.str());
+
+    // create the relation
+    rel.assign(numStates, std::vector<bool>(numStates, false));
+    for (size_t i = 0; i < numStates; ++i)
+    {
+        rel[i][i] = true;
+
+        for (size_t j = 0 ; j < i; ++j)
+        {
+            if (matchWith[i] == matchWith[j])
+            {
+                rel[i][j] = true;
+                rel[j][i] = true;
+            }
+        }
+    }
 	if (predicates.empty()) //else
 	{
 		// create universal relation
@@ -130,15 +130,12 @@ void Abstraction::predicateAbstraction(
 				if (jIsData || kIsData)
 				{
 					rel[j.second][k.second] = false;
-					continue;
 				}
-
-				if (stateMap[j.first] % stateMap[k.first])
+				else if (!(stateMap[j.first] % stateMap[k.first]))
 				{
-					continue;
+					rel[j.second][k.second] = false;
 				}
 
-				rel[j.second][k.second] = false;
 			}
 		}
 	}
