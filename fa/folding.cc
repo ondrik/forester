@@ -861,7 +861,6 @@ const Box* Folding::makeBox2Components(
 	if (!Folding::computeSelectorMap(selectorMap, aux,
 		fae_.getRoot(aux)->getFinalState()))
 	{
-		std::cerr << *(fae_.getRoot(aux)) << '\n';
 		assert(false);           // fail gracefully
 	}
 
