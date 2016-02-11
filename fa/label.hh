@@ -53,7 +53,7 @@ public:   // data types
 		size_t index;
 		size_t offset;
 
-		NodeItem(const AbstractBox* aBox, size_t index, size_t offset)
+		NodeItem(const AbstractBox* aBox, const size_t index, const size_t offset)
 			: aBox(aBox), index(index), offset(offset)
 		{ }
 	};
@@ -120,7 +120,8 @@ public:   // methods
 			delete this->node.m;
 	}
 
-	void addMapItem(size_t key, const AbstractBox* aBox, size_t index, size_t offset)
+	void addMapItem(size_t key, const AbstractBox* aBox, const size_t index,
+					const size_t offset)
 	{
 		assert(this->node.m->find(key) == this->node.m->end());
 
