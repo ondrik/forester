@@ -99,16 +99,24 @@ void FI_acc_sel::execute(ExecutionManager& execMan, SymState& state)
 		throw ProgramError(ss.str(), &state, getLoc(state));
 	}
 
-	std::vector<FAE*> res;
+	std::vector<FAE *> res;
 
 	Splitting splitting(*state.GetFAE());
-	splitting.isolateOne(
-		/* vector for results */ res,
-		/* index of the desired TA */ data.d_ref.root,
-		/* offset of the selector */ data.d_ref.displ + offset_
-	);
-	roots_ = splitting.copyUnfoldedRoots();
 
+	try
+	{
+		splitting.isolateOne(
+				/* vector for results */ res,
+				/* index of the desired TA */ data.d_ref.root,
+				/* offset of the selector */ data.d_ref.displ + offset_
+		);
+	}
+	catch (std::runtime_error e)
+	{
+		throw ProgramError(e.what(), &state, getLoc(state));
+	}
+
+	roots_ = splitting.copyUnfoldedRoots();
 
 	for (auto fae : res)
 	{
