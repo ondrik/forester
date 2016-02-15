@@ -296,7 +296,7 @@ bool VATAAdapter::subseteq(const VATAAdapter& a, const VATAAdapter& b)
 VATAAdapter& VATAAdapter::unfoldAtRoot(
 	VATAAdapter&                   dst,
 	const size_t                   newState,
-	bool                           registerFinalState) const
+	const bool                     registerFinalState) const
 {
     //FA_DEBUG_AT(1,"TA unfoldAtRoot\n");
     if (registerFinalState)
