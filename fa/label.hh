@@ -28,6 +28,7 @@
 // Forester headers
 #include "types.hh"
 #include "abstractbox.hh"
+#include "programerror.hh"
 
 /**
  * @brief  A memory node
@@ -123,7 +124,12 @@ public:   // methods
 	void addMapItem(size_t key, const AbstractBox* aBox, const size_t index,
 					const size_t offset)
 	{
+		if (this->node.m->find(key) != this->node.m->end())
+		{
+			throw std::runtime_error("Cannot find a given selector");
+		}
 		assert(this->node.m->find(key) == this->node.m->end());
+
 
 		this->node.m->insert(std::make_pair(key, NodeItem(aBox, index, offset)));
 	}
