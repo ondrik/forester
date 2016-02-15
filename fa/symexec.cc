@@ -534,6 +534,7 @@ protected:
 		catch (RestartRequest& e)
 		{	// in case a restart is requested, clear all fixpoint computation points
 			FA_NOTE("Restart requested - new box...");
+			predicates_.clear();
 			clearFixpoints();
 
 			FA_DEBUG_AT(2, e.what());
