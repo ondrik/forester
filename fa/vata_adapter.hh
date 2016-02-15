@@ -94,6 +94,8 @@ private: // private methods
 public: // public methods
 	VATAAdapter();
 	VATAAdapter(const VATAAdapter& adapter);
+	VATAAdapter(const VATAAdapter&& adapter);
+	VATAAdapter(VATAAdapter&& adapter);
     ~VATAAdapter();
 
     /**
@@ -472,7 +474,7 @@ public: // public methods
     VATAAdapter& unfoldAtRoot(
 				VATAAdapter&             dst,
 				const size_t             newState,
-				bool                     registerFinalState = true) const;
+				const bool               registerFinalState = true) const;
 
 
 	/**

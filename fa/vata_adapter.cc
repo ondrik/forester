@@ -35,6 +35,9 @@ VATAAdapter::VATAAdapter() : vataAut_()
 VATAAdapter::VATAAdapter(const VATAAdapter& adapter) : vataAut_(adapter.vataAut_)
 {}
 
+VATAAdapter::VATAAdapter(VATAAdapter&& adapter) : vataAut_(adapter.vataAut_)
+{}
+
 VATAAdapter::~VATAAdapter()
 {}
 
