@@ -340,6 +340,7 @@ void Box::initialize()
 
 std::ostream& operator<<(std::ostream& os, const Box& box)
 {
+	os << "BOX " << box.name_ << "\n";
     /*/
 	auto writeStateF = [](size_t state) -> std::string {
 
@@ -360,6 +361,29 @@ std::ostream& operator<<(std::ostream& os, const Box& box)
 		os << " +" << s;
 
 	os << " ) [" << box.outputSignature_ << "] ";
+
+	for (auto state : box.output_->getFinalStates())
+		os << state << " ";
+
+	os << '\n';
+
+	os << *box.output_;
+
+	if (!box.input_)
+		return os;
+
+	os << "===" << std::endl << "input " << box.inputIndex_ << " (";
+
+	for(auto& s : box.inputCoverage(box.inputIndex_))
+		os << " +" << s;
+
+	os << " ) [" << box.inputSignature_ << "] ";
+
+	for (auto state : box.input_->getFinalStates())
+		os << state << " ";
+
+	os << "\n";
+	os << *box.input_;
 
     /*
 	TAWriter<label_type> writer(os);
