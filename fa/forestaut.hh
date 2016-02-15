@@ -284,7 +284,7 @@ public:   // methods
 		variables_[varId] = data;
 	}
 	
-	TreeAut createTAWithSameBackend()
+	TreeAut createTAWithSameBackend()const
 	{
 		return TreeAut::createTAWithSameTransitions(this->ta);
 	}
