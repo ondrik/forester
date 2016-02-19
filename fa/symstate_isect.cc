@@ -604,8 +604,10 @@ void SymState::SubstituteRefs(
 					for (i = 0; i < transArity; ++i)
 					{	// for each pair of states that map to each other
 						const Data* srcData = nullptr, *thisData = nullptr;
-						bool  srcIsData =  srcFAE->isData(srcTrans.GetNthChildren(i),  srcData);
-						bool thisIsData = thisFAE->isData(thisTrans.GetNthChildren(i), thisData);
+						const bool  srcIsData =
+								srcFAE->isData(srcTrans.GetNthChildren(i),  srcData);
+						const bool thisIsData =
+								thisFAE->isData(thisTrans.GetNthChildren(i), thisData);
 
 						//  srcIsData <-> nullptr != srcData
 						assert((!srcIsData || (nullptr != srcData))
