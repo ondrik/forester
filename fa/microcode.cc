@@ -150,7 +150,7 @@ void FI_acc_set::execute(ExecutionManager& execMan, SymState& state)
 				/* offsets of selectors */ offsets_
 		);
 	}
-	catch (ProgramError& e)
+	catch (std::runtime_error& e)
 	{
 		throw ProgramError(e.what(), &state, getLoc(state));
 	}
@@ -190,7 +190,7 @@ void FI_acc_all::execute(ExecutionManager& execMan, SymState& state)
                 /* offsets of selectors */ state.GetFAE()->getType(data.d_ref.root)->getSelectors()
             );
 	}
-	catch (ProgramError& e)
+	catch (std::runtime_error& e)
 	{
 		throw ProgramError(e.what(), &state, getLoc(state));
 	}
@@ -346,9 +346,17 @@ void FI_load::execute(ExecutionManager& execMan, SymState& state)
 	Data data = tmpState->GetReg(src_);
 
 	Data out;
-	VirtualMachine(*(tmpState->GetFAE())).nodeLookup(
+
+	try
+	{
+		VirtualMachine(*(tmpState->GetFAE())).nodeLookup(
 		data.d_ref.root, data.d_ref.displ + offset_, out
-	);
+		);
+	}
+	catch (std::runtime_error e)
+	{
+		throw ProgramError(e.what(), &state, getLoc(state));
+	}
 
 	tmpState->SetReg(dstReg_, out);
 
