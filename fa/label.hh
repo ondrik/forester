@@ -179,6 +179,11 @@ public:   // methods
 	{
 		assert(node_type::n_node == type_);
 		auto i = this->node.m->find(offset);
+		if (this->node.m->find(offset) == this->node.m->end())
+		{
+			throw std::runtime_error("Cannot find a given selector");
+		}
+
 		assert(i != this->node.m->end());
 		return i->second;
 	}
