@@ -17,6 +17,7 @@
  * along with forester.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <assert.h>
 
 // Forester headers
 #include "compiler.hh"
@@ -29,6 +30,20 @@
 #include "virtualmachine.hh"
 #include "garbage_checker.hh"
 
+
+/**
+ * @brief  Destructor
+ *
+ * Destructor
+ */
+SymState::~SymState()
+{
+    // Assertions
+    if (instr_->getType() != fi_type_e::fiFix && instr_->getType() != fi_type_e::fiUnspec)
+    {
+        assert(nullptr == fae_);
+    }
+}
 
 void SymState::init(
 	SymState*                             parent,

@@ -86,11 +86,7 @@ public:   // methods
 	 *
 	 * Destructor
 	 */
-	~SymState()
-	{
-		// Assertions
-		assert(nullptr == fae_);
-	}
+	~SymState();
 
 	std::shared_ptr<const FAE> GetFAE() const
 	{
