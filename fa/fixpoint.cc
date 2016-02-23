@@ -296,14 +296,28 @@ SymState* FixpointBase::reverseAndIsect(
 	SymState* tmpState = execMan.copyState(bwdSucc);
 	std::shared_ptr<FAE> fae = std::shared_ptr<FAE>(new FAE(*(tmpState->GetFAE())));
 
+	assert(foldedRoots_.size() - faeAtIteration_.size() <= 1);
 	for (int i = abstrIteration_ - 1; i >= 0; --i)
 	{
 		assert(i < foldedRoots_.size());
+
+		if (faeAtIteration_.count(i))
+		{
+			SymState st;
+			st.init(*tmpState);
+			st.SetFAE(faeAtIteration_.at(i));
+			tmpState->Intersect(st);
+		}
 
 		for (const auto& rootToBoxes : foldedRoots_.at(i))
 		{
 			for (const auto& boxes : rootToBoxes.second)
 			{
+				fae = std::shared_ptr<FAE>(new FAE(*(tmpState->GetFAE())));
+				if (fae->getRootCount() == 0)
+				{
+					return tmpState;
+				}
 				Unfolding(*fae).unfoldBox(rootToBoxes.first, boxes);
 			}
 		}
@@ -426,6 +440,9 @@ void FI_abs::execute(ExecutionManager& execMan, SymState& state)
 			forbidden = Normalization::computeForbiddenSet(*fae);
 
 			Normalization::normalize(*fae, &state, forbidden, true);
+
+			faeAtIteration_[abstrIteration_] = std::shared_ptr<FAE>(
+					new FAE(*fae));
 
 			abstract(*fae);
 

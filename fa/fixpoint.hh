@@ -39,6 +39,7 @@ private:
 	using Boxes = std::vector<const Box*>;
 	using BoxesAtRoot = std::unordered_map<size_t, Boxes>;
 	using BoxesAtIteration = std::unordered_map<size_t, BoxesAtRoot>;
+	using FAEAtIteration = std::unordered_map<size_t, std::shared_ptr<FAE>>;
 
 protected:
 
@@ -56,6 +57,8 @@ protected:
 	size_t abstrIteration_;
 
 	BoxesAtIteration foldedRoots_;
+
+	FAEAtIteration faeAtIteration_;
 
 protected:
 
@@ -76,6 +79,13 @@ public:
 		fixpoint_.clear();
 		fwdConf_.clear();
 		fwdConfWrapper_.clear();
+	}
+
+	virtual void clearReverse()
+	{
+		faeAtIteration_.clear();
+		foldedRoots_.clear();
+		abstrIteration_ = 0;
 	}
 
 #if 0
@@ -113,7 +123,8 @@ public:
 		ta_(ta),
 		boxMan_(boxMan),
 		abstrIteration_(0),
-		foldedRoots_()
+		foldedRoots_(),
+		faeAtIteration_()
 	{ }
 
 	virtual ~FixpointBase()
