@@ -257,6 +257,17 @@ protected:
 		}
 	}
 
+	void clearFixpointsReverseStructures()
+	{
+		for (auto instr : assembly_.code_)
+		{
+			if (instr->getType() == fi_type_e::fiFix)
+			{
+				static_cast<FixpointInstruction *>(instr)->clearReverse();
+			}
+		}
+	}
+
 
 	void printInstructionInfo(const CodeStorage::Insn *insn, const SymState *state)
 	{
@@ -474,6 +485,7 @@ protected:
                 addNewPredicates();
 
                 clearFixpoints();
+				clearFixpointsReverseStructures();
 
                 shouldRefineAndContinue = true;
             }
@@ -536,6 +548,7 @@ protected:
 			FA_NOTE("Restart requested - new box...");
 			predicates_.clear();
 			clearFixpoints();
+			clearFixpointsReverseStructures();
 
 			FA_DEBUG_AT(2, e.what());
 
