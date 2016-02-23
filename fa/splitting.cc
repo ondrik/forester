@@ -712,7 +712,7 @@ void Splitting::isolateSet(
 				if (!found)
 				{
 					// TODO: we are not sure if this is caused by invalid dereference.
-					throw ProgramError(ErrorMessages::DEREFERENCED);
+					throw std::runtime_error(ErrorMessages::DEREFERENCED);
 				}
 			}
 		}
