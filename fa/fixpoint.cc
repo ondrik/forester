@@ -299,11 +299,6 @@ size_t FixpointBase::fold(
 			BoxesAtRoot(Folding::fold(*fae, boxMan_, forbidden));
 	++abstrIteration_;
 
-	if (iterationToFoldedRoots_.at(abstrIteration_ - 1).size())
-	{
-		for (const auto& i : iterationToFoldedRoots_.at(abstrIteration_ - 1))
-	}
-
 	return iterationToFoldedRoots_.at(abstrIteration_ - 1).size();
 }
 
