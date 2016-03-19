@@ -1057,8 +1057,7 @@ void SymState::Intersect(
 						else if ((thisIsData && thisData->isUndef()) && fwdIsData)
 						{
 							assert(thisIsData && thisData->isUndef());
-
-							//FA_DEBUG_AT(1,"Substituting " << *srcData << " for " << newValue);
+							// TODO: PAB is this corrent?
 
 							lhs.push_back(fae->addData(
 								*fae->getRoot(fwdRoot).get(), *thisData));
