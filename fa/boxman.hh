@@ -349,9 +349,17 @@ public:
 		bool operator()(const AbstractBox* aBox, size_t index, size_t offset);
 	};
 
+	NodeLabel* insertLabel(
+		const std::vector<const AbstractBox*>*     label,
+		const std::vector<SelData>*                nodeInfo = nullptr);
+
+	NodeLabel *insertLabel(
+		const std::vector<const AbstractBox *> &node,
+		const std::vector<SelData> *nodeInfo = nullptr);
+
 	label_type lookupLabel(
 		const std::vector<const AbstractBox*>&       x,
-		const std::vector<SelData>*                  nodeInfo = nullptr);
+		const std::vector<SelData>*             nodeInfo = nullptr);
 
 	const Data& getData(const Data& data)
 	{

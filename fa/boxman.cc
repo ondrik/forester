@@ -244,6 +244,45 @@ bool BoxMan::EvaluateBoxF::operator()(
 }
 
 
+NodeLabel* BoxMan::insertLabel(
+		const std::vector<const AbstractBox*>*     node,
+		const std::vector<SelData>*                nodeInfo)
+{
+	NodeLabel* label = new NodeLabel(node, nodeInfo);
+
+    std::vector<size_t> tag;
+
+    label->iterate(EvaluateBoxF(*label, tag));
+
+    std::sort(tag.begin(), tag.end());
+
+    label->setTag(
+        const_cast<void*>(
+            reinterpret_cast<const void*>(
+                &*tagStore_.insert(
+                    std::make_pair(
+                        static_cast<const TypeBox*>(label->boxLookup(static_cast<size_t>(-1),
+                        nullptr)), tag)
+                ).first
+            )
+        )
+    );
+
+	return label;
+}
+
+
+NodeLabel* BoxMan::insertLabel(
+		const std::vector<const AbstractBox*>&     node,
+		const std::vector<SelData>*                nodeInfo)
+{
+	std::pair<TNodeStore::iterator, bool> p = nodeStore_.insert(
+			std::make_pair(node, static_cast<NodeLabel*>(nullptr)));
+
+	insertLabel(&p.first->first, nodeInfo);
+}
+
+
 label_type BoxMan::lookupLabel(
 	const std::vector<const AbstractBox*>&     x,
 	const std::vector<SelData>*                nodeInfo)
@@ -253,27 +292,7 @@ label_type BoxMan::lookupLabel(
 
 	if (p.second)
 	{
-		NodeLabel* label = new NodeLabel(&p.first->first, nodeInfo);
-
-		std::vector<size_t> tag;
-
-		label->iterate(EvaluateBoxF(*label, tag));
-
-		std::sort(tag.begin(), tag.end());
-
-		label->setTag(
-			const_cast<void*>(
-				reinterpret_cast<const void*>(
-					&*tagStore_.insert(
-						std::make_pair(
-							static_cast<const TypeBox*>(label->boxLookup(static_cast<size_t>(-1),
-							nullptr)), tag)
-					).first
-				)
-			)
-		);
-
-		p.first->second = label;
+		p.first->second = insertLabel(&p.first->first, nodeInfo);
 	}
 
 	return p.first->second;
