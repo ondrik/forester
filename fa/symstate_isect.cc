@@ -1054,6 +1054,15 @@ void SymState::Intersect(
 							lhs.push_back(fae->addData(
 								*fae->getRoot(thisRoot).get(), *fwdData));
 						}
+						else if ((thisIsData && thisData->isUndef()) && fwdIsData)
+						{
+							assert(thisIsData && thisData->isUndef());
+
+							//FA_DEBUG_AT(1,"Substituting " << *srcData << " for " << newValue);
+
+							lhs.push_back(fae->addData(
+								*fae->getRoot(fwdRoot).get(), *thisData));
+						}
 						else
 						{	// we should not get here
 							assert(false);
