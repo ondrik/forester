@@ -126,9 +126,10 @@ public:   // methods
 	{
 		if (this->node.m->find(key) != this->node.m->end())
 		{
-			throw std::runtime_error("Cannot find a given selector");
+			//throw std::runtime_error("Cannot find a given selector");
 		}
-		assert(this->node.m->find(key) == this->node.m->end());
+		// TODO: PAB is this corrent?
+		//assert(this->node.m->find(key) == this->node.m->end());
 
 
 		this->node.m->insert(std::make_pair(key, NodeItem(aBox, index, offset)));
