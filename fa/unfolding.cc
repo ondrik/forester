@@ -68,6 +68,10 @@ void Unfolding::boxMerge(
 
                 FA::reorderBoxes(newLabel, newLhs);
 
+                if (nullptr == this->fae.boxMan->lookupLabel(newLabel).obj_)
+                {
+                    this->fae.boxMan->insertLabel(newLabel);
+                }
                 assert(nullptr != this->fae.boxMan->lookupLabel(newLabel).obj_);
                 dst.addTransition(
                         newLhs,
