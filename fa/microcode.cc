@@ -53,6 +53,22 @@ inline const cl_loc* getLoc(const SymState& state)
 	return &(state.GetInstr()->insn()->loc);
 }
 
+	void addUsedRoots(
+			const size_t usedRoot,
+			const size_t numberBefore,
+			const size_t numberAfter,
+			std::set<size_t>& usedRoots)
+	{
+		if (usedRoots.size()) // something was unfolded
+		{
+			usedRoots.insert(usedRoot);
+			for (size_t i = numberBefore-1; i < numberAfter; ++i)
+			{
+				usedRoots.insert(i);
+			}
+		}
+	}
+
 } // namespace
 
 // FI_cond
@@ -90,6 +106,7 @@ void FI_cond::finalize(
 // FI_acc_sel
 void FI_acc_sel::execute(ExecutionManager& execMan, SymState& state)
 {
+	roots_.clear();
 	const Data& data = state.GetReg(dst_);
 
 	if (!data.isRef())
@@ -117,6 +134,11 @@ void FI_acc_sel::execute(ExecutionManager& execMan, SymState& state)
 	}
 
 	roots_ = splitting.copyUnfoldedRoots();
+	addUsedRoots(
+			data.d_ref.root,
+			state.GetFAE()->getRootCount(),
+			res.at(0)->getRootCount(),
+			roots_);
 
 	for (auto fae : res)
 	{
@@ -129,6 +151,7 @@ void FI_acc_sel::execute(ExecutionManager& execMan, SymState& state)
 // FI_acc_set
 void FI_acc_set::execute(ExecutionManager& execMan, SymState& state)
 {
+	roots_.clear();
 	auto data = state.GetReg(dst_);
 
 	if (!data.isRef())
@@ -156,7 +179,11 @@ void FI_acc_set::execute(ExecutionManager& execMan, SymState& state)
 	}
 
 	roots_ = splitting.copyUnfoldedRoots();
-
+	addUsedRoots(
+			data.d_ref.root,
+			state.GetFAE()->getRootCount(),
+			res.at(0)->getRootCount(),
+			roots_);
 
 	for (auto fae : res)
 	{
@@ -169,6 +196,7 @@ void FI_acc_set::execute(ExecutionManager& execMan, SymState& state)
 // FI_acc_all
 void FI_acc_all::execute(ExecutionManager& execMan, SymState& state)
 {
+	roots_.clear();
 	auto data = state.GetReg(dst_);
 
 	if (!data.isRef())
@@ -196,6 +224,11 @@ void FI_acc_all::execute(ExecutionManager& execMan, SymState& state)
 	}
 
 	roots_ = splitting.copyUnfoldedRoots();
+	addUsedRoots(
+			data.d_ref.root,
+			state.GetFAE()->getRootCount(),
+			res.at(0)->getRootCount(),
+			roots_);
 
 	for (auto fae : res)
 	{

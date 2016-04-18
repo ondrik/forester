@@ -27,41 +27,59 @@
 #include "folding.hh"
 #include "microcode.hh"
 #include "virtualmachine.hh"
+#include "normalization.hh"
 
 namespace
 {
-	std::set<size_t> getUnusedRoots(std::set<size_t> usedRoots,
+	std::set<size_t> getUnusedRoots(const std::set<size_t>& usedRoots,
 								   const size_t rootsNumber)
 	{
 		std::set<size_t> unusedRoots;
 
+		size_t max = 0;
 		for (size_t i = 0; i < rootsNumber; ++i)
 		{
 			if (!usedRoots.count(i))
 			{
 				unusedRoots.insert(i);
 			}
+
+			if (max < i)
+			{
+				max = i;
+			}
+		}
+
+		if (usedRoots.size()) // if some roots were used
+		{
+			for (size_t i = max; i < rootsNumber; ++i)
+			{
+				unusedRoots.erase(i);
+			}
 		}
 
 		return unusedRoots;
 	}
 
-	SymState* revertFolding(ExecutionManager& execMan,
-		const SymState& bwdSucc,
-		BoxMan& boxMan,
-		const std::set<size_t>& roots)
+	SymState* revertUnfolding(ExecutionManager &execMan,
+		const SymState                         &bwdSucc,
+		BoxMan                                 &boxMan,
+		const std::set<size_t>                 &roots,
+		const size_t                            root)
 	{
-        SymState* tmpState = execMan.copyState(bwdSucc);
-        std::shared_ptr<FAE> fae = std::shared_ptr<FAE>(new FAE(*(tmpState->GetFAE())));
+		SymState* tmpState = execMan.copyState(bwdSucc);
+		std::shared_ptr<FAE> fae = std::shared_ptr<FAE>(new FAE(*(tmpState->GetFAE())));
 
-        std::set<size_t> forbidden = getUnusedRoots(roots, fae->getRootCount());
-        forbidden.insert(roots.begin(), roots.end());
+		std::set<size_t> forbidden = getUnusedRoots(roots, fae->getRootCount());
 
-        Folding::learn2(*fae, boxMan, forbidden);
-        Folding::learn1(*fae, boxMan, forbidden);
+		fae->updateConnectionGraph();
+		auto forbiddenNorm = Normalization::computeForbiddenSet(*fae);
+		Normalization::normalize(*fae, &bwdSucc, forbiddenNorm, true);
 
-		Folding::fold(*fae, boxMan, forbidden);
-		// TODO: while here??
+		auto res = Folding::fold(*fae, boxMan, forbidden);
+		assert(forbidden.size() >= fae->getRootCount() || res.size() != 0 ||
+					   (roots.size() == 1 && *(roots.begin()) == root));
+		// TODO PAB: while here??
 
 		return tmpState;
 	}
@@ -90,7 +108,7 @@ SymState* FI_acc_sel::reverseAndIsect(
 //	FA_DEBUG_AT(1,"Executing !!VERY!! suspicious reverse operation FI_acc_sel");
 //	return tmpState;
 
-	SymState* tmpState = revertFolding(execMan, bwdSucc, boxMan_, roots_);
+	SymState* tmpState = revertUnfolding(execMan, bwdSucc, boxMan_, roots_, fwdPred.GetReg(dst_).d_ref.root);
 
 	FA_DEBUG_AT(1,"Skipping reverse operation FI_acc_set");
 	return tmpState;
@@ -103,7 +121,7 @@ SymState* FI_acc_set::reverseAndIsect(
 {
 	(void)fwdPred;
 
-	SymState* tmpState = revertFolding(execMan, bwdSucc, boxMan_, roots_);
+	SymState* tmpState = revertUnfolding(execMan, bwdSucc, boxMan_, roots_, fwdPred.GetReg(dst_).d_ref.root);
 
 	FA_DEBUG_AT(1,"Skipping reverse operation FI_acc_set");
 	return tmpState;
@@ -116,7 +134,7 @@ SymState* FI_acc_all::reverseAndIsect(
 {
 	(void)fwdPred;
 
-	SymState* tmpState = revertFolding(execMan, bwdSucc, boxMan_, roots_);
+	SymState* tmpState = revertUnfolding(execMan, bwdSucc, boxMan_, roots_, fwdPred.GetReg(dst_).d_ref.root);
 
 	FA_DEBUG_AT(1,"Skipping reverse operation FI_acc_all");
 	return tmpState;
