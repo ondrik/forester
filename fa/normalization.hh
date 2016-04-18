@@ -45,7 +45,7 @@ protected:
 	TreeAut* mergeRoot(
 		TreeAut&                          dst,
 		size_t                            ref,
-		const TreeAut&                    src,
+		std::shared_ptr<const TreeAut>    srcPtr,
 		std::vector<size_t>&              joinStates);
 
 
@@ -103,7 +103,7 @@ public:
 		std::vector<bool>&                marked,
 		std::vector<size_t>&              order,
 		const std::set<size_t>&           forbidden = std::set<size_t>(),
-		bool                              extended = false);
+		const bool                        extended = false);
 
 
 	static bool normalize(
@@ -128,7 +128,8 @@ public:
 	 *
 	 * @returns  The set with indices of components not to be merged or folded
 	 */
-	static std::set<size_t> computeForbiddenSet(FAE& fae);
+	static std::set<size_t> computeForbiddenSet(const FAE& fae, const bool ignoreNearby = false,
+	const bool ignoreVars = false);
 
 public:   // methods
 

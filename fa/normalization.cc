@@ -66,20 +66,29 @@ namespace {
 TreeAut* Normalization::mergeRoot(
 	TreeAut&                          dst,
 	const size_t                      rootRef,
-	const TreeAut&                    src,
+	std::shared_ptr<const TreeAut>    srcPtr,
 	std::vector<size_t>&              joinStates)
 {
 	// Assertions
 	assert(rootRef < this->fae.getRootCount());
 
+	const TreeAut& src = *srcPtr;
+	TreeAut* resTA = this->fae.allocTA();
+
 	std::unordered_map<size_t, size_t> joinStatesMap;
-	for (const size_t finState : src.getFinalStates())
+	if (srcPtr != nullptr)
 	{
-		joinStates.push_back(this->fae.nextState());
-		joinStatesMap.insert(std::make_pair(finState, this->fae.freshState()));
+		for (const size_t finState : src.getFinalStates())
+		{
+			joinStates.push_back(this->fae.nextState());
+			joinStatesMap.insert(std::make_pair(finState, this->fae.freshState()));
+		}
+	}
+	else
+	{
+		joinStates.push_back(this->fae.addData(*resTA, Data::createUndef()));
 	}
 
-	TreeAut* resTA = this->fae.allocTA();
 	resTA->addFinalStates(dst.getFinalStates());
 	size_t rootRefState = _MSB_ADD(this->fae.boxMan->getDataId(Data::createRef(rootRef)));
 	
@@ -97,8 +106,10 @@ TreeAut* Normalization::mergeRoot(
 		}
 	}
 	if (!hit) {assert(false);}
-	// avoid screwing up things
-	src.unfoldAtRoot(*resTA, joinStatesMap, false);
+	if (srcPtr != nullptr)
+	{ // avoid screwing up things
+		src.unfoldAtRoot(*resTA, joinStatesMap, false);
+	}
 
 	// postconditions
 	
@@ -160,14 +171,19 @@ void Normalization::normalizeRoot(
 		if (marked[cutpoint.root])
 			continue;
 
+		if (root == cutpoint.root)
+		{
+			continue;
+		}
 		assert(root != cutpoint.root);
 
 		std::vector<size_t> refStates;
 
+		assert(this->fae.getRoot(root) != nullptr);
 		TreeAut* ta = this->mergeRoot(
 			*this->fae.getRoot(root),
 			cutpoint.root,
-			*this->fae.getRoot(cutpoint.root),
+			this->fae.getRoot(cutpoint.root),
 			refStates
 		);
 
@@ -204,7 +220,7 @@ void Normalization::scan(
 	std::vector<bool>&                marked,
 	std::vector<size_t>&              order,
 	const std::set<size_t>&           forbidden,
-	bool                              extended)
+	const bool                        extended)
 {
 	assert(this->fae.connectionGraph.isValid());
 
@@ -359,7 +375,7 @@ bool Normalization::normalizeWithoutMerging(
 	return result;
 }
 
-std::set<size_t> Normalization::computeForbiddenSet(FAE& fae)
+std::set<size_t> Normalization::computeForbiddenSet(const FAE& fae, const bool ignoreNearby, const bool ignoreVars)
 {
 	// Assertions
 	assert(fae.getRootCount() == fae.connectionGraph.data.size());
@@ -369,10 +385,18 @@ std::set<size_t> Normalization::computeForbiddenSet(FAE& fae)
 
 	VirtualMachine vm(fae);
 
-	for (size_t i = 0; i < FIXED_REG_COUNT; ++i)
+	if (!ignoreVars)
 	{
-		assert(fae.getRoot(vm.varGet(i).d_ref.root));
-		forbidden.insert(vm.varGet(i).d_ref.root);
+		for (size_t i = 0; i < FIXED_REG_COUNT; ++i)
+		{
+			assert(fae.getRoot(vm.varGet(i).d_ref.root));
+			forbidden.insert(vm.varGet(i).d_ref.root);
+		}
+	}
+
+	if (ignoreNearby)
+	{
+		return forbidden;
 	}
 
 	for (size_t i = 0; i < FIXED_REG_COUNT; ++i)
