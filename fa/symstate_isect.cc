@@ -389,14 +389,21 @@ bool shouldCreateProductState(
 	auto isundef = [](const Data& data) -> bool {return data.isUndef();};
 	auto isnative = [](const Data& data) -> bool {return data.isNativePtr();};
 
-	if (VirtualMachine::isNodeType(thisFAE, thisVar, isundef) &&
-		VirtualMachine::isNodeType(srcFAE, srcVar, isundef))
-	{ // variable in register is undefined pointer so it has not its own TA
-		return false;
+	try
+	{
+		if (VirtualMachine::isNodeType(thisFAE, thisVar, isundef) &&
+			VirtualMachine::isNodeType(srcFAE, srcVar, isundef))
+		{ // variable in register is undefined pointer so it has not its own TA
+			return false;
+		}
+		else if (VirtualMachine::isNodeType(thisFAE, thisVar, isnative) &&
+				 VirtualMachine::isNodeType(srcFAE, srcVar, isnative))
+		{ // native pointer is return address of a function
+			return false;
+		}
 	}
-	else if (VirtualMachine::isNodeType(thisFAE, thisVar, isnative) &&
-		VirtualMachine::isNodeType(srcFAE, srcVar, isnative))
-	{ // native pointer is return address of a function
+	catch (std::runtime_error e)
+	{ // TODO: PAB
 		return false;
 	}
 
@@ -774,6 +781,8 @@ void SymState::Intersect(
 	const std::shared_ptr<const FAE> thisFAE = this->GetFAE();
 	const std::shared_ptr<const FAE> fwdFAE = fwd.GetFAE();
 	assert((nullptr != thisFAE) && (nullptr != fwdFAE));
+	FA_DEBUG_AT(1, "THIS (BWD) " << *thisFAE);
+	FA_DEBUG_AT(1, "FWD (FWD) " << *fwdFAE);
 
 	FAE* fae = new FAE(*thisFAE);
 	fae->clear();
@@ -874,6 +883,7 @@ void SymState::Intersect(
 			);
 
 			fae->PushVar(Data::createRef(rs.root));
+			FA_DEBUG_AT(1,"Creating root state (" << rs << ')\n');
 		}
 	}
 
