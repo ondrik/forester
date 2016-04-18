@@ -684,7 +684,7 @@ void Splitting::isolateSet(
 			// get root selectors (from the new FA) into tmpS
 			splitting.enumerateSelectorsAtRoot(tmpS, target);
 			if (tmpS.count(i))
-			{	// in case 
+			{	// in case
 				tmp2.push_back(new FAE(*aut));
 			}
 			else
@@ -711,7 +711,7 @@ void Splitting::isolateSet(
 
 				if (!found)
 				{
-					// TODO: we are not sure if this is caused by invalid dereference.
+					// TODO PAB: we are not sure if this is caused by invalid dereference.
 					throw std::runtime_error(ErrorMessages::DEREFERENCED);
 				}
 			}
