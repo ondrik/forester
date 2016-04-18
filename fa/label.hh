@@ -185,7 +185,7 @@ public:   // methods
 			throw std::runtime_error("Cannot find a given selector");
 		}
 
-		assert(i != this->node.m->end());
+		//assert(i != this->node.m->end());
 		return i->second;
 	}
 
