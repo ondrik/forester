@@ -7,6 +7,88 @@
 
 #include <vector>
 
+namespace
+{
+	struct SmartTMatchF
+	{
+		bool operator()(
+				const TreeAut::Transition &t1,
+				const TreeAut::Transition &t2)
+		{
+			label_type l1 = TreeAut::GetSymbol(t1);
+			label_type l2 = TreeAut::GetSymbol(t2);
+			if (l1->isNode() && l2->isNode())
+			{
+				if (!FA_ALLOW_STACK_FRAME_ABSTRACTION)
+				{
+					if ((static_cast<const TypeBox *>(l1->nodeLookup(-1).aBox))->getName().find("__@") == 0)
+					{
+						return l1 == l2;
+					}
+				}
+				return l1->getTag() == l2->getTag();
+			}
+
+			return l1 == l2;
+		}
+	};
+
+	class SmarterTMatchF
+{
+private:  // data members
+
+	const FAE& fae_;
+
+public:   // methods
+
+	SmarterTMatchF(const FAE& fae) :
+		fae_(fae)
+	{ }
+
+	bool operator()(
+		const TreeAut::Transition&  t1,
+		const TreeAut::Transition&  t2)
+	{
+        label_type l1 = TreeAut::GetSymbol(t1);
+        label_type l2 = TreeAut::GetSymbol(t2);
+		if (!l1->isNode() || !l2->isNode())
+			return l1 == l2;
+
+		if (l1->getTag() != l2->getTag())
+			return false;
+
+		if (&t1.GetChildren() == &t2.GetChildren())
+			return true;
+
+		if (t1.GetChildrenSize() != t2.GetChildrenSize())
+			return false;
+
+		for (size_t i = 0; i < t1.GetChildrenSize(); ++i)
+		{
+			size_t s1 = t1.GetNthChildren(i), s2 = t2.GetNthChildren(i), ref;
+
+			if (s1 == s2)
+				continue;
+
+			if (FA::isData(s1))
+			{
+				if (!this->fae_.getRef(s1, ref))
+					return false;
+
+				if (FA::isData(s2))
+					return false;
+			} else
+			{
+				if (FA::isData(s2) && !fae_.getRef(s2, ref))
+					return false;
+			}
+		}
+
+		return true;
+	}
+};
+}
+
 void Abstraction::predicateAbstraction(
 		const std::vector<std::shared_ptr<const TreeAut>>&    predicates)
 {
@@ -138,6 +220,35 @@ void Abstraction::predicateAbstraction(
 
 			}
 		}
+
+		struct SmartTMatchF matcher;
+		const auto usedStates = fae_.getRoot(i)->getUsedStates();
+		for (const auto j : usedStates)
+		{
+			for (const auto k : usedStates)
+			{
+				bool matchedAll = true;
+				for (auto jIt = fae_.getRoot(i)->begin(j); jIt != fae_.getRoot(i)->end(j); ++jIt)
+				{
+					bool matchedOne = false;
+					for (auto kIt = fae_.getRoot(i)->begin(k); kIt != fae_.getRoot(i)->end(k); ++kIt)
+					{
+						if (matcher(*jIt, *kIt))
+						{
+							matchedOne = true;
+							break;
+						}
+					}
+					matchedAll &= matchedOne;
+				}
+
+				if (!matchedAll)
+				{
+					rel.at(faeStateIndex.translate(j)).at(faeStateIndex.translate(k)) = false;
+				}
+			}
+		}
+
 	}
 
 	std::ostringstream ossRel;
