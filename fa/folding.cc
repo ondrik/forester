@@ -289,7 +289,7 @@ bool Folding::discover1(
 	size_t                       root,
 	const std::set<size_t>&      forbidden,
 	bool                         conditional,
-	std::vector<const Box*>*     discoveredBoxes)
+	std::vector<std::pair<size_t, const Box*>>*     discoveredBoxes)
 {
 	// Preconditions
 	assert(fae_.getRootCount() == fae_.connectionGraph.data.size());
@@ -333,7 +333,8 @@ dis1_start:
 			found = true;
 			if (discoveredBoxes != nullptr)
 			{
-				discoveredBoxes->push_back(boxPtr);
+				discoveredBoxes->push_back(std::pair<size_t, const Box*>(
+						fae_.getRoot(root)->getFinalState(),boxPtr));
 			}
 
 			goto dis1_start;
@@ -350,7 +351,7 @@ bool Folding::discover2(
 	size_t                       root,
 	const std::set<size_t>&      forbidden,
 	bool                         conditional,
-	std::vector<const Box *>     *discoveredBoxes)
+	std::vector<std::pair<size_t, const Box*>>*     discoveredBoxes)
 {
 	// Preconditions
 	assert(fae_.getRootCount() == fae_.connectionGraph.data.size());
@@ -411,7 +412,8 @@ dis2_start:
 					found = true;
 					if (discoveredBoxes != nullptr)
 					{
-						discoveredBoxes->push_back(boxPtr);
+						discoveredBoxes->push_back(std::pair<size_t, const Box*>(
+								stateSignaturePair.first, boxPtr));
 					}
 
 					goto dis2_start;
@@ -430,7 +432,7 @@ bool Folding::discover3(
 	size_t                      root,
 	const std::set<size_t>&     forbidden,
 	bool                        conditional,
-	std::vector<const Box *> *discoveredBoxes)
+	std::vector<std::pair<size_t, const Box*>>*     discoveredBoxes)
 {
 	// Preconditions
 	assert(fae_.getRootCount() == fae_.connectionGraph.data.size());
@@ -496,7 +498,8 @@ dis3_start:
 			found = true;
 			if (discoveredBoxes != nullptr)
 			{
-				discoveredBoxes->push_back(boxPtr);
+				discoveredBoxes->push_back(std::pair<size_t, const Box*>(
+						fae_.getRoot(root)->getFinalState(), boxPtr));
 			}
 
 			goto dis3_start;
@@ -660,6 +663,8 @@ const Box* Folding::makeBox1Component(
 	// Preconditions
 	assert(root < fae_.getRootCount());
 	assert(nullptr != fae_.getRoot(root));
+
+	assert(fae_.getRoot(root)->isFinalState(state));
 
 	// 'index' maintains for each cutpoint of the FA either '-1' which means that
 	// the box does not reference it, or the order in which it is referenced in
@@ -1062,12 +1067,12 @@ void Folding::learn2(FAE& fae, BoxMan& boxMan, std::set<size_t> forbidden)
 	}
 }
 
-std::unordered_map<size_t, std::vector<const Box *>> Folding::fold(
+std::unordered_map<size_t, std::vector<std::pair<size_t, const Box *>>> Folding::fold(
         FAE&                         fae,
         BoxMan&                      boxMan,
         const std::set<size_t>&      forbidden)
 {
-	std::unordered_map<size_t, std::vector<const Box *>> foldedRoots;
+	std::unordered_map<size_t, std::vector<std::pair<size_t, const Box *>>> foldedRoots;
 
 	Folding folding(fae, boxMan);
 
@@ -1084,7 +1089,7 @@ std::unordered_map<size_t, std::vector<const Box *>> Folding::fold(
 		// _ONLY_ using boxes which are _ALREADY_ in 'boxMan'. No learning of new
 		// boxes is allowed
 
-		foldedRoots[i] = std::vector<const Box *>();
+		foldedRoots[i] = std::vector<std::pair<size_t, const Box *>>();
 		folding.discover1(i, forbidden, true, &foldedRoots.at(i));
 		folding.discover2(i, forbidden, true, &foldedRoots.at(i));
 		folding.discover3(i, forbidden, true, &foldedRoots.at(i));

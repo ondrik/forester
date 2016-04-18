@@ -378,7 +378,7 @@ public:
 		size_t                       root,
 		const std::set<size_t>&      forbidden,
 		bool                         conditional,
-		std::vector<const Box *>*   discoveredBoxes = nullptr);
+		std::vector<std::pair<size_t, const Box*>>*     discoveredBoxes = nullptr);
 
 
 	/**
@@ -403,13 +403,13 @@ public:
 		size_t                       root,
 		const std::set<size_t>&      forbidden,
 		bool                         conditional,
-		std::vector<const Box *>*    discoveredBoxes = nullptr);
+		std::vector<std::pair<size_t, const Box*>>*     discoveredBoxes = nullptr);
 
 	bool discover3(
 		size_t                      root,
 		const std::set<size_t>&     forbidden,
 		bool                        conditional,
-		std::vector<const Box *>*   discoveredBoxes = nullptr);
+		std::vector<std::pair<size_t, const Box*>>*     discoveredBoxes = nullptr);
 
 	static void learn1(FAE& fae,
 					   BoxMan& boxMan,
@@ -431,7 +431,7 @@ public:
      *
      * @returns  @p Set of roots of TAs where folding was done
      */
-    static std::unordered_map<size_t, std::vector<const Box *>> fold(
+    static std::unordered_map<size_t, std::vector<std::pair<size_t, const Box *>>> fold(
         FAE&                         fae,
         BoxMan&                      boxMan,
         const std::set<size_t>&      forbidden);
