@@ -198,7 +198,7 @@ public:
 				}
 
 				if (!funcCompat(fae, j, *fae.getRoot(j), *ta))
-				{	// in case additional compatibility chack failed
+				{	// in case additional compatibility check failed
 					break;        // the FA are not compatible
 				}
 			}
