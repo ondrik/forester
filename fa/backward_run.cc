@@ -21,67 +21,10 @@
 #include "backward_run.hh"
 #include "memplot.hh"
 #include "streams.hh"
+#include "fixpoint.hh"
 
 namespace
 {
-	std::vector<std::shared_ptr<const TreeAut>> getEmptyTrees(
-			const FAE&            fwdFAE,
-			const FAE&            bwdFAE)
-	{
-		assert(fwdFAE.getRootCount() == bwdFAE.getRootCount());
-		FA_DEBUG_AT(1, "empty input fwd " << fwdFAE);
-		FA_DEBUG_AT(1, "empty input bwd " << bwdFAE);
-
-		std::vector<std::shared_ptr<const TreeAut>> res;
-
-		for (size_t i = 0; i < fwdFAE.getRootCount(); ++i)
-		{
-			if (bwdFAE.getRoot(i) == nullptr || fwdFAE.getRoot(i) == nullptr)
-			{
-				  continue;
-			}
-			TreeAut isectTA = TreeAut::intersectionBU(
-					*(fwdFAE.getRoot(i)),*(bwdFAE.getRoot(i)));
-			TreeAut finalIsectTA;
-
-			isectTA.uselessAndUnreachableFree(finalIsectTA);
-			FA_DEBUG_AT(1, "empty " << isectTA);
-
-			if (finalIsectTA.areTransitionsEmpty())
-			{
-				res.push_back(bwdFAE.getRoot(i));
-			}
-		}
-
-
-		return res;
-	}
-
-	void learnPredicates(
-		SymState*&			                             fwdState,
-		SymState*&			                             bwdState,
-		std::vector<std::shared_ptr<const TreeAut>>&     predicate)
-	{
-		//SymState* tmpState = execMan_.copyStateWithNewRegs(*bwdState, fwdState->GetInstr());
-		// perform intersection
-		//tmpState->Intersect(*fwdState);
-
-		FA_DEBUG_AT(1,*(bwdState->GetFAE()));
-		std::shared_ptr<FAE> normFAEBwd = bwdState->newNormalizedFAE();
-		std::shared_ptr<FAE> normFAEFwd = fwdState->newNormalizedFAE();
-		assert(normFAEFwd->getRootCount() == normFAEBwd->getRootCount());
-
-		predicate = getEmptyTrees(*normFAEFwd, *normFAEBwd);
-
-		if (predicate.empty())
-		{
-			predicate.insert(predicate.end(),
-					normFAEBwd->getRoots().begin(), normFAEBwd->getRoots().end());
-		}
-
-		assert(!predicate.empty()); // TODO this could be condition of spuriousness
-	}
-
 	void printDebugInfo(
 			const AbstractInstruction *instr,
 			const SymState *fwdState,
@@ -131,14 +74,18 @@ bool BackwardRun::isSpuriousCE(
 		assert(nullptr != instr);
 
 		printDebugInfo(instr, fwdState, bwdState);
-
 		SymState* resultState = instr->reverseAndIsect(execMan_, *fwdState, *bwdState);
 		assert(nullptr != resultState);
 
 		if (resultState->GetFAE()->Empty())
 		{	// in case the intersection is empty - spurious counterexample
 			failPoint = fwdState;
-			learnPredicates(fwdState, bwdState, predicate);
+			predicate.insert(
+					predicate.end(),
+					resultState->GetPredicates().begin(),
+					resultState->GetPredicates().end());
+			assert(!predicate.empty());
+			//learnPredicates(fwdState, bwdState, predicate);
 			return true;
 		}
 

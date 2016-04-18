@@ -282,6 +282,50 @@ void getCandidates(
 			candidates.insert(tmp.second.begin(), tmp.second.end());
 	}
 }
+
+	std::vector<std::shared_ptr<const TreeAut>> getEmptyTrees(
+			const FAE&            fwdFAE,
+			const FAE&            bwdFAE)
+	{
+		assert(fwdFAE.getRootCount() == bwdFAE.getRootCount());
+		FA_DEBUG_AT(1, "empty input fwd " << fwdFAE);
+		FA_DEBUG_AT(1, "empty input bwd " << bwdFAE);
+
+		std::vector<std::shared_ptr<const TreeAut>> res;
+
+		for (size_t i = 0; i < fwdFAE.getRootCount(); ++i)
+		{
+			if (bwdFAE.getRoot(i) == nullptr && fwdFAE.getRoot(i) == nullptr)
+			{
+				  continue;
+			}
+			else if (bwdFAE.getRoot(i) == nullptr && fwdFAE.getRoot(i) != nullptr)
+			{
+				res.push_back(fwdFAE.getRoot(i));
+				continue;
+			}
+			else if (bwdFAE.getRoot(i) != nullptr && fwdFAE.getRoot(i) == nullptr)
+			{
+				res.push_back(bwdFAE.getRoot(i));
+				continue;
+			}
+
+			TreeAut isectTA = TreeAut::intersectionBU(
+					*(fwdFAE.getRoot(i)),*(bwdFAE.getRoot(i)));
+			TreeAut finalIsectTA;
+
+			isectTA.uselessAndUnreachableFree(finalIsectTA);
+			FA_DEBUG_AT(1, "empty " << isectTA);
+
+			if (finalIsectTA.areTransitionsEmpty())
+			{
+				res.push_back(bwdFAE.getRoot(i));
+			}
+		}
+
+
+		return res;
+	}
 } // namespace
 
 void FixpointBase::initFoldedRoots()
@@ -317,52 +361,112 @@ SymState* FixpointBase::reverseAndIsect(
 	{
 		assert(i < iterationToFoldedRoots_.size());
 
-		for (const auto& rootToBoxes : iterationToFoldedRoots_.at(i))
-		{
-			for (const auto& boxes : rootToBoxes.second)
-			{
-				std::shared_ptr<FAE> fae = std::shared_ptr<FAE>(new FAE(*(tmpState->GetFAE())));
-				if (fae->getRootCount() == 0)
-				{
-					return tmpState;
-				}
+        for (const auto &rootToBoxes : iterationToFoldedRoots_.at(i))
+        {
+            for (const auto &boxes : rootToBoxes.second)
+            {
+                std::shared_ptr<FAE> fae = std::shared_ptr<FAE>(new FAE(*(tmpState->GetFAE())));
+                if (fae->getRootCount() == 0)
+                {
+                    return tmpState;
+                }
 
-				std::vector<FAE*> unfolded;
-				Splitting splitting(*fae);
-				splitting.isolateSet(
-						unfolded,
-						rootToBoxes.first,
-						0,
-						findSelectors(*fae, fae->getRoot(rootToBoxes.first)->getAcceptingTransition()));
-						//fae->getType(rootToBoxes.first)->getSelectors());
-				assert(unfolded.size() == 1);
-				fae = std::shared_ptr<FAE>(unfolded.at(0));
-				try
-				{
-					Unfolding(*fae).unfoldBox(rootToBoxes.first, boxes);
-				}
-				catch (std::runtime_error e)
-				{
+                std::vector<FAE *> unfolded;
+                Splitting splitting(*fae);
+                splitting.isolateSet(
+                        unfolded,
+                        rootToBoxes.first,
+                        0,
+                        findSelectors(*fae, fae->getRoot(rootToBoxes.first)->getAcceptingTransition()));
+                //fae->getType(rootToBoxes.first)->getSelectors());
+                assert(unfolded.size() == 1);
+                fae = std::shared_ptr<FAE>(unfolded.at(0));
+                try
+                {
+                    assert(fae->getRoot(rootToBoxes.first)->getAcceptingTransition().GetParent() == boxes.first);
+                    Unfolding(*fae).unfoldBox(rootToBoxes.first, boxes.second);
+                }
+                catch (std::runtime_error e)
+                {
 					;
-				}
+                }
 				tmpState->SetFAE(fae);
-			}
+            }
 		}
 
 		if (faeAtIteration_.count(i))
 		{
-			SymState st;
-			st.init(*tmpState);
-			st.SetFAE(faeAtIteration_.at(i));
-			tmpState->Intersect(st);
+			SymState fwd;
+			fwd.init(*tmpState);
+			fwd.SetFAE(faeAtIteration_.at(i));
+
+			SymState bwdBackup;
+			bwdBackup.init(*tmpState);
+
+			tmpState->Intersect(fwd);
+
+            if (tmpState->GetFAE()->Empty())
+            {
+				SymState fwdp;
+				fwdp.init(fwdPred);
+				SymState bwdp;
+				bwdp.init(bwdSucc);
+				//tmpState->SetPredicates(FI_abs::learnPredicates(&fwdp, &bwdp));
+				if (!(abstrIteration_ > 0 || (FAE::subseteq(*fwd.GetFAE(), *fwdp.GetFAE())
+					  && FAE::subseteq(*fwdp.GetFAE(), *fwd.GetFAE()))))
+				{
+					assert(false);
+				}
+				tmpState->SetPredicates(FI_abs::learnPredicates(&fwd, &bwdBackup));
+                return tmpState;
+            }
+		}
+		else
+		{
+			// This is possible in the last iteration of reversion
+			// of folding and abstraction. Because just one fold can
+			// be done before the abstraction loop.
+			assert(i <= 1);
 		}
 	}
 
 	// perform intersection
+	SymState bwdBackup;
+	bwdBackup.init(*tmpState);
 	tmpState->Intersect(fwdPred);
+	if (tmpState->GetFAE()->Empty())
+    {
+		SymState fwdState;
+		fwdState.init(fwdPred);
+        tmpState->SetPredicates(FI_abs::learnPredicates(&fwdState, &bwdBackup));
+    }
 
 	FA_DEBUG_AT(1, "Executing !!VERY!! suspicious reverse operation FixpointBase");
 	return tmpState;
+}
+
+
+std::vector<std::shared_ptr<const TreeAut>> FI_abs::learnPredicates(
+		SymState *fwdState,
+		SymState *bwdState)
+{
+	std::shared_ptr<FAE> normFAEBwd = bwdState->newNormalizedFAE();
+	std::shared_ptr<FAE> normFAEFwd = fwdState->newNormalizedFAE();
+
+	assert(normFAEFwd->getRootCount() == normFAEBwd->getRootCount());
+
+	std::vector<std::shared_ptr<const TreeAut>> predicate = getEmptyTrees(*normFAEFwd, *normFAEBwd);
+
+	if (predicate.empty())
+	{ // no predicates found, brutal refinement
+		assert(false);
+		predicate.insert(predicate.end(),
+				normFAEBwd->getRoots().begin(), normFAEBwd->getRoots().end());
+	}
+
+	assert(!predicate.empty());
+
+	return predicate;
 }
 
 
@@ -462,6 +566,8 @@ void FI_abs::execute(ExecutionManager& execMan, SymState& state)
 
 	Normalization::normalize(*fae, &state, forbidden, true);
 
+	faeAtIteration_[(abstrIteration_ == 0) ? abstrIteration_++ : abstrIteration_-1] =
+			std::shared_ptr<FAE>(new FAE(*fae));
 	abstract(*fae);
 #if FA_ALLOW_FOLDING
 	Folding::learn1(*fae, boxMan_, Normalization::computeForbiddenSet(*fae));
@@ -488,8 +594,6 @@ void FI_abs::execute(ExecutionManager& execMan, SymState& state)
 			}
 
 			old = *fae;
-
-
 		} while (this->fold(fae, forbidden) && !FAE::subseteq(*fae, old));
 
 	}

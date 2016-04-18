@@ -36,7 +36,7 @@
 class FixpointBase : public FixpointInstruction
 {
 private:
-	using Boxes = std::vector<const Box*>;
+	using Boxes = std::vector<std::pair<size_t, const Box*>>;
 	using BoxesAtRoot = std::unordered_map<size_t, Boxes>;
 	using BoxesAtIteration = std::unordered_map<size_t, BoxesAtRoot>;
 	using FAEAtIteration = std::unordered_map<size_t, std::shared_ptr<FAE>>;
@@ -223,6 +223,11 @@ public:   // methods
 	virtual std::ostream& toStream(std::ostream& os) const {
 		return os << "abs   \t";
 	}
+
+	static std::vector<std::shared_ptr<const TreeAut>> learnPredicates(
+			SymState*			                             fwdState,
+			SymState*			                             bwdState
+	);
 };
 
 /**
@@ -236,8 +241,8 @@ public:
 
 	FI_fix(
 		const CodeStorage::Insn*           insn,
-		TreeAut&                  fixpoint,
-		TreeAut&                  ta,
+		TreeAut&                           fixpoint,
+		TreeAut&                           ta,
 		BoxMan&                            boxMan) :
 		FixpointBase(insn, fixpoint, ta, boxMan)
 	{ }
