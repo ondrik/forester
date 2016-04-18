@@ -478,6 +478,7 @@ protected:
                 assert(!predicates_.empty());
                 assert(nullptr != failPoint);
                 assert(nullptr != failPoint->GetInstr());
+                FA_LOG("The error was at " << failPoint->GetInstr()->insn()->loc << " " << *(failPoint->GetInstr()->insn()));
 
                 printRefinementInfo(failPoint);
 
