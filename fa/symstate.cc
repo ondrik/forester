@@ -164,7 +164,10 @@ std::shared_ptr<FAE> SymState::newNormalizedFAE()
 	std::shared_ptr<FAE> normFae = std::shared_ptr<FAE>(new FAE(*fae_));
 	GarbageChecker::checkAndRemoveGarbage(*normFae, this, false, true);
 	normFae->updateConnectionGraph();
-	Normalization::normalize(*normFae, this, Normalization::computeForbiddenSet(*normFae));
+	Normalization::normalize(
+			*normFae,
+			this,
+			Normalization::computeForbiddenSet(*normFae, true, true));
 
 	return normFae;
 }

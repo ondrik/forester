@@ -63,6 +63,8 @@ private:  // data members
 	/// the registers
 	std::shared_ptr<DataArray> regs_;
 
+	std::vector<std::shared_ptr<const TreeAut>> learntPredicates_;
+
 private:  // methods
 
 	SymState(const SymState&);
@@ -78,7 +80,8 @@ public:   // methods
 	SymState() :
 		instr_{},
 		fae_{},
-		regs_(nullptr)
+		regs_(nullptr),
+		learntPredicates_()
 	{ }
 
 	/**
@@ -143,6 +146,19 @@ public:   // methods
 		fae_ = fae;
 	}
 
+	void SetPredicates(const std::vector<std::shared_ptr<const TreeAut>>& preds)
+	{
+		this->learntPredicates_.clear();
+		this->learntPredicates_.insert(
+				this->learntPredicates_.end(),
+				preds.begin(),
+				preds.end());
+	}
+
+	const std::vector<std::shared_ptr<const TreeAut>>& GetPredicates() const
+	{
+		return this->learntPredicates_;
+	}
 
 	/**
 	 * @brief  Initializes the symbolic state
