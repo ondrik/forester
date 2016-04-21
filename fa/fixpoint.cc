@@ -356,42 +356,45 @@ SymState* FixpointBase::reverseAndIsect(
 	(void)fwdPred;
 	SymState* tmpState = execMan.copyState(bwdSucc);
 
-	assert(iterationToFoldedRoots_.size() - faeAtIteration_.size() <= 1);
-	for (int i = abstrIteration_ - 1; i >= 0; --i)
+	assert(iterationToFoldedRoots_.size() - faeAtIteration_.size() <= 1 || boxMan_.size() == 0);
+	for (int i = (abstrIteration_ - 1); i >= 0; --i)
 	{
-		assert(i < iterationToFoldedRoots_.size());
+		assert(i < iterationToFoldedRoots_.size() || boxMan_.size() == 0);
 
-        for (const auto &rootToBoxes : iterationToFoldedRoots_.at(i))
-        {
-            for (const auto &boxes : rootToBoxes.second)
-            {
-                std::shared_ptr<FAE> fae = std::shared_ptr<FAE>(new FAE(*(tmpState->GetFAE())));
-                if (fae->getRootCount() == 0)
-                {
-                    return tmpState;
-                }
+		if (i < iterationToFoldedRoots_.size())
+		{
+			for (const auto &rootToBoxes : iterationToFoldedRoots_.at(i))
+			{
+				for (const auto &boxes : rootToBoxes.second)
+				{
+					std::shared_ptr<FAE> fae = std::shared_ptr<FAE>(new FAE(*(tmpState->GetFAE())));
+					if (fae->getRootCount() == 0)
+					{
+						return tmpState;
+					}
 
-                std::vector<FAE *> unfolded;
-                Splitting splitting(*fae);
-                splitting.isolateSet(
-                        unfolded,
-                        rootToBoxes.first,
-                        0,
-                        findSelectors(*fae, fae->getRoot(rootToBoxes.first)->getAcceptingTransition()));
-                //fae->getType(rootToBoxes.first)->getSelectors());
-                assert(unfolded.size() == 1);
-                fae = std::shared_ptr<FAE>(unfolded.at(0));
-                try
-                {
-                    assert(fae->getRoot(rootToBoxes.first)->getAcceptingTransition().GetParent() == boxes.first);
-                    Unfolding(*fae).unfoldBox(rootToBoxes.first, boxes.second);
-                }
-                catch (std::runtime_error e)
-                {
-					;
-                }
-				tmpState->SetFAE(fae);
-            }
+					std::vector<FAE *> unfolded;
+					Splitting splitting(*fae);
+					splitting.isolateSet(
+							unfolded,
+							rootToBoxes.first,
+							0,
+							findSelectors(*fae, fae->getRoot(rootToBoxes.first)->getAcceptingTransition()));
+					//fae->getType(rootToBoxes.first)->getSelectors());
+					assert(unfolded.size() == 1);
+					fae = std::shared_ptr<FAE>(unfolded.at(0));
+					try
+					{
+						assert(fae->getRoot(rootToBoxes.first)->getAcceptingTransition().GetParent() == boxes.first);
+						Unfolding(*fae).unfoldBox(rootToBoxes.first, boxes.second);
+					}
+					catch (std::runtime_error e)
+					{
+						;
+					}
+					tmpState->SetFAE(fae);
+				}
+			}
 		}
 
 		if (faeAtIteration_.count(i))
