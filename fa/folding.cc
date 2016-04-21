@@ -397,7 +397,7 @@ dis2_start:
 				}
 
 				FA_DEBUG_AT(3, "type 2 cutpoint detected inside component " << root
-					<< " at state q" << stateSignaturePair.first);
+					<< " at state q" << stateSignaturePair.first << " for cutpoint " << tmp);
 
 				const Box* boxPtr = this->makeBox1Component(
 						/* index of the TA to be folded */ root,
@@ -664,7 +664,10 @@ const Box* Folding::makeBox1Component(
 	assert(root < fae_.getRootCount());
 	assert(nullptr != fae_.getRoot(root));
 
-	assert(fae_.getRoot(root)->isFinalState(state));
+	if (!fae_.getRoot(root)->isFinalState(state))
+	{ // TODO PAB
+		return nullptr;
+	}
 
 	// 'index' maintains for each cutpoint of the FA either '-1' which means that
 	// the box does not reference it, or the order in which it is referenced in
