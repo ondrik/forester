@@ -162,6 +162,7 @@ void SymState::recycle(Recycler<SymState>& recycler)
 std::shared_ptr<FAE> SymState::newNormalizedFAE()
 {
 	std::shared_ptr<FAE> normFae = std::shared_ptr<FAE>(new FAE(*fae_));
+	normFae->updateConnectionGraph();
 	GarbageChecker::checkAndRemoveGarbage(*normFae, this, false, true);
 	normFae->updateConnectionGraph();
 	Normalization::normalize(
