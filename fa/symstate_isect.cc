@@ -1138,6 +1138,10 @@ void SymState::Intersect(
 	size_t newRootsSize = std::max(fae->getRootCount(), fwdFAE->getRootCount());
 	for (size_t i = 0; i < newRootsSize; ++i)
 	{
+		if (i >= fae->getRootCount())
+		{
+			fae->connectionGraph.newRoot();
+		}
 		newRoots.push_back(std::shared_ptr<TreeAut>());
 	}
 
@@ -1147,6 +1151,7 @@ void SymState::Intersect(
 		newRoots[index[i]] = fae->getRoot(i);
 	}
 
+	FA_DEBUG_AT(1,"Before swap: " << *fae);
 	// update representation
 	fae->swapRoots(newRoots);
 
@@ -1157,12 +1162,13 @@ void SymState::Intersect(
 		fae->setRoot(index[i], std::shared_ptr<TreeAut>(
 			fae->relabelReferences(fae->getRoot(index[i]).get(), index)
 		));
+		fae->connectionGraph.invalidate(index.at(i));
 	}
 
 	FA_DEBUG_AT(1,"After shuffling: " << *fae);
 
 	// FIXME: do we really need this?
-//	fae->updateConnectionGraph();
+	fae->updateConnectionGraph();
 
 	FA_DEBUG_AT(1,"Underapproximating intersection");
 }
