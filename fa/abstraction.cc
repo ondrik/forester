@@ -1,5 +1,5 @@
 #include "abstraction.hh"
-
+#include "forestaut.hh"
 #include "streams.hh"
 #include "vata_adapter.hh"
 
@@ -227,15 +227,22 @@ void Abstraction::predicateAbstraction(
 		{
 			for (const auto k : usedStates)
 			{
+				if (j == k ||
+					rel.at(faeStateIndex.translate(j)).at(
+							faeStateIndex.translate(k)) == false)
+				{
+					continue;
+				}
+
 				bool matchedAll = true;
 				for (auto jIt = fae_.getRoot(i)->begin(j); jIt != fae_.getRoot(i)->end(j); ++jIt)
 				{
-					bool matchedOne = false;
+					bool matchedOne = true;
 					for (auto kIt = fae_.getRoot(i)->begin(k); kIt != fae_.getRoot(i)->end(k); ++kIt)
 					{
-						if (matcher(*jIt, *kIt))
+						if (!matcher(*jIt, *kIt))
 						{
-							matchedOne = true;
+							matchedOne = false;
 							break;
 						}
 					}
@@ -245,6 +252,14 @@ void Abstraction::predicateAbstraction(
 				if (!matchedAll)
 				{
 					rel.at(faeStateIndex.translate(j)).at(faeStateIndex.translate(k)) = false;
+				}
+			}
+
+			for (const auto& item : faeStateIndex)
+			{
+				if (!usedStates.count(item.first))
+				{ // if state is not in the same automaton, refine
+					rel.at(faeStateIndex.translate(j)).at(item.second) = false;
 				}
 			}
 		}
@@ -276,7 +291,7 @@ void Abstraction::predicateAbstraction(
 	{
 		for (const auto& item2 : faeStateIndex)
 		{
-			if (rel[item1.second][item2.second])
+			if (rel.at(item1.second).at(item2.second))
 			{
 				relCom[item2.first] = item1.first;
 			}
