@@ -318,6 +318,7 @@ bool Normalization::normalizeInternal(
 
 	for (size_t i = 0; i < this->fae.getRootCount(); ++i)
 	{
+		assert(this->fae.getRoot(i) != nullptr);
 		this->fae.setRoot(i, std::shared_ptr<TreeAut>(
 			this->fae.relabelReferences(this->fae.getRoot(i).get(), index)
 		));
