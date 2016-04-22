@@ -30,6 +30,7 @@
 #include "streams.hh"
 #include "symstate.hh"
 #include "virtualmachine.hh"
+#include "types.hh"
 
 namespace
 {
@@ -1165,9 +1166,21 @@ void SymState::Intersect(
 		fae->connectionGraph.invalidate(index.at(i));
 	}
 
+	for (size_t i = 0; i < thisFAE->GetVarCount(); ++i)
+	{    // relabel global variables according to the index
+		const Data& var = fae->GetVar(i);
+
+		if (var.isRef())
+		{
+			assert(var.d_ref.root < index.size());
+			fae->SetVar(i, Data::createRef(index.at(var.d_ref.root)));
+		}
+	}
+
+	// TODO maybe relabel the register a bit
+
 	FA_DEBUG_AT(1,"After shuffling: " << *fae);
 
-	// FIXME: do we really need this?
 	fae->updateConnectionGraph();
 
 	FA_DEBUG_AT(1,"Underapproximating intersection");
