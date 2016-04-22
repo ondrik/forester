@@ -52,6 +52,32 @@ public:   // data types
 	/// Trace of symbolic states
 	typedef std::vector<const SymState*> Trace;
 
+	using Boxes = std::vector<std::pair<size_t, const Box*>>;
+	using BoxesAtRoot = std::unordered_map<size_t, Boxes>;
+	using BoxesAtIteration = std::unordered_map<size_t, BoxesAtRoot>;
+	using FAEAtIteration = std::unordered_map<size_t, std::shared_ptr<FAE>>;
+
+	struct AbstractionInfo {
+			size_t abstrIteration_;
+
+			BoxesAtIteration iterationToFoldedRoots_;
+
+			FAEAtIteration faeAtIteration_;
+
+			AbstractionInfo() :
+					abstrIteration_(0),
+					iterationToFoldedRoots_(),
+					faeAtIteration_()
+			{}
+
+			void clear()
+			{
+				abstrIteration_ = 0;
+				faeAtIteration_.clear();
+				iterationToFoldedRoots_.clear();
+			}
+	};
+
 private:  // data members
 
 	/// Instruction that the symbolic state corresponds to
@@ -64,6 +90,8 @@ private:  // data members
 	std::shared_ptr<DataArray> regs_;
 
 	std::vector<std::shared_ptr<const TreeAut>> learntPredicates_;
+
+	AbstractionInfo abstractionInfo_;
 
 private:  // methods
 
@@ -81,7 +109,8 @@ public:   // methods
 		instr_{},
 		fae_{},
 		regs_(nullptr),
-		learntPredicates_()
+		learntPredicates_(),
+		abstractionInfo_()
 	{ }
 
 	/**
@@ -139,6 +168,16 @@ public:   // methods
 	AbstractInstruction* GetInstr()
 	{
 		return instr_;
+	}
+
+	AbstractionInfo& GetAbstractionInfo()
+	{
+		return abstractionInfo_;
+	}
+
+	const AbstractionInfo& GetAbstractionInfo() const
+	{
+		return abstractionInfo_;
 	}
 
 	void SetFAE(const std::shared_ptr<FAE> fae)

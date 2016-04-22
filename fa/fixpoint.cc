@@ -328,22 +328,17 @@ void getCandidates(
 	}
 } // namespace
 
-void FixpointBase::initFoldedRoots()
-{
-	abstrIteration_ = 0;
-	iterationToFoldedRoots_.clear();
-}
-
 
 size_t FixpointBase::fold(
 		const std::shared_ptr<FAE>&       fae,
-		std::set<size_t>&                 forbidden)
+		std::set<size_t>&                 forbidden,
+		SymState::AbstractionInfo&        ainfo)
 {
-	iterationToFoldedRoots_[abstrIteration_] =
-			BoxesAtRoot(Folding::fold(*fae, boxMan_, forbidden));
-	++abstrIteration_;
+	ainfo.iterationToFoldedRoots_[ainfo.abstrIteration_] =
+			SymState::BoxesAtRoot(Folding::fold(*fae, boxMan_, forbidden));
+	++ainfo.abstrIteration_;
 
-	return iterationToFoldedRoots_.at(abstrIteration_ - 1).size();
+	return ainfo.iterationToFoldedRoots_.at(ainfo.abstrIteration_ - 1).size();
 }
 
 
@@ -355,15 +350,16 @@ SymState* FixpointBase::reverseAndIsect(
 {
 	(void)fwdPred;
 	SymState* tmpState = execMan.copyState(bwdSucc);
+	const SymState::AbstractionInfo& ainfo = fwdPred.GetAbstractionInfo();
 
-	assert(iterationToFoldedRoots_.size() - faeAtIteration_.size() <= 1 || boxMan_.size() == 0);
-	for (int i = (abstrIteration_ - 1); i >= 0; --i)
+	assert(ainfo.iterationToFoldedRoots_.size() - ainfo.faeAtIteration_.size() <= 1 || boxMan_.size() == 0);
+	for (int i = (ainfo.abstrIteration_ - 1); i >= 0; --i)
 	{
-		assert(i < iterationToFoldedRoots_.size() || boxMan_.size() == 0);
+		assert(i < ainfo.iterationToFoldedRoots_.size() || boxMan_.size() == 0);
 
-		if (i < iterationToFoldedRoots_.size())
+		if (i < ainfo.iterationToFoldedRoots_.size())
 		{
-			for (const auto &rootToBoxes : iterationToFoldedRoots_.at(i))
+			for (const auto &rootToBoxes : ainfo.iterationToFoldedRoots_.at(i))
 			{
 				for (const auto &boxes : rootToBoxes.second)
 				{
@@ -397,11 +393,11 @@ SymState* FixpointBase::reverseAndIsect(
 			}
 		}
 
-		if (faeAtIteration_.count(i))
+		if (ainfo.faeAtIteration_.count(i))
 		{
 			SymState fwd;
 			fwd.init(*tmpState);
-			fwd.SetFAE(faeAtIteration_.at(i));
+			fwd.SetFAE(ainfo.faeAtIteration_.at(i));
 
 			SymState bwdBackup;
 			bwdBackup.init(*tmpState);
@@ -415,7 +411,7 @@ SymState* FixpointBase::reverseAndIsect(
 				SymState bwdp;
 				bwdp.init(bwdSucc);
 				//tmpState->SetPredicates(FI_abs::learnPredicates(&fwdp, &bwdp));
-				if (!(abstrIteration_ > 0 || (FAE::subseteq(*fwd.GetFAE(), *fwdp.GetFAE())
+				if (!(ainfo.abstrIteration_ > 0 || (FAE::subseteq(*fwd.GetFAE(), *fwdp.GetFAE())
 					  && FAE::subseteq(*fwdp.GetFAE(), *fwd.GetFAE()))))
 				{
 					assert(false);
@@ -540,7 +536,8 @@ void FI_abs::abstract(
 // FI_abs
 void FI_abs::execute(ExecutionManager& execMan, SymState& state)
 {
-	this->initFoldedRoots();
+	auto& ainfo = state.GetAbstractionInfo();
+	ainfo.clear();
 
 	std::shared_ptr<FAE> fae = std::shared_ptr<FAE>(new FAE(*(state.GetFAE())));
 
@@ -548,9 +545,9 @@ void FI_abs::execute(ExecutionManager& execMan, SymState& state)
 
 	std::set<size_t> forbidden;
 #if FA_ALLOW_FOLDING
+
 	// reorder components into the canonical form (no merging!)
 	reorder(&state, *fae);
-
 	if (!boxMan_.boxDatabase().empty())
 	{	// in the case there are some boxes, try to fold immediately before
 		// normalization
@@ -560,7 +557,7 @@ void FI_abs::execute(ExecutionManager& execMan, SymState& state)
 		}
 
 		// fold already discovered boxes
-		this->fold(fae, forbidden);
+		this->fold(fae, forbidden, ainfo);
 	}
 
 	Folding::learn2(*fae, boxMan_, Normalization::computeForbiddenSet(*fae));
@@ -569,7 +566,7 @@ void FI_abs::execute(ExecutionManager& execMan, SymState& state)
 
 	Normalization::normalize(*fae, &state, forbidden, true);
 
-	faeAtIteration_[(abstrIteration_ == 0) ? abstrIteration_++ : abstrIteration_-1] =
+	ainfo.faeAtIteration_[(ainfo.abstrIteration_ == 0) ? ainfo.abstrIteration_++ : ainfo.abstrIteration_-1] =
 			std::shared_ptr<FAE>(new FAE(*fae));
 	abstract(*fae);
 #if FA_ALLOW_FOLDING
@@ -585,7 +582,7 @@ void FI_abs::execute(ExecutionManager& execMan, SymState& state)
 
 			Normalization::normalize(*fae, &state, forbidden, true);
 
-			faeAtIteration_[abstrIteration_] = std::shared_ptr<FAE>(
+			ainfo.faeAtIteration_[ainfo.abstrIteration_] = std::shared_ptr<FAE>(
 					new FAE(*fae));
 
 			abstract(*fae);
@@ -597,14 +594,14 @@ void FI_abs::execute(ExecutionManager& execMan, SymState& state)
 			}
 
 			old = *fae;
-		} while (this->fold(fae, forbidden) && !FAE::subseteq(*fae, old));
+		} while (this->fold(fae, forbidden, ainfo) && !FAE::subseteq(*fae, old));
 
 	}
 #endif
 	// test inclusion
 	if (testInclusion(*fae, fwdConf_, fwdConfWrapper_))
 	{
-		FA_DEBUG_AT(3, "hit");
+		FA_DEBUG_AT(1, "hit");
 
 		execMan.pathFinished(&state);
 	} else
@@ -622,7 +619,6 @@ void FI_abs::execute(ExecutionManager& execMan, SymState& state)
 // FI_fix
 void FI_fix::execute(ExecutionManager& execMan, SymState& state)
 {
-	this->initFoldedRoots();
 
 	std::shared_ptr<FAE> fae = std::shared_ptr<FAE>(new FAE(*(state.GetFAE())));
 
@@ -639,7 +635,7 @@ void FI_fix::execute(ExecutionManager& execMan, SymState& state)
 			forbidden.insert(VirtualMachine(*fae).varGet(i).d_ref.root);
 		}
 
-		this->fold(fae, forbidden);
+		this->fold(fae, forbidden, state.GetAbstractionInfo());
 	}
 #endif
 	forbidden = Normalization::computeForbiddenSet(*fae);
@@ -655,7 +651,7 @@ void FI_fix::execute(ExecutionManager& execMan, SymState& state)
 			forbidden.insert(VirtualMachine(*fae).varGet(i).d_ref.root);
 		}
 
-		while (this->fold(fae, forbidden))
+		while (this->fold(fae, forbidden, state.GetAbstractionInfo()))
 		{
 			forbidden = Normalization::computeForbiddenSet(*fae);
 

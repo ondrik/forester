@@ -35,12 +35,6 @@
  */
 class FixpointBase : public FixpointInstruction
 {
-private:
-	using Boxes = std::vector<std::pair<size_t, const Box*>>;
-	using BoxesAtRoot = std::unordered_map<size_t, Boxes>;
-	using BoxesAtIteration = std::unordered_map<size_t, BoxesAtRoot>;
-	using FAEAtIteration = std::unordered_map<size_t, std::shared_ptr<FAE>>;
-
 protected:
 
 	/// Fixpoint configuration obtained in the forward run
@@ -54,18 +48,13 @@ protected:
 
 	BoxMan &boxMan_;
 
-	size_t abstrIteration_;
-
-	BoxesAtIteration iterationToFoldedRoots_;
-
-	FAEAtIteration faeAtIteration_;
 
 protected:
 
-	void initFoldedRoots();
 	size_t fold(
 			const std::shared_ptr<FAE>&  fae,
-			std::set<size_t>&            forbidden);
+			std::set<size_t>&            forbidden,
+			SymState::AbstractionInfo&   ainfo);
 
 public:
 
@@ -79,13 +68,6 @@ public:
 		fixpoint_.clear();
 		fwdConf_.clear();
 		fwdConfWrapper_.clear();
-	}
-
-	virtual void clearReverse()
-	{
-		faeAtIteration_.clear();
-		iterationToFoldedRoots_.clear();
-		abstrIteration_ = 0;
 	}
 
 #if 0
@@ -121,10 +103,7 @@ public:
 		fwdConfWrapper_(fwdConf_, boxMan),
 		fixpoint_{},
 		ta_(ta),
-		boxMan_(boxMan),
-		abstrIteration_(0),
-		iterationToFoldedRoots_(),
-		faeAtIteration_()
+		boxMan_(boxMan)
 	{ }
 
 	virtual ~FixpointBase()

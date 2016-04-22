@@ -57,6 +57,7 @@ void SymState::init(
 	instr_     = instr;
 	fae_       = fae;
 	regs_      = regs;
+	abstractionInfo_ = AbstractionInfo();
 
 	this->setParent(parent);
 }
@@ -68,6 +69,7 @@ void SymState::init(
 	instr_ = oldState.instr_;
 	fae_   = oldState.fae_;
 	regs_  = oldState.regs_;
+	abstractionInfo_ = AbstractionInfo();
 
 	this->clearTree();
 }
@@ -93,6 +95,7 @@ void SymState::init(
 	instr_ = insn;
 	fae_   = oldState.fae_;
 	regs_  = regs;
+	abstractionInfo_ = AbstractionInfo();
 
 	this->clearTree();
 }
@@ -109,6 +112,7 @@ void SymState::initChildFrom(
 	instr_  = instr;
 	fae_    = parent->fae_;
 	regs_   = parent->regs_;
+	abstractionInfo_ = AbstractionInfo();
 
 	this->setParent(parent);
 }
@@ -126,6 +130,7 @@ void SymState::initChildFrom(
 	instr_  = instr;
 	fae_    = parent->fae_;
 	regs_   = regs;
+	abstractionInfo_ = AbstractionInfo();
 
 	this->setParent(parent);
 }
@@ -162,6 +167,7 @@ void SymState::recycle(Recycler<SymState>& recycler)
 std::shared_ptr<FAE> SymState::newNormalizedFAE()
 {
 	std::shared_ptr<FAE> normFae = std::shared_ptr<FAE>(new FAE(*fae_));
+	normFae->minimizeRoots(); // TODO PAB maybe remove
 	normFae->updateConnectionGraph();
 	GarbageChecker::checkAndRemoveGarbage(*normFae, this, false, true);
 	normFae->updateConnectionGraph();
