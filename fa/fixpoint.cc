@@ -312,12 +312,12 @@ void getCandidates(
 
 			TreeAut isectTA = TreeAut::intersectionBU(
 					*(fwdFAE.getRoot(i)),*(bwdFAE.getRoot(i)));
-			TreeAut finalIsectTA;
+			std::shared_ptr<TreeAut> finalIsectTA = std::shared_ptr<TreeAut>(new TreeAut());
 
-			isectTA.uselessAndUnreachableFree(finalIsectTA);
+			isectTA.uselessAndUnreachableFree(*finalIsectTA);
 			FA_DEBUG_AT(1, "empty " << isectTA);
 
-			if (finalIsectTA.areTransitionsEmpty())
+			if (finalIsectTA->areTransitionsEmpty())
 			{
 				res.push_back(bwdFAE.getRoot(i));
 			}
@@ -399,12 +399,14 @@ SymState* FixpointBase::reverseAndIsect(
 			fwd.init(*tmpState);
 			fwd.SetFAE(ainfo.faeAtIteration_.at(i));
 
+			tmpState->SetFAE(tmpState->newNormalizedFAE());
 			SymState bwdBackup;
 			bwdBackup.init(*tmpState);
 
+			fwd.SetFAE(fwd.newNormalizedFAE());
 			tmpState->Intersect(fwd);
 
-            if (tmpState->GetFAE()->Empty())
+            if  (tmpState->GetFAE()->Empty())
             {
 				SymState fwdp;
 				fwdp.init(fwdPred);

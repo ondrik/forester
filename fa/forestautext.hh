@@ -276,6 +276,7 @@ public:
 		std::shared_ptr<TreeAut> tmp = ta;
 		ta = std::shared_ptr<TreeAut>(this->allocTA());
 		tmp->unreachableFree(*ta);
+		tmp->uselessAndUnreachableFree(*ta);
 	}
 
 	void unreachableFree()
@@ -415,6 +416,23 @@ public:
 
 		return &this->relabelReferences(*this->allocTA(), *src, index);
 	}
+
+
+	void relabelReferences(
+		const std::vector<size_t>&     index);
+
+
+	void relabelVariables(
+		const std::vector<size_t>&     index);
+
+
+	std::unordered_set<size_t> getEmptyRoots() const;
+
+
+	void removeEmptyRoots();
+
+
+	void removeReferences(const size_t root);
 
 
 	TreeAut& invalidateReference(

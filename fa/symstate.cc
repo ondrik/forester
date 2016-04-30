@@ -168,6 +168,7 @@ std::shared_ptr<FAE> SymState::newNormalizedFAE()
 {
 	std::shared_ptr<FAE> normFae = std::shared_ptr<FAE>(new FAE(*fae_));
 	normFae->minimizeRoots(); // TODO PAB maybe remove
+	normFae->unreachableFree();
 	normFae->updateConnectionGraph();
 	GarbageChecker::checkAndRemoveGarbage(*normFae, this, false, true);
 	normFae->updateConnectionGraph();

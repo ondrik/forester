@@ -31,6 +31,7 @@
 #include "symstate.hh"
 #include "virtualmachine.hh"
 #include "types.hh"
+#include "regdef.hh"
 
 namespace
 {
@@ -240,8 +241,10 @@ public:   // methods
 		const size_t&          lhsState,
 		const size_t&          rhsRoot,
 		const size_t&          rhsState,
-		const bool&            jumped=false)
+		const size_t           jumped = 0,
+		const size_t           currentRoot = 0)
 	{
+		FA_DEBUG_AT(1, "Making product state");
 		// the product state
 		RootState lhsRootState(lhsRoot, lhsState);
 		RootState rhsRootState(rhsRoot, rhsState);
@@ -250,8 +253,16 @@ public:   // methods
 		// find the root # in the aut (or create one)
 		auto itBoolPairRootMap = rootMap_.insert(std::make_pair(
 			std::make_pair(lhsRoot, rhsRoot), rootCnt_));
-		bool isNewRoot = itBoolPairRootMap.second;
-		if (isNewRoot)
+		const bool isNewRoot = itBoolPairRootMap.second;
+
+		if (!isNewRoot && (jumped > 0 && jumped <= 3 && !processed_.count(prodState)))
+		{
+			FA_DEBUG_AT(1, "Creating new " << jumped);
+            itBoolPairRootMap = rootMap_.insert(std::make_pair(
+                    std::make_pair(lhsState, rhsRoot), rootCnt_));
+		}
+
+		if (isNewRoot || (jumped > 0 && !processed_.count(prodState)))
 		{
 			FA_DEBUG_AT(1,"Creating new root: " << rootCnt_ << " as the product of roots ("
 				<< lhsRoot << ", " << rhsRoot << ")");
@@ -263,13 +274,13 @@ public:   // methods
 		}
 
 		// the actual number of the root
-		const size_t& root = itBoolPairRootMap.first->second;
+		const size_t& root = (!isNewRoot && jumped == 0) ? currentRoot : itBoolPairRootMap.first->second;
 
 		RootState newState(root, fae_.nextState());
 		auto itBoolPairProcessed = processed_.insert(std::make_pair(prodState, newState));
 		bool isNewState = itBoolPairProcessed.second;
 
-		FA_DEBUG_AT(1,"Processing product state [" << rhsState << "," << lhsState << "] -> " 
+		FA_DEBUG_AT(1,"Processing product state [" << rhsState << "," << lhsState << "] -> "
 				<< newState << ", roots ["
 				<< lhsRoot	<< "," << rhsRoot << "] -> " << root);
 
@@ -288,12 +299,12 @@ public:   // methods
 		// the actual number of the state
 		const size_t& state = itBoolPairProcessed.first->second.state;
 
-		if (isNewRoot || jumped)
+		if (isNewRoot || (jumped && isNewState))
 		{	// set final state
 			FA_DEBUG_AT(1,"Creating new final state " << state << "("
 				<< itBoolPairProcessed.first->first.first << ","
 				<< itBoolPairProcessed.first->first.second << ")"
-				<< " of root " << root); 
+				<< " of root " << root << " was jumped " << jumped);
 			fae_.getRoot(root)->addFinalState(state);
 		}
 
@@ -306,6 +317,7 @@ public:   // methods
 				<< itBoolRhsRootMap.first->second << ")");
 		}
 
+		FA_DEBUG_AT(1, "Finishing product state " << state << " at root " << root);
 		return RootState(root, state);
 	}
 
@@ -410,7 +422,6 @@ bool shouldCreateProductState(
 
 	return true;
 }
-
 } // namespace
 
 
@@ -949,7 +960,7 @@ void SymState::Intersect(
 					for (i = 0; i < transArity; ++i)
 					{	// for each pair of states that map to each other
 						const Data* fwdData = nullptr, *thisData = nullptr;
-						bool  fwdIsData =  fwdFAE->isData( fwdTrans.GetNthChildren(i),  fwdData);
+						bool  fwdIsData =  fwdFAE->isData(fwdTrans.GetNthChildren(i),  fwdData);
 						bool thisIsData = thisFAE->isData(thisTrans.GetNthChildren(i), thisData);
 
 						if (!fwdIsData && !thisIsData)
@@ -960,7 +971,8 @@ void SymState::Intersect(
 
 							RootState rootState = engine.makeProductState(
 								thisRoot, thisTrans.GetNthChildren(i),
-								fwdRoot, fwdTrans.GetNthChildren(i));
+								fwdRoot, fwdTrans.GetNthChildren(i),
+								0, curNewState.root);
 
 							// check that we have not created a new automaton
 							assert(rootState.root == curNewState.root);
@@ -1001,7 +1013,9 @@ void SymState::Intersect(
 
 							RootState rootState = engine.makeProductState(
 								thisNewRoot, thisNewTA->getFinalState(),
-								fwdNewRoot, fwdNewTA->getFinalState());
+								fwdNewRoot, fwdNewTA->getFinalState(), 3);
+
+							assert (fae->getRoot(rootState.root)->getFinalStates().size());
 
 							const size_t state = fae->addData(*fae->getRoot(curNewState.root).get(),
 								Data::createRef(rootState.root));
@@ -1011,6 +1025,7 @@ void SymState::Intersect(
 						}
 						else if ((fwdIsData && !thisIsData && fwdData->isNull())
 							|| (!fwdIsData && thisIsData && thisData->isNull())
+							|| (!fwdIsData && thisIsData && thisData->isUndef())
 							|| (fwdIsData && thisIsData && fwdData->isNull() && thisData->isRef())
 							|| (fwdIsData && thisIsData && fwdData->isRef() && thisData->isNull()))
 						{ // ************* process NULL pointers *************
@@ -1035,7 +1050,7 @@ void SymState::Intersect(
 
 								rootState = engine.makeProductState(
 									thisRoot, thisTrans.GetNthChildren(i),
-									fwdNewRoot, fwdNewTA->getFinalState());
+									fwdNewRoot, fwdNewTA->getFinalState(), 1);
 							}
 							else
 							{
@@ -1047,9 +1062,10 @@ void SymState::Intersect(
 
 								rootState = engine.makeProductState(
 									thisNewRoot, thisNewTA->getFinalState(),
-									fwdRoot, fwdTrans.GetNthChildren(i));
+									fwdRoot, fwdTrans.GetNthChildren(i), 2);
 							}
 
+							assert (fae->getRoot(rootState.root)->getFinalStates().size());
 							const size_t state = fae->addData(*fae->getRoot(curNewState.root).get(),
 								Data::createRef(rootState.root));
 							FA_DEBUG_AT(1,"Adding data node r" << _MSB_GET(state) << " of root " << curNewState.root);
@@ -1102,12 +1118,36 @@ void SymState::Intersect(
 		}
 	}
 
+	// find an empty intersection -> if not found end;
+	// nullptr it and remove all references
+	// goto 1
+	// check whether there is non empty root for all references
+	const auto emptyRoots = fae->getEmptyRoots();
+	FA_DEBUG_AT(1,"Empty roots " << emptyRoots.size());
+
+	assert(fae->getRootCount() >= emptyRoots.size());
+	if (fae->getRootCount() - emptyRoots.size() < FIXED_REG_COUNT)
+	{
+		FA_DEBUG_AT(1,"Empty fae " << *fae);
+        fae->clear();   // the language of the FA is empty
+        FA_DEBUG_AT(1,"A tree of intersection is empty");
+
+        return;
+	}
+
+	//fae = &*faeEmptyCheck;
 	FA_DEBUG_AT(1,"Result of intersection: " << *fae);
 
 	// now, check whether there is some component with an empty language in the
 	// result
+	/*
 	for (size_t i = 0; i < fae->getRootCount(); ++i)
 	{
+		if (fae->getRoot(i) == nullptr)
+		{
+			fae->clear();
+			return;
+		}
 		TreeAut* ta = fae->allocTA();
 		fae->getRoot(i)->uselessAndUnreachableFree(*ta);
 		std::shared_ptr<TreeAut> pTa(ta);
@@ -1117,15 +1157,16 @@ void SymState::Intersect(
 		{	// in case the language of an automaton is empty
 			fae->clear();   // the language of the FA is empty
 			FA_DEBUG_AT(1,"A tree of intersection is empty");
+
 			return;
 		}
 
 		fae->setRoot(i, pTa);
 	}
+	 */
 
 	// reorder the FAE to correspond to the original order
 	std::vector<size_t> index = engine.getRootOrderIndexForRHS();
-	assert(index.size() == fae->getValidRootCount());
 
 	// set new root # for components that do not correspond to components in the
 	// forward run
@@ -1134,6 +1175,7 @@ void SymState::Intersect(
 	std::ostringstream os;
 	utils::printCont(os, index);
 	FA_DEBUG_AT(1,"Index: " << os.str());
+	assert(index.size() == fae->getValidRootCount());
 
 	std::vector<std::shared_ptr<TreeAut>> newRoots;
 	size_t newRootsSize = std::max(fae->getRootCount(), fwdFAE->getRootCount());
@@ -1166,23 +1208,27 @@ void SymState::Intersect(
 		fae->connectionGraph.invalidate(index.at(i));
 	}
 
-	for (size_t i = 0; i < thisFAE->GetVarCount(); ++i)
-	{    // relabel global variables according to the index
-		const Data& var = fae->GetVar(i);
-
-		if (var.isRef())
-		{
-			assert(var.d_ref.root < index.size());
-			fae->SetVar(i, Data::createRef(index.at(var.d_ref.root)));
-		}
-	}
+	fae->relabelVariables(index);
 
 	// TODO maybe relabel the register a bit
 
 	FA_DEBUG_AT(1,"After shuffling: " << *fae);
 
+	if (emptyRoots.size())
+	{
+		fae->removeEmptyRoots();
+		FA_DEBUG_AT(1,"After fun: " << *fae);
+	}
+	else
+	{
+		fae->unreachableFree();
+		fae->minimizeRoots();
+	}
+
+	FA_DEBUG_AT(1,"Before connection graph update: " <<*fae);
 	fae->updateConnectionGraph();
 
+	FA_DEBUG_AT(1,"Final result: " << *fae);
 	FA_DEBUG_AT(1,"Underapproximating intersection");
 }
 

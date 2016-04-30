@@ -390,6 +390,8 @@ public:
 		this->data.clear();
 	}
 
+	void reset(const size_t newRoots);
+
 	void invalidate(size_t root);
 
 	void updateBackwardData(size_t root);

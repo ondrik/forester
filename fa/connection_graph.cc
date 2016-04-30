@@ -35,6 +35,17 @@ bool ConnectionGraph::CutpointInfo::operator%(const CutpointInfo& rhs) const
 }
 
 
+void ConnectionGraph::reset(const size_t newRoots)
+{
+	this->clear();
+
+	for (size_t i = 0; i < newRoots; ++i)
+    {
+        this->newRoot();
+    }
+}
+
+
 void ConnectionGraph::updateStateSignature(
 	StateToCutpointSignatureMap&    stateMap,
 	size_t                          state,

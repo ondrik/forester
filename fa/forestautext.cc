@@ -22,6 +22,36 @@
 #include "streams.hh"
 #include "vata_adapter.hh"
 
+
+void FAE::removeReferences(const size_t root)
+{
+    for (size_t i = 0; i < this->getRootCount(); ++i)
+    {
+		if (this->getRoot(i) == nullptr)
+		{
+			continue;
+		}
+
+        TreeAut *ta = this->allocTA();
+        std::shared_ptr<TreeAut> pTa(ta);
+
+        for (const auto trans : *this->getRoot(i))
+        {
+            if (FAE::isRef(trans.GetSymbol())
+                && this->getRef(trans.GetParent()) == root)
+            {
+                continue;
+            }
+
+            pTa->addTransition(trans);
+        }
+		pTa->addFinalStates(this->getRoot(i)->getFinalStates());
+
+        this->setRoot(i, pTa);
+    }
+}
+
+
 bool FAE::subseteq(const FAE& lhs, const FAE& rhs)
 {
 	if (lhs.getRootCount() != rhs.getRootCount())
@@ -109,7 +139,110 @@ TreeAut& FAE::invalidateReference(
 }
 
 
-// TODO: I really need refactore 
+void FAE::relabelVariables(
+		const std::vector<size_t>&     index)
+{
+	for (size_t i = 0; i < this->GetVarCount(); ++i)
+    {    // relabel global variables according to the index
+        const Data& var = this->GetVar(i);
+
+        if (var.isRef())
+        {
+            assert(var.d_ref.root < index.size());
+            this->SetVar(i, Data::createRef(index.at(var.d_ref.root)));
+        }
+    }
+}
+
+
+void FAE::relabelReferences(
+		const std::vector<size_t>&     index)
+{
+    for (size_t i = 0; i < this->getRootCount(); ++i)
+    {
+        this->setRoot(i, std::shared_ptr<TreeAut>(this->relabelReferences(
+							  this->getRoot(i).get(), index)));
+    }
+}
+
+
+void FAE::removeEmptyRoots()
+{
+	const auto emptyRoots = this->getEmptyRoots();
+    std::vector<size_t> indexRemovingEmpty(this->getRootCount(), 0);
+
+    size_t removed = 0;
+    for (size_t i = 0; i < this->getRootCount(); ++i)
+    {
+        if (emptyRoots.count(i))
+        {
+             // move it on its own place, will be replaced later
+            //indexRemovingEmpty.at(i - removed) = i;
+            ++removed;
+            this->removeReferences(i);
+        }
+        else if (removed > 0)
+        {
+            this->setRoot(i-removed, this->getRoot(i));
+            indexRemovingEmpty.at(i) = i-removed;
+        }
+        else
+        {
+            indexRemovingEmpty.at(i) = i;
+        }
+    }
+
+    this->resizeRoots(this->getRootCount() - removed);
+
+    this->unreachableFree();
+    this->minimizeRoots();
+
+    this->relabelReferences(indexRemovingEmpty);
+    this->relabelVariables(indexRemovingEmpty);
+
+    this->connectionGraph.reset(this->getRootCount());
+}
+
+
+std::unordered_set<size_t> FAE::getEmptyRoots() const
+{
+	std::unordered_set<size_t> removed;
+    bool found = true;
+
+	std::shared_ptr<FAE> faeEmptyCheck = std::shared_ptr<FAE>(new FAE(*this));
+
+    while (found)
+    {
+		found = false;
+        for (size_t i = 0; i < faeEmptyCheck->getRootCount(); ++i)
+        {
+			if (faeEmptyCheck->getRoot(i) == nullptr)
+            {
+                continue;
+            }
+
+            TreeAut* ta = faeEmptyCheck->allocTA();
+            faeEmptyCheck->getRoot(i)->uselessAndUnreachableFree(*ta);
+            std::shared_ptr<TreeAut> pTa(ta);
+
+            if (ta->getFinalStates().empty())
+            {
+				found = true;
+				faeEmptyCheck->setRoot(i, nullptr);
+				faeEmptyCheck->removeReferences(i);
+				removed.insert(i);
+            }
+			else
+			{
+				faeEmptyCheck->setRoot(i, pTa);
+			}
+        }
+    }
+
+	return removed;
+}
+
+// TODO: I really need refactore
 // TODO: Error: You have to relable all states that
 // were changed because of new data value
 void FAE::setLabelsToValue(
