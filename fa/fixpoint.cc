@@ -454,6 +454,13 @@ std::vector<std::shared_ptr<const TreeAut>> FI_abs::learnPredicates(
 	std::shared_ptr<FAE> normFAEBwd = bwdState->newNormalizedFAE();
 	std::shared_ptr<FAE> normFAEFwd = fwdState->newNormalizedFAE();
 
+	if (normFAEBwd->getRootCount() < FIXED_REG_COUNT)
+	{
+		return std::vector<std::shared_ptr<const TreeAut>>(
+			normFAEBwd->getRoots().begin(),
+			normFAEBwd->getRoots().end());
+	}
+	FA_DEBUG_AT(1, "FWD " << *normFAEFwd << '\n' << "BWD " << *normFAEBwd << '\n');
 	assert(normFAEFwd->getRootCount() == normFAEBwd->getRootCount());
 
 	std::vector<std::shared_ptr<const TreeAut>> predicate = getEmptyTrees(*normFAEFwd, *normFAEBwd);

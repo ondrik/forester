@@ -56,7 +56,7 @@ void ConnectionGraph::updateStateSignature(
 	if (!itBoolPair.second)
 	{	// in case the state is already mapped to something
 		CutpointSignature& oldSig = itBoolPair.first->second;
-		assert(v.size() == oldSig.size());
+		//assert(v.size() == oldSig.size());
 
 		for (size_t i = 0; i < v.size(); ++i)
 		{
