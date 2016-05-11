@@ -184,6 +184,8 @@ public:   // methods
 	}
 };
 
+enum JumpedAut {none, left, right, both};
+
 /**
  * @brief  Engine for intersection
  */
@@ -241,7 +243,7 @@ public:   // methods
 		const size_t&          lhsState,
 		const size_t&          rhsRoot,
 		const size_t&          rhsState,
-		const size_t           jumped = 0,
+		const JumpedAut        jumped = none,
 		const size_t           currentRoot = 0)
 	{
 		FA_DEBUG_AT(1, "Making product state");
@@ -255,14 +257,15 @@ public:   // methods
 			std::make_pair(lhsRoot, rhsRoot), rootCnt_));
 		const bool isNewRoot = itBoolPairRootMap.second;
 
-		if (!isNewRoot && (jumped > 0 && jumped <= 3 && !processed_.count(prodState)))
+		if (!isNewRoot && (jumped > none && jumped <= both
+						   && !processed_.count(prodState)))
 		{
 			FA_DEBUG_AT(1, "Creating new " << jumped);
             itBoolPairRootMap = rootMap_.insert(std::make_pair(
                     std::make_pair(lhsState, rhsRoot), rootCnt_));
 		}
 
-		if (isNewRoot || (jumped > 0 && !processed_.count(prodState)))
+		if (isNewRoot || (jumped > none && !processed_.count(prodState)))
 		{
 			FA_DEBUG_AT(1,"Creating new root: " << rootCnt_ << " as the product of roots ("
 				<< lhsRoot << ", " << rhsRoot << ")");
@@ -274,7 +277,7 @@ public:   // methods
 		}
 
 		// the actual number of the root
-		const size_t& root = (!isNewRoot && jumped == 0) ? currentRoot : itBoolPairRootMap.first->second;
+		const size_t& root = (!isNewRoot && jumped == none) ? currentRoot : itBoolPairRootMap.first->second;
 
 		RootState newState(root, fae_.nextState());
 		auto itBoolPairProcessed = processed_.insert(std::make_pair(prodState, newState));
@@ -972,7 +975,7 @@ void SymState::Intersect(
 							RootState rootState = engine.makeProductState(
 								thisRoot, thisTrans.GetNthChildren(i),
 								fwdRoot, fwdTrans.GetNthChildren(i),
-								0, curNewState.root);
+								none, curNewState.root);
 
 							// check that we have not created a new automaton
 							assert(rootState.root == curNewState.root);
@@ -1013,7 +1016,7 @@ void SymState::Intersect(
 
 							RootState rootState = engine.makeProductState(
 								thisNewRoot, thisNewTA->getFinalState(),
-								fwdNewRoot, fwdNewTA->getFinalState(), 3);
+								fwdNewRoot, fwdNewTA->getFinalState(), both);
 
 							assert (fae->getRoot(rootState.root)->getFinalStates().size());
 
@@ -1050,7 +1053,7 @@ void SymState::Intersect(
 
 								rootState = engine.makeProductState(
 									thisRoot, thisTrans.GetNthChildren(i),
-									fwdNewRoot, fwdNewTA->getFinalState(), 1);
+									fwdNewRoot, fwdNewTA->getFinalState(), right);
 							}
 							else
 							{
@@ -1062,7 +1065,7 @@ void SymState::Intersect(
 
 								rootState = engine.makeProductState(
 									thisNewRoot, thisNewTA->getFinalState(),
-									fwdRoot, fwdTrans.GetNthChildren(i), 2);
+									fwdRoot, fwdTrans.GetNthChildren(i), left);
 							}
 
 							assert (fae->getRoot(rootState.root)->getFinalStates().size());
