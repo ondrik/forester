@@ -172,6 +172,11 @@ std::shared_ptr<FAE> SymState::newNormalizedFAE()
 	normFae->updateConnectionGraph();
 	GarbageChecker::checkAndRemoveGarbage(*normFae, this, false, true);
 	normFae->updateConnectionGraph();
+	if (normFae->getRootCount() <= FIXED_REG_COUNT)
+	{
+		return normFae;
+	}
+
 	Normalization::normalize(
 			*normFae,
 			this,
