@@ -284,7 +284,7 @@ public:   // methods
 		bool isNewState = itBoolPairProcessed.second;
 
 		FA_DEBUG_AT(1,"Processing product state [" << rhsState << "," << lhsState << "] -> "
-				<< newState << ", roots ["
+				<< FAE::writeState(newState.state) << ", roots ["
 				<< lhsRoot	<< "," << rhsRoot << "] -> " << root);
 
 		// isNewRoot -> isNewState
