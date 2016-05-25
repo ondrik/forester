@@ -22,6 +22,7 @@
 
 // Std headers
 #include <string>
+#include <vector>
 
 // Boost headers
 #include <boost/algorithm/string.hpp>
