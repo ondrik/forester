@@ -79,6 +79,18 @@ private: // private data types
     };
 
 
+	class CopyOneTransition : public TreeAut::AbstractCopyF
+    {
+    private:
+        const Transition& trans_;
+    public:
+        CopyOneTransition(const Transition& trans) : trans_(trans)
+        {}
+
+        bool operator()(const Transition& t);
+    };
+
+
 private: // private constants
     const int cEmptyRootTransIndex = 0; // index of root transition
 
@@ -427,6 +439,10 @@ public: // public methods
 		VATAAdapter& dst,
 		const VATAAdapter& ta) const;
 
+	VATAAdapter& copyGivenTransitionUnderRoot(
+		VATAAdapter& dst,
+		const Transition& trans) const;
+
 	/**
 	 * @brief Copy all transitions confirmed by functor
 	 *
@@ -443,6 +459,7 @@ public: // public methods
 		return dst;
 	}
 
+	size_t getNumberOfTransFromState(const size_t state)const;
 	
 	/**
 	 * @brief Removes all transitions and final states.

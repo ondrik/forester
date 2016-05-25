@@ -25,6 +25,33 @@
 #include <utility>
 
 #include "connection_graph.hh"
+#include "forestaut.hh"
+
+bool VATAAdapter::CopyOneTransition::operator()(const Transition& t)
+{
+    if (trans_.GetParent() != t.GetParent())
+    {
+        return true;
+    }
+
+
+    if (trans_.GetSymbol() != t.GetSymbol() ||
+            trans_.GetChildrenSize() != t.GetChildrenSize())
+    {
+        return false;
+    }
+
+    assert(trans_.GetChildrenSize() == t.GetChildrenSize());
+    for (size_t i = 0; i < t.GetChildrenSize(); ++i)
+    {
+        if (trans_.GetChildren().at(i) != t.GetChildren().at(i))
+        {
+            return false;
+        }
+    }
+
+    return true;
+}
 
 VATAAdapter::VATAAdapter(TreeAut aut) : vataAut_(aut)
 {}
@@ -283,7 +310,29 @@ VATAAdapter& VATAAdapter::copyNotAcceptingTransitions(
     dst.vataAut_.CopyTransitionsFrom(vataAut_, copyFunctor);
 		return dst;
 }
-	
+
+VATAAdapter &VATAAdapter::copyGivenTransitionUnderRoot(
+        VATAAdapter &dst,
+        const Transition& trans) const
+{
+    CopyOneTransition copyFunctor(trans);
+
+    dst.vataAut_.CopyTransitionsFrom(vataAut_, copyFunctor);
+    return dst;
+}
+
+size_t VATAAdapter::getNumberOfTransFromState(const size_t state) const
+{
+    size_t res = 0;
+
+    for (auto i = this->begin(state); i != this->end(state); ++i)
+    {
+        ++res;
+    }
+
+    return res;
+}
+
 void VATAAdapter::clear()
 {
     //FA_DEBUG_AT(1,"TA clear\n");
