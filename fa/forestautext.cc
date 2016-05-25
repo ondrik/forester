@@ -156,12 +156,13 @@ void FAE::relabelVariables(
 
 
 void FAE::relabelReferences(
-		const std::vector<size_t>&     index)
+		const std::vector<size_t>&     index,
+		const bool                     allowNullPtr)
 {
     for (size_t i = 0; i < this->getRootCount(); ++i)
     {
         this->setRoot(i, std::shared_ptr<TreeAut>(this->relabelReferences(
-							  this->getRoot(i).get(), index)));
+							  this->getRoot(i).get(), index, allowNullPtr)));
     }
 }
 
@@ -197,7 +198,12 @@ void FAE::removeEmptyRoots()
     this->unreachableFree();
     this->minimizeRoots();
 
-    this->relabelReferences(indexRemovingEmpty);
+	std::ostringstream os;
+	utils::printCont(os, indexRemovingEmpty);
+	FA_DEBUG_AT(1,"Index: " << os.str());
+	FA_DEBUG_AT(1,"FAE: " << *this);
+
+    this->relabelReferences(indexRemovingEmpty, true);
     this->relabelVariables(indexRemovingEmpty);
 
     this->connectionGraph.reset(this->getRootCount());

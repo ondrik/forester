@@ -409,17 +409,24 @@ public:
 
 	TreeAut* relabelReferences(
 		TreeAut*                       src,
-		const std::vector<size_t>&     index)
+		const std::vector<size_t>&     index,
+		const bool                     allowNullPtr = false)
 	{
 		// Preconditions
-		assert(nullptr != src);
+		assert(nullptr != src || allowNullPtr);
+
+		if (nullptr == src && allowNullPtr)
+		{
+			return nullptr;
+		}
 
 		return &this->relabelReferences(*this->allocTA(), *src, index);
 	}
 
 
 	void relabelReferences(
-		const std::vector<size_t>&     index);
+		const std::vector<size_t>&     index,
+		const bool                     allowNullPtr = false);
 
 
 	void relabelVariables(
@@ -516,6 +523,20 @@ public:
 		const int                              value,
 		const size_t                           bytesToSet);
 
+
+	size_t getStateNumber() const
+	{
+		size_t acc = 0;
+		for (const auto& ta : this->getRoots())
+		{
+			if (ta != nullptr)
+			{
+				acc += ta->getUsedStates().size();
+			}
+		}
+
+		return acc;
+	}
 
 public:
 
