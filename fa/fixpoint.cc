@@ -376,6 +376,7 @@ SymState* FixpointBase::reverseAndIsect(
 							rootToBoxes.first,
 							0,
 							findSelectors(*fae, fae->getRoot(rootToBoxes.first)->getAcceptingTransition()));
+
 					//fae->getType(rootToBoxes.first)->getSelectors());
 					assert(unfolded.size() == 1);
 					fae = std::shared_ptr<FAE>(unfolded.at(0));
@@ -406,7 +407,7 @@ SymState* FixpointBase::reverseAndIsect(
 			fwd.SetFAE(fwd.newNormalizedFAE());
 			tmpState->Intersect(fwd);
 
-            if  (tmpState->GetFAE()->Empty())
+            if (tmpState->GetFAE()->Empty())
             {
 				SymState fwdp;
 				fwdp.init(fwdPred);
@@ -451,15 +452,19 @@ std::vector<std::shared_ptr<const TreeAut>> FI_abs::learnPredicates(
 		SymState *fwdState,
 		SymState *bwdState)
 {
+	FA_DEBUG_AT(1, "BWD " << *bwdState);
 	std::shared_ptr<FAE> normFAEBwd = bwdState->newNormalizedFAE();
 	std::shared_ptr<FAE> normFAEFwd = fwdState->newNormalizedFAE();
 
-	if (normFAEBwd->getRootCount() < FIXED_REG_COUNT)
+	if (normFAEBwd->getRootCount() < FIXED_REG_COUNT ||
+			(normFAEBwd->getRootCount() == FIXED_REG_COUNT &&
+			normFAEBwd->getRoot(1) == nullptr))
 	{
 		return std::vector<std::shared_ptr<const TreeAut>>(
 			normFAEBwd->getRoots().begin(),
 			normFAEBwd->getRoots().end());
 	}
+
 	FA_DEBUG_AT(1, "FWD " << *normFAEFwd << '\n' << "BWD " << *normFAEBwd << '\n');
 	assert(normFAEFwd->getRootCount() == normFAEBwd->getRootCount());
 
@@ -566,7 +571,14 @@ void FI_abs::execute(ExecutionManager& execMan, SymState& state)
 		}
 
 		// fold already discovered boxes
-		this->fold(fae, forbidden, ainfo);
+		try
+		{
+			this->fold(fae, forbidden, ainfo);
+		}
+		catch (std::runtime_error&)
+		{
+			throw ProgramError("Abstraction leads to inconsisten selector map", &state);
+		}
 	}
 
 	Folding::learn2(*fae, boxMan_, Normalization::computeForbiddenSet(*fae));
@@ -585,25 +597,32 @@ void FI_abs::execute(ExecutionManager& execMan, SymState& state)
 	{
 		FAE old(*fae, boxMan_);
 
-		do
+		try
 		{
-			forbidden = Normalization::computeForbiddenSet(*fae);
-
-			Normalization::normalize(*fae, &state, forbidden, true);
-
-			ainfo.faeAtIteration_[ainfo.abstrIteration_] = std::shared_ptr<FAE>(
-					new FAE(*fae));
-
-			abstract(*fae);
-
-			forbidden.clear();
-			for (size_t i = 0; i < FIXED_REG_COUNT; ++i)
+			do
 			{
-				forbidden.insert(VirtualMachine(*fae).varGet(i).d_ref.root);
-			}
+				forbidden = Normalization::computeForbiddenSet(*fae);
 
-			old = *fae;
-		} while (this->fold(fae, forbidden, ainfo) && !FAE::subseteq(*fae, old));
+				Normalization::normalize(*fae, &state, forbidden, true);
+
+				ainfo.faeAtIteration_[ainfo.abstrIteration_] = std::shared_ptr<FAE>(
+						new FAE(*fae));
+
+				abstract(*fae);
+
+				forbidden.clear();
+				for (size_t i = 0; i < FIXED_REG_COUNT; ++i)
+				{
+					forbidden.insert(VirtualMachine(*fae).varGet(i).d_ref.root);
+				}
+
+				old = *fae;
+			} while (this->fold(fae, forbidden, ainfo) && !FAE::subseteq(*fae, old));
+		}
+		catch (std::runtime_error&)
+		{
+			throw ProgramError("Abstraction leads to inconsisten selector map", &state);
+		}
 
 	}
 #endif
@@ -615,7 +634,7 @@ void FI_abs::execute(ExecutionManager& execMan, SymState& state)
 		execMan.pathFinished(&state);
 	} else
 	{
-		FA_DEBUG_AT_MSG(1, &this->insn()->loc, "extending fixpoint\n" << *fae);
+		FA_DEBUG_AT_MSG(1, &this->insn()->loc, "extending fixpoint\n" << *fae << "\n");
 
 		SymState* tmpState = execMan.createChildState(state, next_);
 		tmpState->SetFAE(fae);
