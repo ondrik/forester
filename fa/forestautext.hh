@@ -191,7 +191,7 @@ public:
 				}
 				else
 				{	// in case the 'j'-th root has some cutpoint info
-					if (k->second.size() != fae.connectionGraph.data[j].signature.size())
+					if (k->second != fae.connectionGraph.data[j].signature)
 					{	// in case the info is not compatible to the one in FA
 						break;      // the FA are not compatible
 					}
