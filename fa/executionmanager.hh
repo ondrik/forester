@@ -23,6 +23,9 @@
 // Standard library headers
 #include <list>
 
+#include <cl/code_listener.h>
+#include <cl/storage.hh>
+
 // Forester headers
 #include "types.hh"
 #include "recycler.hh"

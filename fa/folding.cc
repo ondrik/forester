@@ -870,7 +870,7 @@ const Box* Folding::makeBox2Components(
 		fae_.getRoot(aux)->getFinalState()))
 	{
 		assert(false);           // fail gracefully
-		throw std::runtime_error("Bad selector map");
+		//throw std::runtime_error("Bad selector map");
 	}
 
 	size_t selector = extractSelector(selectorMap, root);

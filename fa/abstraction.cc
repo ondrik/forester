@@ -197,8 +197,8 @@ void Abstraction::predicateAbstraction(
 				if (fae_.getRoot(i)->isFinalState(j.first)
 					|| fae_.getRoot(i)->isFinalState(k.first))
 				{
-					rel[j.second][k.second] = false;
-					continue;
+					// rel[j.second][k.second] = false;
+					// continue;
 				}
 
 				// load data if present
@@ -257,13 +257,13 @@ void Abstraction::predicateAbstraction(
 
 			for (const auto& item : faeStateIndex)
 			{
-				if (!usedStates.count(item.first))
+				if (!usedStates.count(item.first) && usedStates.count(faeStateIndex.translate(j)))
 				{ // if state is not in the same automaton, refine
 					rel.at(faeStateIndex.translate(j)).at(item.second) = false;
+					rel.at(item.second).at(faeStateIndex.translate(j)) = false;
 				}
 			}
 		}
-
 	}
 
 	std::ostringstream ossRel;
@@ -309,7 +309,14 @@ void Abstraction::predicateAbstraction(
 	for (size_t i = 0; i < fae_.getRootCount(); ++i)
 	{
 		TreeAut ta = fae_.createTAWithSameBackend();
-		fae_.getRoot(i)->collapsed(ta, relCom);
+		if (i >= 2)
+		{
+			fae_.getRoot(i)->collapsed(ta, relCom);
+		}
+		else
+		{
+			ta = *fae_.getRoot(i);
+		}
 		FA_DEBUG_AT(1,"NEW TA " << ta);
 		//fae_.setRoot(i, std::shared_ptr<TreeAut>(ta));
 		fae_.setRoot(i, std::shared_ptr<TreeAut>(fae_.allocTA()));

@@ -234,7 +234,9 @@ bool testInclusion(
 	fwdConfWrapper.fae2ta(ta, index, fae);
 
 	if (TreeAut::subseteq(ta, fwdConf))
+	{
 		return true;
+	}
 
 	fwdConfWrapper.join(ta, index);
 
@@ -377,6 +379,34 @@ SymState* FixpointBase::reverseAndIsect(
 							0,
 							findSelectors(*fae, fae->getRoot(rootToBoxes.first)->getAcceptingTransition()));
 
+		//			int i = rootToBoxes.first;
+		//			for (; i >= 0; --i)
+		//			{
+		//				if (i >= fae->getRootCount() || fae->getRoot(i) == nullptr)
+		//				{
+		//					continue;
+		//				}
+		//				else if (fae->getRoot(i) != nullptr)
+		//				{
+		//					break;
+		//				}
+		//			}
+
+		//			if (rootToBoxes.first < fae->getRootCount())
+		//			{
+		//				for (const auto fs : fae->getRoot(i)->getFinalStates())
+		//				{
+		//					const auto &ta = fae->getRoot(i);
+		//					for (auto it = ta->begin(fs); it != ta->end(fs); ++it)
+		//					{
+		//						splitting.isolateSet(
+		//								unfolded,
+		//								rootToBoxes.first,
+		//								0,
+		//								findSelectors(*fae, *it /*fae->getRoot(i)->getAcceptingTransition()*/));
+		//					}
+		//				}
+		//			}
 					//fae->getType(rootToBoxes.first)->getSelectors());
 					assert(unfolded.size() == 1);
 					fae = std::shared_ptr<FAE>(unfolded.at(0));
@@ -465,7 +495,8 @@ std::vector<std::shared_ptr<const TreeAut>> FI_abs::learnPredicates(
 			normFAEBwd->getRoots().end());
 	}
 
-	FA_DEBUG_AT(1, "FWD " << *normFAEFwd << '\n' << "BWD " << *normFAEBwd << '\n');
+	if (normFAEFwd->getRootCount() != normFAEBwd->getRootCount())
+		FA_DEBUG_AT(1, "FWD " << *normFAEFwd << '\n' << "BWD " << *normFAEBwd << '\n');
 	assert(normFAEFwd->getRootCount() == normFAEBwd->getRootCount());
 
 	std::vector<std::shared_ptr<const TreeAut>> predicate = getEmptyTrees(*normFAEFwd, *normFAEBwd);
@@ -490,15 +521,50 @@ void FI_abs::abstract(
 
 	FA_DEBUG_AT(3, "before abstraction: " << std::endl << fae);
 
+	FAE faeTemp = FAE(ta_, boxMan_);
 	if (FA_FUSION_ENABLED)
 	{
+		auto renamedAccs = std::unique_ptr<TreeAut>(&fae.unique(*accs_.allocTA(), *accs_.getRoot(0), false));
+		for (size_t i = 0; i < fae.getRootCount(); ++i)
+		{
+			// faeTemp.appendRoot(faeTemp.allocTA());
+			std::vector<size_t> index;
+			index.push_back(i);
+
+			for (auto &cutpointInfo : fae.connectionGraph.data.at(i).signature)
+			{
+				if (cutpointInfo.root == i)
+				{
+					continue;
+				}
+				else
+				{
+					index.push_back(cutpointInfo.root);
+				}
+			}
+
+			std::unique_ptr<TreeAut> finalTa = std::unique_ptr<TreeAut>(fae.allocTA());
+			accs_.relabelReferences(*finalTa, *renamedAccs, index);
+			std::shared_ptr<TreeAut> tempTa = std::shared_ptr<TreeAut>(
+					TreeAut::allocateTAWithSameFinalStates(*fae.getRoot(i)));
+			TreeAut::disjointUnion(*tempTa, *finalTa, false);
+
+			//assert (TreeAut::subseteq(*fae.getRoot(i), *tempTa) || tempTa->areTransitionsEmpty());
+			// faeTemp.setRoot(i, tempTa);
+			fae.setRoot(i, tempTa);
+		 }
+
+		//faeTemp.connectionGraph = fae.connectionGraph;
+		FA_DEBUG_AT(1, "Zumped " << std::endl << fae);
+
 		// merge fixpoint
+		/*
 		std::vector<FAE*> tmp;
 
 		ContainerGuard<std::vector<FAE*>> g(tmp);
 
 		FAE::loadCompatibleFAs(
-			/* the result */ tmp,
+			tmp, // result
 			fwdConf_,
 			ta_,
 			boxMan_,
@@ -513,15 +579,18 @@ void FI_abs::abstract(
 		}
 
 		fae.fuse(tmp, FuseNonFixedF());
-		FA_DEBUG_AT(3, "fused " << std::endl << fae);
+		 */
+		FA_DEBUG_AT(1, "fused " << std::endl << fae);
 	}
 
 	// abstract
 	Abstraction abstraction(fae);
+	//Abstraction abstractionTemp(faeTemp);
 
 	if ((FA_START_WITH_PREDICATE_ABSTRACTION || !predicates_.empty()) && FA_USE_PREDICATE_ABSTRACTION)
 	{	// for predicate abstraction
 		abstraction.predicateAbstraction(this->getPredicates());
+		//abstractionTemp.predicateAbstraction(this->getPredicates());
 	}
 	else
 	{	// for finite height abstraction
@@ -538,12 +607,30 @@ void FI_abs::abstract(
 			if (!excludedRoots[i])
 			{
 				abstraction.heightAbstraction(i, FA_ABS_HEIGHT, SmartTMatchF());
+//				abstractionTemp.heightAbstraction(i, FA_ABS_HEIGHT, SmartTMatchF());
 //				abstraction.heightAbstraction(i, FA_ABS_HEIGHT, SmarterTMatchF(fae));
 			}
 		}
 	}
 
-	FA_DEBUG_AT(3, "after abstraction: " << std::endl << fae);
+	/*
+	if (!FAE::subseteq(fae, faeTemp))
+	{
+		//std::cerr << "SMALL " << fae;
+		//std::cerr << "BIG " << faeTemp;
+		//assert(false);
+	}
+	if (FAE::subseteq(faeTemp, fae) && FAE::subseteq(fae, faeTemp))
+	{
+		std::cerr << "FAIL\n";
+	}
+	else
+	{
+		std::cerr << "HIT\n";
+	}
+	*/
+
+	FA_DEBUG_AT(1, "after abstraction: " << std::endl << fae);
 }
 
 
@@ -621,7 +708,7 @@ void FI_abs::execute(ExecutionManager& execMan, SymState& state)
 		}
 		catch (std::runtime_error&)
 		{
-			throw ProgramError("Abstraction leads to inconsisten selector map", &state);
+			throw ProgramError("Abstraction leads to inconsistent selector map", &state);
 		}
 
 	}
@@ -629,16 +716,41 @@ void FI_abs::execute(ExecutionManager& execMan, SymState& state)
 	// test inclusion
 	if (testInclusion(*fae, fwdConf_, fwdConfWrapper_))
 	{
-		FA_DEBUG_AT(1, "hit");
+		FA_DEBUG_AT(1, "hit " << fwdConf_);
+		FA_DEBUG_AT(1, "hit " << *fae);
 
 		execMan.pathFinished(&state);
 	} else
 	{
 		FA_DEBUG_AT_MSG(1, &this->insn()->loc, "extending fixpoint\n" << *fae << "\n");
+        for (size_t i = 0; i < fae->getRootCount(); ++i)
+        {
+            std::vector<size_t> index(fae->getRootCount(), static_cast<size_t>(-1));
+            size_t start = i;
+            index[i] = start++;
+
+            for (auto& cutpointInfo : fae->connectionGraph.data.at(i).signature)
+            {
+                if (cutpointInfo.root == i)
+                {
+                    continue;
+                }
+                else
+                {
+                    index[cutpointInfo.root] = start++;
+                }
+            }
+
+            const auto ta = fae->getRoot(i);
+
+            auto tmp = std::unique_ptr<TreeAut>(&fae->unique(*accs_.allocTA(), *ta));
+            std::unique_ptr<TreeAut> finalTa = std::unique_ptr<TreeAut>(accs_.allocTA());
+            accs_.relabelReferences(*finalTa, *tmp, index);
+            TreeAut::disjointUnion(*accs_.getRoot(0), *finalTa);
+        }
 
 		SymState* tmpState = execMan.createChildState(state, next_);
 		tmpState->SetFAE(fae);
-
 		execMan.enqueue(tmpState);
 	}
 	FA_DEBUG_AT_MSG(1, &this->insn()->loc, "AbsInt end " << *fae);

@@ -78,7 +78,7 @@ namespace
 
 		auto res = Folding::fold(*fae, boxMan, forbidden);
 		assert(forbidden.size() >= fae->getRootCount() || res.size() != 0 ||
-					   (roots.size() == 1 && *(roots.begin()) == root));
+			   (roots.size() == 1 && *(roots.begin()) == root));
 		// TODO PAB: while here??
 
 		return tmpState;

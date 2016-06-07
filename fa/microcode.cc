@@ -140,6 +140,56 @@ void FI_acc_sel::execute(ExecutionManager& execMan, SymState& state)
 			res.at(0)->getRootCount(),
 			roots_);
 
+	/*
+	std::vector<FAE *> tmp;
+
+	bool change = false;
+	for (auto fae : res)
+	{
+		bool splitted = false;
+		size_t rootNumber = 0;
+		for (const auto ta : fae->getRoots())
+		{
+			for (const auto finState : ta->getFinalStates())
+			{
+				if (ta->getNumberOfTransFromState(finState) <= 1)
+				{
+					continue;
+				}
+
+				for (auto finTransIt = ta->begin(finState); finTransIt != ta->end(finState); ++finTransIt)
+				{
+					splitted = true;
+					auto newTa = std::shared_ptr<TreeAut>(new TreeAut());
+
+					TreeAut::Transition trans(finState,
+											  (*finTransIt).GetSymbol(),
+											  (*finTransIt).GetChildren());
+					ta->copyGivenTransitionUnderRoot(*newTa, trans);
+					newTa->addFinalStates(ta->getFinalStates());
+
+					assert(newTa->getNumberOfTransFromState(finState) == 1);
+					FAE* splittedFAE = new FAE(*fae);
+					splittedFAE->setRoot(rootNumber, newTa);
+
+					assert(fae->getRootCount() == splittedFAE->getRootCount());
+
+					tmp.push_back(splittedFAE);
+				}
+			}
+			++rootNumber;
+		}
+
+		change |= splitted;
+		if (!splitted)
+		{
+			tmp.push_back(fae);
+		}
+	}
+
+	assert(change || res.size() == tmp.size());
+	 */
+
 	for (auto fae : res)
 	{
 		SymState* tmpState = execMan.createChildState(state, next_);

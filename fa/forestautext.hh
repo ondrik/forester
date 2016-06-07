@@ -168,7 +168,7 @@ public:
 			{	// for all TA in the FA
 				assert(roots.size() == j);
 
-				TreeAut* ta = TreeAut::allocateTAWithSameTransitions(tap);
+				TreeAut *ta = TreeAut::allocateTAWithSameTransitions(tap);
 				roots.push_back(std::shared_ptr<TreeAut>(ta));
 
 				const size_t& rootState = trans.GetNthChildren(j);
@@ -191,7 +191,7 @@ public:
 				}
 				else
 				{	// in case the 'j'-th root has some cutpoint info
-					if (k->second != fae.connectionGraph.data[j].signature)
+					if (k->second.size() != fae.connectionGraph.data[j].signature.size())
 					{	// in case the info is not compatible to the one in FA
 						break;      // the FA are not compatible
 					}

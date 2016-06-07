@@ -40,6 +40,8 @@ protected:
 	/// Fixpoint configuration obtained in the forward run
 	TreeAut fwdConf_;
 
+	FAE accs_;
+
 	UFAE fwdConfWrapper_;
 
 	std::vector<std::shared_ptr<const FAE>> fixpoint_;
@@ -68,6 +70,8 @@ public:
 		fixpoint_.clear();
 		fwdConf_.clear();
 		fwdConfWrapper_.clear();
+		accs_.clear();
+		accs_.appendRoot(accs_.allocTA());
 	}
 
 #if 0
@@ -100,11 +104,14 @@ public:
 		BoxMan&                            boxMan) :
 		FixpointInstruction(insn),
 		fwdConf_(fixpoint),
+		accs_(fixpoint, boxMan),
 		fwdConfWrapper_(fwdConf_, boxMan),
 		fixpoint_{},
 		ta_(ta),
 		boxMan_(boxMan)
-	{ }
+	{
+		accs_.appendRoot(accs_.allocTA());
+	}
 
 	virtual ~FixpointBase()
 	{ }
