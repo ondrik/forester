@@ -64,7 +64,6 @@ bool FAE::subseteq(const FAE& lhs, const FAE& rhs)
 	{
 		if (!TreeAut::subseteq(*lhs.getRoot(i), *rhs.getRoot(i)))
 		{
-			std::cerr << "Breaking by " << i << '\n';
 			return false;
 		}
 	}
