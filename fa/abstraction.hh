@@ -105,6 +105,7 @@ public:   // methods
 	 * @param[in]  predicates  The predicates used for the abstraction
 	 */
 	void predicateAbstraction(
+		const size_t                                          abstrRoot,
 		const std::vector<std::shared_ptr<const TreeAut>>&    predicates);
 
 

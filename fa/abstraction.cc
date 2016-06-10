@@ -90,20 +90,21 @@ public:   // methods
 }
 
 void Abstraction::predicateAbstraction(
+		const size_t                                          abstrRoot,
 		const std::vector<std::shared_ptr<const TreeAut>>&    predicates)
 {
 	FA_DEBUG_AT(1,"Predicate abstraction input: predicates " << predicates.size() << " FAE: " << fae_);
 
-	Index<size_t> faeStateIndex;
-	for (size_t i = 0; i < fae_.getRootCount(); ++i)
-	{
-		assert(nullptr != fae_.getRoot(i));
-		fae_.getRoot(i)->buildStateIndex(faeStateIndex);
-	}
+	assert(fae_.getRoot(abstrRoot) != nullptr);
+	const TreeAut& abstrTa = *fae_.getRoot(abstrRoot);
 
-	const size_t numStates = faeStateIndex.size();
+	Index<size_t> abstrTaStateIndex;
+	abstrTa.buildStateIndex(abstrTaStateIndex);
 
-	FA_DEBUG_AT(1,"Index: " << faeStateIndex);
+	const size_t numStates = abstrTaStateIndex.size();
+	assert(abstrTa.getUsedStates().size() == numStates);
+
+	FA_DEBUG_AT(1,"Index: " << abstrTaStateIndex);
 
 	// create the initial relation
 	// TODO: use boost::dynamic_bitset
@@ -113,41 +114,23 @@ void Abstraction::predicateAbstraction(
 	for (const auto& predicate : predicates)
 	{
 		FA_DEBUG_AT(1,"Predicate: " << *predicate);
-		//assert(predicate->getRootCount() >= this->fae_.getRootCount());
-		//const size_t roots = predicate->getRootCount() >= this->fae_.getRootCount()
-		//	? this->fae_.getRootCount() : predicate->getRootCount();
+        FA_DEBUG_AT(1,"ISECT1: " << abstrTa);
+        FA_DEBUG_AT(1,"ISECT2: " << predicate /* *(predicate->getRoot(root)) */);
 
-		for (size_t root = 0; root < this->fae_.getRootCount(); ++root)
-		{
-			FA_DEBUG_AT(1,"ISECT1: " << *this->fae_.getRoot(root));
-			FA_DEBUG_AT(1,"ISECT2: " << predicate /* *(predicate->getRoot(root)) */);
-			if (this->fae_.getRoot(root) != nullptr && predicate != nullptr)
-			{
-				const auto res = VATAAdapter::intersectionBU(
-						*this->fae_.getRoot(root),
-						/* *(predicate->getRoot(root)) */ *predicate, &translMap);
-				FA_DEBUG_AT(1, "RES: " << res);
-			}
-		}
+        if (predicate != nullptr)
+        {
+            const auto res = VATAAdapter::intersectionBU(
+                    abstrTa,
+                    /* *(predicate->getRoot(root)) */ *predicate, &translMap);
+            FA_DEBUG_AT(1, "RES: " << res);
+        }
 	}
 
     std::vector<std::set<size_t>> matchWith(numStates, std::set<size_t>());
     for (const auto& matchPair : translMap)
     {
-        matchWith[faeStateIndex[matchPair.first.first]].insert(matchPair.first.second);
+        matchWith[abstrTaStateIndex[matchPair.first.first]].insert(matchPair.first.second);
     }
-
-    /*
-    std::set<std::pair<size_t, size_t>> product;
-    FAE::makeProduct(fae_, *predicates.back(), product);
-
-    // create a map of states of 'fae_' on sets of states of 'predicate'
-    std::vector<std::set<size_t>> matchWith(numStates, std::set<size_t>());
-    for (const std::pair<size_t, size_t>& statePair : product)
-    {
-        matchWith[faeStateIndex[statePair.first]].insert(statePair.second);
-    }
-    */
 
     std::ostringstream oss;
     for (size_t i = 0; i < matchWith.size(); ++i)
@@ -178,93 +161,79 @@ void Abstraction::predicateAbstraction(
 		rel.assign(numStates, std::vector<bool>(numStates, true));
 	}
 
-	for (size_t i = 0; i < fae_.getRootCount(); ++i)
-	{
-		assert(nullptr != fae_.getRoot(i));
+    // refine the relation according to cutpoints etc.
+    ConnectionGraph::StateToCutpointSignatureMap stateMap;
+    ConnectionGraph::computeSignatures(stateMap, abstrTa);
+    for (const auto j : abstrTaStateIndex)
+    { // go through the matrix
+        for (const auto k : abstrTaStateIndex)
+        {
+            if (k == j)
+            {
+                continue;
+            }
 
-		// refine the relation according to cutpoints etc.
-		ConnectionGraph::StateToCutpointSignatureMap stateMap;
-		ConnectionGraph::computeSignatures(stateMap, *fae_.getRoot(i));
-		for (const auto j : faeStateIndex)
-		{ // go through the matrix
-			for (const auto k : faeStateIndex)
-			{
-				if (k == j)
-				{
-					continue;
-				}
+            if (abstrTa.isFinalState(j.first)
+                || abstrTa.isFinalState(k.first))
+            {
+                // rel[j.second][k.second] = false;
+                // continue;
+            }
 
-				if (fae_.getRoot(i)->isFinalState(j.first)
-					|| fae_.getRoot(i)->isFinalState(k.first))
-				{
-					// rel[j.second][k.second] = false;
-					// continue;
-				}
+            // load data if present
+            const Data* jData;
+            const bool jIsData = fae_.isData(j.first, jData);
+            assert((!jIsData || (nullptr != jData)) && (!(nullptr == jData) || !jIsData));
+            const Data* kData;
+            const bool kIsData = fae_.isData(k.first, kData);
+            assert((!kIsData || (nullptr != kData)) && (!(nullptr == kData) || !kIsData));
 
-				// load data if present
-				const Data* jData;
-				const bool jIsData = fae_.isData(j.first, jData);
-				assert((!jIsData || (nullptr != jData)) && (!(nullptr == jData) || !jIsData));
-				const Data* kData;
-				const bool kIsData = fae_.isData(k.first, kData);
-				assert((!kIsData || (nullptr != kData)) && (!(nullptr == kData) || !kIsData));
+            if (jIsData || kIsData)
+            {
+                rel[j.second][k.second] = false;
+            }
+            else if (!(stateMap[j.first] % stateMap[k.first]))
+            {
+                rel[j.second][k.second] = false;
+            }
 
-				if (jIsData || kIsData)
-				{
-					rel[j.second][k.second] = false;
-				}
-				else if (!(stateMap[j.first] % stateMap[k.first]))
-				{
-					rel[j.second][k.second] = false;
-				}
+        }
+    }
 
-			}
-		}
+    struct SmartTMatchF matcher;
+    const auto usedStates = abstrTa.getUsedStates();
+    for (const auto j : usedStates)
+    {
+        for (const auto k : usedStates)
+        {
+            if (j == k ||
+                rel.at(abstrTaStateIndex.translate(j)).at(
+                        abstrTaStateIndex.translate(k)) == false)
+            {
+                continue;
+            }
 
-		struct SmartTMatchF matcher;
-		const auto usedStates = fae_.getRoot(i)->getUsedStates();
-		for (const auto j : usedStates)
-		{
-			for (const auto k : usedStates)
-			{
-				if (j == k ||
-					rel.at(faeStateIndex.translate(j)).at(
-							faeStateIndex.translate(k)) == false)
-				{
-					continue;
-				}
+            bool matchedAll = true;
+            for (auto jIt = abstrTa.begin(j); jIt != abstrTa.end(j); ++jIt)
+            {
+                bool matchedOne = true;
+                for (auto kIt = abstrTa.begin(k); kIt != abstrTa.end(k); ++kIt)
+                {
+                    if (!matcher(*jIt, *kIt))
+                    {
+                        matchedOne = false;
+                        break;
+                    }
+                }
+                matchedAll &= matchedOne;
+            }
 
-				bool matchedAll = true;
-				for (auto jIt = fae_.getRoot(i)->begin(j); jIt != fae_.getRoot(i)->end(j); ++jIt)
-				{
-					bool matchedOne = true;
-					for (auto kIt = fae_.getRoot(i)->begin(k); kIt != fae_.getRoot(i)->end(k); ++kIt)
-					{
-						if (!matcher(*jIt, *kIt))
-						{
-							matchedOne = false;
-							break;
-						}
-					}
-					matchedAll &= matchedOne;
-				}
-
-				if (!matchedAll)
-				{
-					rel.at(faeStateIndex.translate(j)).at(faeStateIndex.translate(k)) = false;
-				}
-			}
-
-			for (const auto& item : faeStateIndex)
-			{
-				if (!usedStates.count(item.first) && usedStates.count(faeStateIndex.translate(j)))
-				{ // if state is not in the same automaton, refine
-					rel.at(faeStateIndex.translate(j)).at(item.second) = false;
-					rel.at(item.second).at(faeStateIndex.translate(j)) = false;
-				}
-			}
-		}
-	}
+            if (!matchedAll)
+            {
+                rel.at(abstrTaStateIndex.translate(j)).at(abstrTaStateIndex.translate(k)) = false;
+            }
+        }
+    }
 
 	std::ostringstream ossRel;
 	utils::relPrint(ossRel, rel);
@@ -272,7 +241,7 @@ void Abstraction::predicateAbstraction(
 
 	std::ostringstream ossInd;
 	ossInd << '[';
-	for (const auto it : faeStateIndex)
+	for (const auto it : abstrTaStateIndex)
 	{
 		ossInd << '(' << FA::writeState(it.first) << ',' << it.second << ')';
 	}
@@ -287,9 +256,9 @@ void Abstraction::predicateAbstraction(
 		relCom[state] = state;
 	}
 
-	for (const auto& item1 : faeStateIndex)
+	for (const auto& item1 : abstrTaStateIndex)
 	{
-		for (const auto& item2 : faeStateIndex)
+		for (const auto& item2 : abstrTaStateIndex)
 		{
 			if (rel.at(item1.second).at(item2.second))
 			{
@@ -298,7 +267,7 @@ void Abstraction::predicateAbstraction(
 		}
 	}
 
-	for (const auto& item : faeStateIndex)
+	for (const auto& item : abstrTaStateIndex)
 	{
 		if (relCom.count(item.second) == 0)
 		{
@@ -306,22 +275,18 @@ void Abstraction::predicateAbstraction(
 		}
 	}
 
-	for (size_t i = 0; i < fae_.getRootCount(); ++i)
-	{
-		TreeAut ta = fae_.createTAWithSameBackend();
-		if (i >= 2)
-		{
-			fae_.getRoot(i)->collapsed(ta, relCom);
-		}
-		else
-		{
-			ta = *fae_.getRoot(i);
-		}
-		FA_DEBUG_AT(1,"NEW TA " << ta);
-		//fae_.setRoot(i, std::shared_ptr<TreeAut>(ta));
-		fae_.setRoot(i, std::shared_ptr<TreeAut>(fae_.allocTA()));
-		ta.uselessAndUnreachableFree(*fae_.getRoot(i));
-	}
+    TreeAut ta = fae_.createTAWithSameBackend();
+    if (abstrRoot >= 2)
+    {
+        abstrTa.collapsed(ta, relCom);
+    }
+    else
+    {
+        ta = abstrTa;
+    }
+    FA_DEBUG_AT(1,"NEW TA " << ta);
+    fae_.setRoot(abstrRoot, std::shared_ptr<TreeAut>(fae_.allocTA()));
+    ta.uselessAndUnreachableFree(*fae_.getRoot(abstrRoot));
 
 	FA_DEBUG_AT(1,"Predicate abstraction output: " << fae_);
 }
