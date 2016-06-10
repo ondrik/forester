@@ -153,6 +153,15 @@ private:  // methods
 	void abstract(
 		FAE&             fae);
 
+	void strongFusion(
+		FAE&             fae);
+
+	void weakFusion(
+		FAE&             fae);
+
+	void loadFaeToAccs(
+		FAE&       fae);
+
 public:   // methods
 
 	FI_abs(

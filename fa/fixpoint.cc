@@ -514,6 +514,102 @@ std::vector<std::shared_ptr<const TreeAut>> FI_abs::learnPredicates(
 }
 
 
+void FI_abs::loadFaeToAccs(FAE& fae)
+{
+	for (size_t i = 0; i < fae.getRootCount(); ++i)
+    {
+        if (i <= 1)
+        {
+            continue;
+        }
+
+        std::vector<size_t> index(fae.getRootCount(), static_cast<size_t>(-1));
+        size_t start = 0;
+        index[i] = start++;
+
+        for (auto& cutpointInfo : fae.connectionGraph.data.at(i).signature)
+        {
+            if (cutpointInfo.root == i)
+            {
+                continue;
+            }
+            else
+            {
+                index[cutpointInfo.root] = start++;
+            }
+        }
+
+        const auto ta = fae.getRoot(i);
+
+        auto tmp = std::unique_ptr<TreeAut>(&fae.unique(*accs_.allocTA(), *ta));
+        std::unique_ptr<TreeAut> finalTa = std::unique_ptr<TreeAut>(accs_.allocTA());
+        accs_.relabelReferences(*finalTa, *tmp, index);
+        TreeAut::disjointUnion(*accs_.getRoot(0), *finalTa);
+    }
+}
+
+
+void FI_abs::strongFusion(
+		FAE&            fae)
+{
+	auto renamedAccs = std::unique_ptr<TreeAut>(&fae.unique(*accs_.allocTA(), *accs_.getRoot(0), false));
+    for (size_t i = 0; i < fae.getRootCount(); ++i)
+    {
+        //faeTemp.appendRoot(fae.allocTA());
+        std::vector<size_t> index;
+        index.push_back(i);
+
+        for (auto &cutpointInfo : fae.connectionGraph.data.at(i).signature)
+        {
+            if (cutpointInfo.root == i)
+            {
+                continue;
+            }
+            else
+            {
+                index.push_back(cutpointInfo.root);
+            }
+        }
+
+        std::unique_ptr<TreeAut> finalTa = std::unique_ptr<TreeAut>(fae.allocTA());
+        accs_.relabelReferences(*finalTa, *renamedAccs, index);
+
+        std::shared_ptr<TreeAut> tempTa = std::shared_ptr<TreeAut>(
+                TreeAut::allocateTAWithSameFinalStates(*fae.getRoot(i)));
+        TreeAut::disjointUnion(*tempTa, *finalTa, false);
+        fae.setRoot(i, tempTa);
+     }
+}
+
+
+void FI_abs::weakFusion(
+	FAE&                 fae)
+{
+    // merge fixpoint
+    std::vector<FAE*> tmp;
+
+    ContainerGuard<std::vector<FAE*>> g(tmp);
+
+    FAE::loadCompatibleFAs(
+        tmp, // result
+        fwdConf_,
+        ta_,
+        boxMan_,
+        fae,
+        0,
+        CompareVariablesF()
+    );
+
+    for (size_t i = 0; i < tmp.size(); ++i)
+    {
+        FA_DEBUG_AT(3, "accelerator " << std::endl << *tmp[i]);
+    }
+
+    fae.fuse(tmp, FuseNonFixedF());
+    FA_DEBUG_AT(1, "fused " << std::endl << fae);
+}
+
+
 void FI_abs::abstract(
 	FAE&                 fae)
 {
@@ -521,66 +617,16 @@ void FI_abs::abstract(
 
 	FA_DEBUG_AT(3, "before abstraction: " << std::endl << fae);
 
-	FAE faeTemp = FAE(ta_, boxMan_);
+	// FAE faeTemp = FAE(ta_, boxMan_);
 	if (FA_FUSION_ENABLED)
 	{
-		auto renamedAccs = std::unique_ptr<TreeAut>(&fae.unique(*accs_.allocTA(), *accs_.getRoot(0), false));
-		for (size_t i = 0; i < fae.getRootCount(); ++i)
-		{
-			// faeTemp.appendRoot(faeTemp.allocTA());
-			std::vector<size_t> index;
-			index.push_back(i);
-
-			for (auto &cutpointInfo : fae.connectionGraph.data.at(i).signature)
-			{
-				if (cutpointInfo.root == i)
-				{
-					continue;
-				}
-				else
-				{
-					index.push_back(cutpointInfo.root);
-				}
-			}
-
-			std::unique_ptr<TreeAut> finalTa = std::unique_ptr<TreeAut>(fae.allocTA());
-			accs_.relabelReferences(*finalTa, *renamedAccs, index);
-			std::shared_ptr<TreeAut> tempTa = std::shared_ptr<TreeAut>(
-					TreeAut::allocateTAWithSameFinalStates(*fae.getRoot(i)));
-			TreeAut::disjointUnion(*tempTa, *finalTa, false);
-
-			//assert (TreeAut::subseteq(*fae.getRoot(i), *tempTa) || tempTa->areTransitionsEmpty());
-			// faeTemp.setRoot(i, tempTa);
-			fae.setRoot(i, tempTa);
-		 }
-
-		//faeTemp.connectionGraph = fae.connectionGraph;
-		FA_DEBUG_AT(1, "Zumped " << std::endl << fae);
-
-		// merge fixpoint
+		strongFusion(fae);
 		/*
-		std::vector<FAE*> tmp;
-
-		ContainerGuard<std::vector<FAE*>> g(tmp);
-
-		FAE::loadCompatibleFAs(
-			tmp, // result
-			fwdConf_,
-			ta_,
-			boxMan_,
-			fae,
-			0,
-			CompareVariablesF()
-		);
-
-		for (size_t i = 0; i < tmp.size(); ++i)
-		{
-			FA_DEBUG_AT(3, "accelerator " << std::endl << *tmp[i]);
-		}
-
-		fae.fuse(tmp, FuseNonFixedF());
+		faeTemp.connectionGraph = fae.connectionGraph;
+		FA_DEBUG_AT(1, "Zumped " << faeTemp << '\n');
 		 */
-		FA_DEBUG_AT(1, "fused " << std::endl << fae);
+
+		//weakFusion(fae);
 	}
 
 	// abstract
@@ -589,8 +635,11 @@ void FI_abs::abstract(
 
 	if ((FA_START_WITH_PREDICATE_ABSTRACTION || !predicates_.empty()) && FA_USE_PREDICATE_ABSTRACTION)
 	{	// for predicate abstraction
-		abstraction.predicateAbstraction(this->getPredicates());
-		//abstractionTemp.predicateAbstraction(this->getPredicates());
+		for (size_t i = 0; i < fae.getRootCount(); ++i)
+		{
+			abstraction.predicateAbstraction(i, this->getPredicates());
+			//abstractionTemp.predicateAbstraction(i, this->getPredicates());
+		}
 	}
 	else
 	{	// for finite height abstraction
@@ -616,17 +665,19 @@ void FI_abs::abstract(
 	/*
 	if (!FAE::subseteq(fae, faeTemp))
 	{
-		//std::cerr << "SMALL " << fae;
-		//std::cerr << "BIG " << faeTemp;
-		//assert(false);
+		std::cerr << "SMALL " << fae;
+		std::cerr << "BIG " << faeTemp;
+		assert(false);
 	}
+	 */
+	/*
 	if (FAE::subseteq(faeTemp, fae) && FAE::subseteq(fae, faeTemp))
 	{
-		std::cerr << "FAIL\n";
+		//std::cerr << "FAIL\n";
 	}
 	else
 	{
-		std::cerr << "HIT\n";
+		//std::cerr << "HIT\n";
 	}
 	*/
 
@@ -723,31 +774,7 @@ void FI_abs::execute(ExecutionManager& execMan, SymState& state)
 	} else
 	{
 		FA_DEBUG_AT_MSG(1, &this->insn()->loc, "extending fixpoint\n" << *fae << "\n");
-        for (size_t i = 0; i < fae->getRootCount(); ++i)
-        {
-            std::vector<size_t> index(fae->getRootCount(), static_cast<size_t>(-1));
-            size_t start = i;
-            index[i] = start++;
-
-            for (auto& cutpointInfo : fae->connectionGraph.data.at(i).signature)
-            {
-                if (cutpointInfo.root == i)
-                {
-                    continue;
-                }
-                else
-                {
-                    index[cutpointInfo.root] = start++;
-                }
-            }
-
-            const auto ta = fae->getRoot(i);
-
-            auto tmp = std::unique_ptr<TreeAut>(&fae->unique(*accs_.allocTA(), *ta));
-            std::unique_ptr<TreeAut> finalTa = std::unique_ptr<TreeAut>(accs_.allocTA());
-            accs_.relabelReferences(*finalTa, *tmp, index);
-            TreeAut::disjointUnion(*accs_.getRoot(0), *finalTa);
-        }
+		loadFaeToAccs(*fae);
 
 		SymState* tmpState = execMan.createChildState(state, next_);
 		tmpState->SetFAE(fae);
