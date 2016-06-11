@@ -159,8 +159,9 @@ private:  // methods
 	void weakFusion(
 		FAE&             fae);
 
-	void loadFaeToAccs(
-		FAE&       fae);
+	void storeFaeToAccs(
+		FAE &fae,
+		const bool startFromZero = false);
 
 public:   // methods
 

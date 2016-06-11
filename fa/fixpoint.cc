@@ -514,7 +514,9 @@ std::vector<std::shared_ptr<const TreeAut>> FI_abs::learnPredicates(
 }
 
 
-void FI_abs::loadFaeToAccs(FAE& fae)
+void FI_abs::storeFaeToAccs(
+		FAE &fae,
+		const bool startFromZero)
 {
 	for (size_t i = 0; i < fae.getRootCount(); ++i)
     {
@@ -524,7 +526,7 @@ void FI_abs::loadFaeToAccs(FAE& fae)
         }
 
         std::vector<size_t> index(fae.getRootCount(), static_cast<size_t>(-1));
-        size_t start = 0;
+        size_t start = startFromZero ? 0 : i;
         index[i] = start++;
 
         for (auto& cutpointInfo : fae.connectionGraph.data.at(i).signature)
@@ -774,7 +776,8 @@ void FI_abs::execute(ExecutionManager& execMan, SymState& state)
 	} else
 	{
 		FA_DEBUG_AT_MSG(1, &this->insn()->loc, "extending fixpoint\n" << *fae << "\n");
-		loadFaeToAccs(*fae);
+		storeFaeToAccs(*fae);
+		storeFaeToAccs(*fae, true);
 
 		SymState* tmpState = execMan.createChildState(state, next_);
 		tmpState->SetFAE(fae);
