@@ -480,26 +480,32 @@ namespace
 	}
 }
 
+std::ostream& VATAAdapter::printTrans(std::ostream& os, const VATAAdapter::Transition& t, const bool isFinal)
+{
+    if (isFinal)
+    {
+        os << "[" << stateToString(t.GetParent()) << "] " << VATAAdapter::GetSymbol(t) << " ";
+    }
+    else
+    {
+        os << stateToString(t.GetParent()) << " " << VATAAdapter::GetSymbol(t) << " ";
+    }
+    for (auto s : t.GetChildren())
+    {
+        os << stateToString(s) << " ";
+    }
+    os << "\n";
+
+    return os;
+}
+
 std::ostream& operator<<(std::ostream& os, const VATAAdapter& ta)
 {
     os << "TREE AUT " << std::endl;
 
     for (const auto t : ta.vataAut_)
     {
-		if (ta.isFinalState(t.GetParent()))
-		{
-			os << "[" << stateToString(t.GetParent()) << "] " << VATAAdapter::GetSymbol(t) << " ";
-		}
-		else 
-		{
-			os << stateToString(t.GetParent()) << " " << VATAAdapter::GetSymbol(t) << " ";
-		}
-        for (auto s : t.GetChildren())
-		{
-			os << stateToString(s) << " ";
-			//os << s << " " ;
-		}
-        os << "\n";
+        TreeAut::printTrans(os, t, ta.isFinalState(t.GetParent()));
     }
 
     os.flush();
