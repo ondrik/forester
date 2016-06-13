@@ -690,18 +690,19 @@ void SymState::SubstituteRefs(
 							lhs.push_back(fae->addData(*fae->getRoot(thisRoot).get(),
 								Data::createRef(thisNewRoot)));
 						}
-						else if (srcIsData && (*srcData == oldValue))
+						else if (srcIsData && (*srcData == oldValue) && thisIsData)
 						{ // ************* perform substitution of reference *************
+							FA_DEBUG_AT(1, "Substituting " << *srcData << " for " << newValue);
 							assert(thisIsData && thisData->isUndef());
-
-							FA_DEBUG_AT(1,"Substituting " << *srcData << " for " << newValue);
 
 							lhs.push_back(fae->addData(
 								*fae->getRoot(thisRoot).get(), newValue));
 						}
 						else if ((srcIsData && !thisIsData && srcData->isNull())
 							|| (!srcIsData && thisIsData && thisData->isNull())
+							|| (!srcIsData && thisIsData && thisData->isUndef())
 							|| (srcIsData && thisIsData && srcData->isNull() && thisData->isRef())
+							|| (srcIsData && thisIsData && srcData->isRef() && thisData->isUndef())
 							|| (srcIsData && thisIsData && srcData->isRef() && thisData->isNull()))
 						{ // ************* process NULL pointers *************
 							// This is the case when there is a NULL pointer and either an
@@ -1027,6 +1028,7 @@ void SymState::Intersect(
 							lhs.push_back(state);
 						}
 						else if ((fwdIsData && !thisIsData && fwdData->isNull())
+							|| (fwdIsData && !thisIsData && fwdData->isUndef())
 							|| (!fwdIsData && thisIsData && thisData->isNull())
 							|| (!fwdIsData && thisIsData && thisData->isUndef())
 							|| (fwdIsData && thisIsData && fwdData->isNull() && thisData->isRef())
@@ -1084,7 +1086,7 @@ void SymState::Intersect(
 							lhs.push_back(fae->addData(
 								*fae->getRoot(thisRoot).get(), *fwdData));
 						}
-						else if ((thisIsData && thisData->isUndef()) && fwdIsData)
+						else if (thisIsData && thisData->isUndef())
 						{
 							assert(thisIsData && thisData->isUndef());
 							// TODO: PAB is this corrent?
@@ -1121,9 +1123,6 @@ void SymState::Intersect(
 		}
 	}
 
-	// find an empty intersection -> if not found end;
-	// nullptr it and remove all references
-	// goto 1
 	// check whether there is non empty root for all references
 	const auto emptyRoots = fae->getEmptyRoots();
 	FA_DEBUG_AT(1,"Empty roots " << emptyRoots.size());
@@ -1138,78 +1137,23 @@ void SymState::Intersect(
         return;
 	}
 
-	//fae = &*faeEmptyCheck;
 	FA_DEBUG_AT(1,"Result of intersection: " << *fae);
-
-	// now, check whether there is some component with an empty language in the
-	// result
-	/*
-	for (size_t i = 0; i < fae->getRootCount(); ++i)
-	{
-		if (fae->getRoot(i) == nullptr)
-		{
-			fae->clear();
-			return;
-		}
-		TreeAut* ta = fae->allocTA();
-		fae->getRoot(i)->uselessAndUnreachableFree(*ta);
-		std::shared_ptr<TreeAut> pTa(ta);
-
-		// check emptiness
-		if (ta->getFinalStates().empty())
-		{	// in case the language of an automaton is empty
-			fae->clear();   // the language of the FA is empty
-			FA_DEBUG_AT(1,"A tree of intersection is empty");
-
-			return;
-		}
-
-		fae->setRoot(i, pTa);
-	}
-	 */
 
 	// reorder the FAE to correspond to the original order
 	std::vector<size_t> index = engine.getRootOrderIndexForRHS();
 
 	// set new root # for components that do not correspond to components in the
 	// forward run
-
-
 	std::ostringstream os;
 	utils::printCont(os, index);
 	FA_DEBUG_AT(1,"Index: " << os.str());
 	assert(index.size() == fae->getValidRootCount());
 
-	std::vector<std::shared_ptr<TreeAut>> newRoots;
-	size_t newRootsSize = std::max(fae->getRootCount(), fwdFAE->getRootCount());
-	for (size_t i = 0; i < newRootsSize; ++i)
-	{
-		if (i >= fae->getRootCount())
-		{
-			fae->connectionGraph.newRoot();
-		}
-		newRoots.push_back(std::shared_ptr<TreeAut>());
-	}
-
-	for (size_t i = 0; i < index.size(); ++i)
-	{
-		assert(index[i] < newRootsSize);
-		newRoots[index[i]] = fae->getRoot(i);
-	}
-
-	FA_DEBUG_AT(1,"Before swap: " << *fae);
-	// update representation
-	fae->swapRoots(newRoots);
+	fae->reorderRoots(index, std::max(fae->getRootCount(), fwdFAE->getRootCount()));
 
 	FA_DEBUG_AT(1,"Before relabelling: " << *fae);
 
-	for (size_t i = 0; i < index.size(); ++i)
-	{
-		fae->setRoot(index[i], std::shared_ptr<TreeAut>(
-			fae->relabelReferences(fae->getRoot(index[i]).get(), index)
-		));
-		fae->connectionGraph.invalidate(index.at(i));
-	}
+	fae->relabelReferencesAndRoots(index);
 
 	fae->relabelVariables(index);
 
