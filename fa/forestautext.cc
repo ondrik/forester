@@ -169,6 +169,18 @@ void FAE::relabelReferences(
 }
 
 
+void FAE::relabelReferencesAndRoots(const std::vector<size_t>& index)
+{
+	for (size_t i = 0; i < index.size(); ++i)
+	{
+		this->setRoot(index[i], std::shared_ptr<TreeAut>(
+			this->relabelReferences(this->getRoot(index[i]).get(), index)
+		));
+		this->connectionGraph.invalidate(index.at(i));
+	}
+}
+
+
 void FAE::removeEmptyRoots()
 {
 	const auto emptyRoots = this->getEmptyRoots();
@@ -400,3 +412,26 @@ void FAE::freePosition(size_t root, const std::unordered_set<size_t>& rootsRefer
 	FA_DEBUG_AT(1,"FAE now: " << *this);
 }
 
+void FAE::reorderRoots(
+		const std::vector<size_t>& index,
+		const size_t               newRootsSize)
+{
+	std::vector<std::shared_ptr<TreeAut>> newRoots;
+	for (size_t i = 0; i < newRootsSize; ++i)
+	{
+		if (i >= this->getRootCount())
+		{
+			this->connectionGraph.newRoot();
+		}
+		newRoots.push_back(std::shared_ptr<TreeAut>());
+	}
+
+	for (size_t i = 0; i < index.size(); ++i)
+	{
+		assert(index[i] < newRootsSize);
+		newRoots[index[i]] = this->getRoot(i);
+	}
+
+	// update representation
+	this->swapRoots(newRoots);
+}

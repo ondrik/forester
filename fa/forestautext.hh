@@ -401,6 +401,10 @@ public:
 		return true;
 	}
 
+	void relabelReferencesAndRoots(
+		const std::vector<size_t>&    index
+	);
+
 	TreeAut& relabelReferences(
 		TreeAut&                      dst,
 		const TreeAut&                src,
@@ -432,6 +436,11 @@ public:
 	void relabelVariables(
 		const std::vector<size_t>&     index);
 
+
+	void reorderRoots(
+		const std::vector<size_t>&    index,
+		const size_t                  newRootsSize
+	);
 
 	std::unordered_set<size_t> getEmptyRoots() const;
 
