@@ -203,6 +203,12 @@ SymState::Trace SymState::getTrace() const
 
 std::ostream& operator<<(std::ostream& os, const SymState& state)
 {
+	if (state.GetFAE() == nullptr)
+	{
+		os << "Null fae\n";
+		return os << "instruction (" << state.GetInstr() << "): "
+		<< *state.GetInstr();
+	}
 	VirtualMachine vm(*state.GetFAE());
 
 	// in case it changes, we should alter the printout
@@ -232,7 +238,9 @@ std::ostream& operator<<(std::ostream& os, const SymState& state)
 		os << " r" << i << '=' << state.GetReg(i);
 	}
 
-	os << ", heap:" << std::endl << *state.GetFAE();
+	os << ", heap:" << std::endl;
+	if (state.GetFAE() != nullptr)
+		os << *state.GetFAE();
 
 	return os << "instruction (" << state.GetInstr() << "): "
 		<< *state.GetInstr();

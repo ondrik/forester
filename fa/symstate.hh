@@ -64,10 +64,15 @@ public:   // data types
 
 			FAEAtIteration faeAtIteration_;
 
+			BoxesAtRoot  learn2Boxes_;
+			BoxesAtRoot  learn1Boxes_;
+
 			AbstractionInfo() :
 					abstrIteration_(0),
 					iterationToFoldedRoots_(),
-					faeAtIteration_()
+					faeAtIteration_(),
+					learn2Boxes_(),
+					learn1Boxes_()
 			{}
 
 			void clear()
@@ -75,6 +80,8 @@ public:   // data types
 				abstrIteration_ = 0;
 				faeAtIteration_.clear();
 				iterationToFoldedRoots_.clear();
+				learn2Boxes_.clear();
+				learn1Boxes_.clear();
 			}
 	};
 
