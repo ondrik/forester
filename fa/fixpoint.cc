@@ -37,6 +37,7 @@
 #include "ufae.hh"
 #include "utils.hh"
 #include "virtualmachine.hh"
+#include "garbage_checker.hh"
 
 // anonymous namespace
 namespace
@@ -285,51 +286,209 @@ void getCandidates(
 	}
 }
 
-	std::vector<std::shared_ptr<const TreeAut>> getEmptyTrees(
-			const FAE&            fwdFAE,
-			const FAE&            bwdFAE)
-	{
-		assert(fwdFAE.getRootCount() == bwdFAE.getRootCount());
-		FA_DEBUG_AT(1, "empty input fwd " << fwdFAE);
-		FA_DEBUG_AT(1, "empty input bwd " << bwdFAE);
+std::vector<std::shared_ptr<const TreeAut>> getEmptyTrees(
+        const FAE&            fwdFAE,
+        const FAE&            bwdFAE)
+{
+    assert(fwdFAE.getRootCount() == bwdFAE.getRootCount());
+    FA_DEBUG_AT(1, "empty input fwd " << fwdFAE);
+    FA_DEBUG_AT(1, "empty input bwd " << bwdFAE);
 
-		std::vector<std::shared_ptr<const TreeAut>> res;
+    std::vector<std::shared_ptr<const TreeAut>> res;
 
-		for (size_t i = 0; i < fwdFAE.getRootCount(); ++i)
-		{
-			if (bwdFAE.getRoot(i) == nullptr && fwdFAE.getRoot(i) == nullptr)
-			{
-				  continue;
-			}
-			else if (bwdFAE.getRoot(i) == nullptr && fwdFAE.getRoot(i) != nullptr)
-			{
-				res.push_back(fwdFAE.getRoot(i));
-				continue;
-			}
-			else if (bwdFAE.getRoot(i) != nullptr && fwdFAE.getRoot(i) == nullptr)
-			{
-				res.push_back(bwdFAE.getRoot(i));
-				continue;
-			}
+    for (size_t i = 0; i < fwdFAE.getRootCount(); ++i)
+    {
+        if (bwdFAE.getRoot(i) == nullptr && fwdFAE.getRoot(i) == nullptr)
+        {
+              continue;
+        }
+        else if (bwdFAE.getRoot(i) == nullptr && fwdFAE.getRoot(i) != nullptr)
+        {
+            res.push_back(fwdFAE.getRoot(i));
+            continue;
+        }
+        else if (bwdFAE.getRoot(i) != nullptr && fwdFAE.getRoot(i) == nullptr)
+        {
+            res.push_back(bwdFAE.getRoot(i));
+            continue;
+        }
 
-			TreeAut isectTA = TreeAut::intersectionBU(
-					*(fwdFAE.getRoot(i)),*(bwdFAE.getRoot(i)));
-			std::shared_ptr<TreeAut> finalIsectTA = std::shared_ptr<TreeAut>(new TreeAut());
+        TreeAut isectTA = TreeAut::intersectionBU(
+                *(fwdFAE.getRoot(i)),*(bwdFAE.getRoot(i)));
+        std::shared_ptr<TreeAut> finalIsectTA = std::shared_ptr<TreeAut>(new TreeAut());
 
-			isectTA.uselessAndUnreachableFree(*finalIsectTA);
-			FA_DEBUG_AT(1, "empty " << isectTA);
+        isectTA.uselessAndUnreachableFree(*finalIsectTA);
+        FA_DEBUG_AT(1, "empty " << isectTA);
 
-			if (finalIsectTA->areTransitionsEmpty())
-			{
-				res.push_back(bwdFAE.getRoot(i));
-			}
-		}
+        if (finalIsectTA->areTransitionsEmpty())
+        {
+            FA_DEBUG_AT(1, "new predicate " << *bwdFAE.getRoot(i));
+            res.push_back(bwdFAE.getRoot(i));
+        }
+    }
 
 
-		return res;
-	}
+    return res;
+}
+
+
+std::vector<std::shared_ptr<TreeAut>> bottomUpIntersection(
+		const FAE&            fwdFAE,
+		const FAE&            bwdFAE)
+{
+    assert(fwdFAE.getRootCount() == bwdFAE.getRootCount());
+    FA_DEBUG_AT(1, "empty input fwd " << fwdFAE);
+    FA_DEBUG_AT(1, "empty input bwd " << bwdFAE);
+
+    std::vector<std::shared_ptr<TreeAut>> res;
+
+    for (size_t i = 0; i < fwdFAE.getRootCount(); ++i)
+    {
+        if (bwdFAE.getRoot(i) == nullptr || fwdFAE.getRoot(i) == nullptr)
+        {
+			res.push_back(nullptr);
+            continue;
+        }
+
+        TreeAut isectTA = TreeAut::intersectionBU(
+                *(fwdFAE.getRoot(i)),*(bwdFAE.getRoot(i)));
+        std::shared_ptr<TreeAut> finalIsectTA = std::shared_ptr<TreeAut>(new TreeAut());
+
+        isectTA.uselessAndUnreachableFree(*finalIsectTA);
+        FA_DEBUG_AT(1, "empty " << isectTA);
+
+        res.push_back(finalIsectTA);
+    }
+
+    assert(fwdFAE.getRootCount() == res.size());
+    return res;
+}
+
+
+std::shared_ptr<FAE> revertFolding(
+		const SymState::BoxesAtRoot&      foldedRoots,
+		const FAE&                        actFae)
+{
+    std::shared_ptr<FAE> fae = std::shared_ptr<FAE>(new FAE(actFae));
+    bool somethingUnfolded = false;
+    bool skipped = false;
+
+    std::vector<size_t> keys;
+    for (const auto& item : foldedRoots)
+    {
+        keys.push_back(item.first);
+    }
+    //std::sort(keys.begin(), keys.end());
+
+    for (const auto& key : keys)
+    {
+        assert(foldedRoots.count(key));
+        const auto &rootToBoxes = *foldedRoots.find(key);
+
+        if (rootToBoxes.first >= fae->getRootCount() ||
+                fae->getRoot(rootToBoxes.first) == nullptr)
+        {
+            skipped |= rootToBoxes.second.size() > 0;
+            continue;
+        }
+        assert(rootToBoxes.first < fae->getRootCount());
+        assert(fae->getRoot(rootToBoxes.first) != nullptr);
+
+        for (const auto &boxes : rootToBoxes.second)
+        {
+            somethingUnfolded = true;
+            if (fae->getRootCount() == 0)
+            {
+                return fae;
+            }
+
+            std::vector<FAE *> unfolded;
+
+            Splitting splitting(*fae);
+            splitting.isolateSet(
+                    unfolded,
+                    rootToBoxes.first,
+                    0,
+                    findSelectors(*fae, fae->getRoot(rootToBoxes.first)->getAcceptingTransition()));
+
+
+//			int i = rootToBoxes.first;
+//			for (; i >= 0; --i)
+//			{
+//				if (i >= fae->getRootCount() || fae->getRoot(i) == nullptr)
+//				{
+//					continue;
+//				}
+//				else if (fae->getRoot(i) != nullptr)
+//				{
+//					break;
+//				}
+//			}
+
+//			if (rootToBoxes.first < fae->getRootCount())
+//			{
+//				for (const auto fs : fae->getRoot(i)->getFinalStates())
+//				{
+//					const auto &ta = fae->getRoot(i);
+//					for (auto it = ta->begin(fs); it != ta->end(fs); ++it)
+//					{
+//						splitting.isolateSet(
+//								unfolded,
+//								rootToBoxes.first,
+//								0,
+//								findSelectors(*fae, *it /*fae->getRoot(i)->getAcceptingTransition()*/));
+//					}
+//				}
+//			}
+            //fae->getType(rootToBoxes.first)->getSelectors());
+            assert(unfolded.size() == 1);
+            fae = std::shared_ptr<FAE>(unfolded.at(0));
+            try
+            {
+                //assert(fae->getRoot(rootToBoxes.first)->getAcceptingTransition().GetParent() == boxes.first);
+                Unfolding(*fae).unfoldBox(rootToBoxes.first, boxes.second);
+            }
+            catch (std::runtime_error e)
+            {
+                ;
+            }
+        }
+    }
+
+    assert(!skipped || somethingUnfolded);
+
+    return fae;
+}
+
+
+void revertAbstraction(
+		SymState*   tmpState,
+		const std::shared_ptr<FAE> faeAtIteration)
+{
+    SymState fwd;
+    fwd.init(*tmpState);
+    fwd.SetFAE(faeAtIteration);
+    fwd.SetFAE(fwd.newNormalizedFAE());
+
+    tmpState->SetFAE(tmpState->newNormalizedFAE());
+    SymState bwdBackup;
+    bwdBackup.init(*tmpState);
+
+    tmpState->Intersect(fwd);
+
+    if (tmpState->GetFAE()->Empty())
+    {
+        tmpState->SetPredicates(FI_abs::learnPredicates(&fwd, &bwdBackup));
+    }
+}
+
+void noFold(SymState::AbstractionInfo& ainfo)
+{
+	ainfo.iterationToFoldedRoots_[ainfo.abstrIteration_] =
+			SymState::BoxesAtRoot();
+	++ainfo.abstrIteration_;
+}
 } // namespace
-
 
 size_t FixpointBase::fold(
 		const std::shared_ptr<FAE>&       fae,
@@ -344,7 +503,6 @@ size_t FixpointBase::fold(
 }
 
 
-
 SymState* FixpointBase::reverseAndIsect(
 	ExecutionManager&                      execMan,
 	const SymState&                        fwdPred,
@@ -354,113 +512,41 @@ SymState* FixpointBase::reverseAndIsect(
 	SymState* tmpState = execMan.copyState(bwdSucc);
 	const SymState::AbstractionInfo& ainfo = fwdPred.GetAbstractionInfo();
 
-	assert(ainfo.iterationToFoldedRoots_.size() - ainfo.faeAtIteration_.size() <= 1 || boxMan_.size() == 0);
+	assert(ainfo.iterationToFoldedRoots_.size() == ainfo.faeAtIteration_.size());
+	assert(ainfo.abstrIteration_ > 0);
 	for (int i = (ainfo.abstrIteration_ - 1); i >= 0; --i)
 	{
-		assert(i < ainfo.iterationToFoldedRoots_.size() || boxMan_.size() == 0);
+		assert(i < ainfo.iterationToFoldedRoots_.size());
 
-		if (i < ainfo.iterationToFoldedRoots_.size())
-		{
-			for (const auto &rootToBoxes : ainfo.iterationToFoldedRoots_.at(i))
-			{
-				for (const auto &boxes : rootToBoxes.second)
-				{
-					std::shared_ptr<FAE> fae = std::shared_ptr<FAE>(new FAE(*(tmpState->GetFAE())));
-					if (fae->getRootCount() == 0)
-					{
-						return tmpState;
-					}
+		const auto& foldedRoots = (i != 0) ?
+                     ainfo.iterationToFoldedRoots_.at(i) :
+                     ainfo.learn1Boxes_;
+        tmpState->SetFAE(
+                revertFolding(foldedRoots, *tmpState->GetFAE()));
 
-					std::vector<FAE *> unfolded;
-					Splitting splitting(*fae);
-					splitting.isolateSet(
-							unfolded,
-							rootToBoxes.first,
-							0,
-							findSelectors(*fae, fae->getRoot(rootToBoxes.first)->getAcceptingTransition()));
+        if (tmpState->GetFAE()->getRootCount() == 0)
+        {
+            return tmpState;
+        }
 
-		//			int i = rootToBoxes.first;
-		//			for (; i >= 0; --i)
-		//			{
-		//				if (i >= fae->getRootCount() || fae->getRoot(i) == nullptr)
-		//				{
-		//					continue;
-		//				}
-		//				else if (fae->getRoot(i) != nullptr)
-		//				{
-		//					break;
-		//				}
-		//			}
+		assert(tmpState->GetFAE()->getRootCount());
 
-		//			if (rootToBoxes.first < fae->getRootCount())
-		//			{
-		//				for (const auto fs : fae->getRoot(i)->getFinalStates())
-		//				{
-		//					const auto &ta = fae->getRoot(i);
-		//					for (auto it = ta->begin(fs); it != ta->end(fs); ++it)
-		//					{
-		//						splitting.isolateSet(
-		//								unfolded,
-		//								rootToBoxes.first,
-		//								0,
-		//								findSelectors(*fae, *it /*fae->getRoot(i)->getAcceptingTransition()*/));
-		//					}
-		//				}
-		//			}
-					//fae->getType(rootToBoxes.first)->getSelectors());
-					assert(unfolded.size() == 1);
-					fae = std::shared_ptr<FAE>(unfolded.at(0));
-					try
-					{
-						assert(fae->getRoot(rootToBoxes.first)->getAcceptingTransition().GetParent() == boxes.first);
-						Unfolding(*fae).unfoldBox(rootToBoxes.first, boxes.second);
-					}
-					catch (std::runtime_error e)
-					{
-						;
-					}
-					tmpState->SetFAE(fae);
-				}
-			}
-		}
+		assert(ainfo.faeAtIteration_.count(i));
 
-		if (ainfo.faeAtIteration_.count(i))
-		{
-			SymState fwd;
-			fwd.init(*tmpState);
-			fwd.SetFAE(ainfo.faeAtIteration_.at(i));
+		revertAbstraction(tmpState, ainfo.faeAtIteration_.at(i));
 
-			tmpState->SetFAE(tmpState->newNormalizedFAE());
-			SymState bwdBackup;
-			bwdBackup.init(*tmpState);
+        if (tmpState->GetFAE()->Empty())
+		{ // check assertion
 
-			fwd.SetFAE(fwd.newNormalizedFAE());
-			tmpState->Intersect(fwd);
-
-            if (tmpState->GetFAE()->Empty())
-            {
-				SymState fwdp;
-				fwdp.init(fwdPred);
-				SymState bwdp;
-				bwdp.init(bwdSucc);
-				//tmpState->SetPredicates(FI_abs::learnPredicates(&fwdp, &bwdp));
-				if (!(ainfo.abstrIteration_ > 0 || (FAE::subseteq(*fwd.GetFAE(), *fwdp.GetFAE())
-					  && FAE::subseteq(*fwdp.GetFAE(), *fwd.GetFAE()))))
-				{
-					assert(false);
-				}
-				tmpState->SetPredicates(FI_abs::learnPredicates(&fwd, &bwdBackup));
-                return tmpState;
-            }
-		}
-		else
-		{
-			// This is possible in the last iteration of reversion
-			// of folding and abstraction. Because just one fold can
-			// be done before the abstraction loop.
-			assert(i <= 1);
+			return tmpState;
 		}
 	}
+
+	tmpState->SetFAE(
+			revertFolding(ainfo.learn2Boxes_, *tmpState->GetFAE()));
+    tmpState->SetFAE(
+			revertFolding(ainfo.iterationToFoldedRoots_.at(0), *tmpState->GetFAE())
+    );
 
 	// perform intersection
 	SymState bwdBackup;
@@ -470,7 +556,7 @@ SymState* FixpointBase::reverseAndIsect(
     {
 		SymState fwdState;
 		fwdState.init(fwdPred);
-        tmpState->SetPredicates(FI_abs::learnPredicates(&fwdState, &bwdBackup));
+		tmpState->SetPredicates(FI_abs::learnPredicates(&fwdState, &bwdBackup));
     }
 
 	FA_DEBUG_AT(1, "Executing !!VERY!! suspicious reverse operation FixpointBase");
@@ -622,14 +708,15 @@ void FI_abs::abstract(
 	// FAE faeTemp = FAE(ta_, boxMan_);
 	if (FA_FUSION_ENABLED)
 	{
-		strongFusion(fae);
+		//strongFusion(fae);
 		/*
 		faeTemp.connectionGraph = fae.connectionGraph;
 		FA_DEBUG_AT(1, "Zumped " << faeTemp << '\n');
 		 */
 
-		//weakFusion(fae);
+		weakFusion(fae);
 	}
+	FA_DEBUG_AT(1, "After fusion " << fae << '\n');
 
 	// abstract
 	Abstraction abstraction(fae);
@@ -640,7 +727,6 @@ void FI_abs::abstract(
 		for (size_t i = 0; i < fae.getRootCount(); ++i)
 		{
 			abstraction.predicateAbstraction(i, this->getPredicates());
-			//abstractionTemp.predicateAbstraction(i, this->getPredicates());
 		}
 	}
 	else
@@ -658,30 +744,10 @@ void FI_abs::abstract(
 			if (!excludedRoots[i])
 			{
 				abstraction.heightAbstraction(i, FA_ABS_HEIGHT, SmartTMatchF());
-//				abstractionTemp.heightAbstraction(i, FA_ABS_HEIGHT, SmartTMatchF());
 //				abstraction.heightAbstraction(i, FA_ABS_HEIGHT, SmarterTMatchF(fae));
 			}
 		}
 	}
-
-	/*
-	if (!FAE::subseteq(fae, faeTemp))
-	{
-		std::cerr << "SMALL " << fae;
-		std::cerr << "BIG " << faeTemp;
-		assert(false);
-	}
-	 */
-	/*
-	if (FAE::subseteq(faeTemp, fae) && FAE::subseteq(fae, faeTemp))
-	{
-		//std::cerr << "FAIL\n";
-	}
-	else
-	{
-		//std::cerr << "HIT\n";
-	}
-	*/
 
 	FA_DEBUG_AT(1, "after abstraction: " << std::endl << fae);
 }
@@ -702,6 +768,8 @@ void FI_abs::execute(ExecutionManager& execMan, SymState& state)
 
 	// reorder components into the canonical form (no merging!)
 	reorder(&state, *fae);
+	state.SetFAE(std::shared_ptr<FAE>(new FAE(*fae)));
+
 	if (!boxMan_.boxDatabase().empty())
 	{	// in the case there are some boxes, try to fold immediately before
 		// normalization
@@ -720,18 +788,29 @@ void FI_abs::execute(ExecutionManager& execMan, SymState& state)
 			throw ProgramError("Abstraction leads to inconsisten selector map", &state);
 		}
 	}
+	else
+	{
+		noFold(ainfo);
+	}
 
-	Folding::learn2(*fae, boxMan_, Normalization::computeForbiddenSet(*fae));
+	ainfo.learn2Boxes_ = SymState::BoxesAtRoot(
+			Folding::learn2(*fae,
+							boxMan_,
+							Normalization::computeForbiddenSet(*fae)));
 #endif
+	assert(ainfo.abstrIteration_ == 1);
+	ainfo.faeAtIteration_[0] = std::shared_ptr<FAE>(new FAE(*fae));
+	assert(ainfo.faeAtIteration_.at(0)->getRootCount() == state.GetFAE()->getRootCount());
+
 	forbidden = Normalization::computeForbiddenSet(*fae);
 
 	Normalization::normalize(*fae, &state, forbidden, true);
 
-	ainfo.faeAtIteration_[(ainfo.abstrIteration_ == 0) ? ainfo.abstrIteration_++ : ainfo.abstrIteration_-1] =
-			std::shared_ptr<FAE>(new FAE(*fae));
 	abstract(*fae);
 #if FA_ALLOW_FOLDING
-	Folding::learn1(*fae, boxMan_, Normalization::computeForbiddenSet(*fae));
+	ainfo.learn1Boxes_ = SymState::BoxesAtRoot(
+			Folding::learn1(*fae, boxMan_, Normalization::computeForbiddenSet(*fae))
+	);
 
 	if (boxMan_.boxDatabase().size())
 	{
@@ -765,7 +844,9 @@ void FI_abs::execute(ExecutionManager& execMan, SymState& state)
 		}
 
 	}
+	assert(ainfo.iterationToFoldedRoots_.size() == ainfo.faeAtIteration_.size());
 #endif
+	FA_DEBUG_AT(1, "After abstraction " << *fae);
 	// test inclusion
 	if (testInclusion(*fae, fwdConf_, fwdConfWrapper_))
 	{
@@ -777,8 +858,9 @@ void FI_abs::execute(ExecutionManager& execMan, SymState& state)
 	{
 		FA_DEBUG_AT_MSG(1, &this->insn()->loc, "extending fixpoint\n" << *fae << "\n");
 		storeFaeToAccs(*fae);
-		storeFaeToAccs(*fae, true);
+		//storeFaeToAccs(*fae, true);
 
+		FA_DEBUG_AT(1, "Continue with " << *fae);
 		SymState* tmpState = execMan.createChildState(state, next_);
 		tmpState->SetFAE(fae);
 		execMan.enqueue(tmpState);
