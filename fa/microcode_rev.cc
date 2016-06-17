@@ -76,11 +76,22 @@ namespace
 		auto forbiddenNorm = Normalization::computeForbiddenSet(*fae);
 		Normalization::normalize(*fae, &bwdSucc, forbiddenNorm, true);
 
-		auto res = Folding::fold(*fae, boxMan, forbidden);
-		assert(forbidden.size() >= fae->getRootCount() || res.size() != 0 ||
-			   (roots.size() == 1 && *(roots.begin()) == root));
-		// TODO PAB: while here??
+		try
+		{
+			auto res = Folding::fold(*fae, boxMan, forbidden);
+			assert(forbidden.size() >= fae->getRootCount() || res.size() != 0 ||
+				   (roots.size() == 1 && *(roots.begin()) == root));
+			while (res.size())
+			{
+				Normalization::normalize(*fae, &bwdSucc, forbiddenNorm, true);
+				res = Folding::fold(*fae, boxMan, forbidden);
+			}
+		} catch (std::runtime_error& e)
+		{
+			throw e;
+		}
 
+		tmpState->SetFAE(fae);
 		return tmpState;
 	}
 }
