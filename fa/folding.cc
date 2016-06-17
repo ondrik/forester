@@ -432,7 +432,7 @@ bool Folding::discover3(
 	size_t                      root,
 	const std::set<size_t>&     forbidden,
 	bool                        conditional,
-	std::vector<std::pair<size_t, const Box*>>*     discoveredBoxes)
+	std::unordered_map<size_t, std::vector<std::pair<size_t, const Box *>>> *foldedRoots)
 {
 	// Preconditions
 	assert(fae_.getRootCount() == fae_.connectionGraph.data.size());
@@ -496,10 +496,21 @@ dis3_start:
 		if (nullptr != boxPtr)
 		{	// in the case folding was successful
 			found = true;
-			if (discoveredBoxes != nullptr)
+			if (foldedRoots != nullptr)
 			{
-				discoveredBoxes->push_back(std::pair<size_t, const Box*>(
+				assert(foldedRoots->count(root));
+				if (foldedRoots->count(cutpoint.root) == 0)
+				{
+					(*foldedRoots)[cutpoint.root] =
+							std::vector<std::pair<size_t, const Box *>>();
+
+				}
+
+				(*foldedRoots)[root].push_back(std::pair<size_t, const Box*>(
 						fae_.getRoot(root)->getFinalState(), boxPtr));
+
+				(*foldedRoots)[cutpoint.root].push_back(std::pair<size_t, const Box*>(
+						fae_.getRoot(cutpoint.root)->getFinalState(), boxPtr));
 			}
 
 			goto dis3_start;
@@ -869,8 +880,8 @@ const Box* Folding::makeBox2Components(
 	if (!Folding::computeSelectorMap(selectorMap, aux,
 		fae_.getRoot(aux)->getFinalState()))
 	{
-		assert(false);           // fail gracefully
-		//throw std::runtime_error("Bad selector map");
+		//assert(false);           // fail gracefully
+		throw std::runtime_error("Bad selector map");
 	}
 
 	size_t selector = extractSelector(selectorMap, root);
@@ -1036,8 +1047,11 @@ bool Folding::computeSelectorMap(
 	return this->checkSelectorMap(selectorMap, root, state);
 }
 
-void Folding::learn1(FAE& fae, BoxMan& boxMan, std::set<size_t> forbidden)
+std::unordered_map<size_t, std::vector<std::pair<size_t, const Box *>>>
+	Folding::learn1(FAE& fae, BoxMan& boxMan, std::set<size_t> forbidden)
 {
+	std::unordered_map<size_t, std::vector<std::pair<size_t, const Box *>>> foldedRoots;
+
 	fae.unreachableFree();
 
 	Folding folding(fae, boxMan);
@@ -1049,13 +1063,19 @@ void Folding::learn1(FAE& fae, BoxMan& boxMan, std::set<size_t> forbidden)
 
 		assert(fae.getRoot(i));
 
-		folding.discover1(i, forbidden, false);
-		folding.discover2(i, forbidden, false);
+		foldedRoots[i] = std::vector<std::pair<size_t, const Box *>>();
+
+		folding.discover1(i, forbidden, false, &foldedRoots.at(i));
+		folding.discover2(i, forbidden, false, &foldedRoots.at(i));
 	}
+
+	return foldedRoots;
 }
 
-void Folding::learn2(FAE& fae, BoxMan& boxMan, std::set<size_t> forbidden)
+std::unordered_map<size_t, std::vector<std::pair<size_t, const Box *>>>
+	Folding::learn2(FAE& fae, BoxMan& boxMan, std::set<size_t> forbidden)
 {
+	std::unordered_map<size_t, std::vector<std::pair<size_t, const Box *>>> foldedRoots;
 	fae.unreachableFree();
 
 	Folding folding(fae, boxMan);
@@ -1067,8 +1087,14 @@ void Folding::learn2(FAE& fae, BoxMan& boxMan, std::set<size_t> forbidden)
 
 		assert(fae.getRoot(i));
 
-		folding.discover3(i, forbidden, false);
+		if (foldedRoots.count(i) == 0)
+		{
+			foldedRoots[i] = std::vector<std::pair<size_t, const Box *>>();
+		}
+		folding.discover3(i, forbidden, false, &foldedRoots);
 	}
+
+	return foldedRoots;
 }
 
 std::unordered_map<size_t, std::vector<std::pair<size_t, const Box *>>> Folding::fold(
@@ -1093,10 +1119,14 @@ std::unordered_map<size_t, std::vector<std::pair<size_t, const Box *>>> Folding:
 		// _ONLY_ using boxes which are _ALREADY_ in 'boxMan'. No learning of new
 		// boxes is allowed
 
-		foldedRoots[i] = std::vector<std::pair<size_t, const Box *>>();
+		if (foldedRoots.count(i) == 0)
+		{
+			foldedRoots[i] = std::vector<std::pair<size_t, const Box *>>();
+		}
+
 		folding.discover1(i, forbidden, true, &foldedRoots.at(i));
 		folding.discover2(i, forbidden, true, &foldedRoots.at(i));
-		folding.discover3(i, forbidden, true, &foldedRoots.at(i));
+		folding.discover3(i, forbidden, true, &foldedRoots);
 
 		if (foldedRoots.at(i).size() == 0)
 		{

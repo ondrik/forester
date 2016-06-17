@@ -409,12 +409,12 @@ public:
 		size_t                      root,
 		const std::set<size_t>&     forbidden,
 		bool                        conditional,
-		std::vector<std::pair<size_t, const Box*>>*     discoveredBoxes = nullptr);
+		std::unordered_map<size_t, std::vector<std::pair<size_t, const Box *>>> *foldedRoots = nullptr);
 
-	static void learn1(FAE& fae,
+	static std::unordered_map<size_t, std::vector<std::pair<size_t, const Box *>>> learn1(FAE& fae,
 					   BoxMan& boxMan,
 					   std::set<size_t> forbidden = std::set<size_t>());
-	static void learn2(FAE& fae,
+	static std::unordered_map<size_t, std::vector<std::pair<size_t, const Box *>>> learn2(FAE& fae,
 					   BoxMan& boxMan,
 					   std::set<size_t> forbidden = std::set<size_t>());
 
