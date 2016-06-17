@@ -174,6 +174,42 @@ public:   // methods
 		predicates_()
 	{ }
 
+	bool arePredicatesNew(
+		const std::vector<std::shared_ptr<const TreeAut>>&     oldPredicates,
+		const std::vector<std::shared_ptr<const TreeAut>>&     newPredicates)
+	{
+		if (oldPredicates.size() == 0)
+		{
+			std::cerr << "No predicates\n";
+			return true;
+		}
+
+		bool oneNew = false;
+		for (const auto& newPredicate : newPredicates)
+		{
+			bool isCovered = false;
+			for (const auto& oldPredicate : oldPredicates)
+			{
+				if ((newPredicate == nullptr && oldPredicate != nullptr) || TreeAut::subseteq(*newPredicate, *oldPredicate))
+				{
+					if (newPredicate != nullptr)
+						std::cerr << "Compared " << *newPredicate << " " << *oldPredicate << '\n';
+					isCovered = true;
+					break;
+				}
+			}
+
+			if (!isCovered)
+			{
+				std::cerr << "New predicate " << *newPredicate << '\n';
+			}
+			oneNew |= !isCovered;
+		}
+		std::cerr << "New\n";
+
+		return oneNew;
+	}
+
 	/**
 	 * @brief  Adds a new predicate to abstraction
 	 *
@@ -184,6 +220,7 @@ public:   // methods
 	 */
 	void addPredicate(std::vector<std::shared_ptr<const TreeAut>>& predicate)
 	{
+		//assert(arePredicatesNew(predicates_, predicate));
 		predicates_.insert(predicates_.end(), predicate.begin(), predicate.end());
 	}
 
