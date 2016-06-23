@@ -153,12 +153,14 @@ void Normalization::traverse(
 void Normalization::normalizeRoot(
 	std::vector<bool>&                normalized,
 	const size_t                      root,
-	const std::vector<bool>&          marked)
+	const std::vector<bool>&          marked,
+	NormalizationInfo&                normalizationInfo)
 {
 	if (normalized[root])
 		return;
 
 	normalized[root] = true;
+	normalizationInfo.addMergedRootToLastRoot(root);
 
 	// we need a copy here!
 	ConnectionGraph::CutpointSignature signature =
@@ -166,7 +168,7 @@ void Normalization::normalizeRoot(
 
 	for (auto& cutpoint : signature)
 	{
-		this->normalizeRoot(normalized, cutpoint.root, marked);
+		this->normalizeRoot(normalized, cutpoint.root, marked, normalizationInfo);
 
 		if (marked[cutpoint.root])
 			continue;
@@ -186,6 +188,12 @@ void Normalization::normalizeRoot(
 			this->fae.getRoot(cutpoint.root),
 			refStates
 		);
+
+		normalizationInfo.addMergedRootToLastRoot(cutpoint.root);
+		for (const auto& state : refStates)
+		{
+			normalizationInfo.addJoinStateToLastRoot(state);
+		}
 
 		this->fae.setRoot(root, std::shared_ptr<TreeAut>(ta));
 		this->fae.setRoot(cutpoint.root, nullptr);
@@ -281,7 +289,8 @@ namespace {
 
 bool Normalization::normalizeInternal(
 	const std::vector<bool>&          marked,
-	const std::vector<size_t>&        order)
+	const std::vector<size_t>&        order,
+	NormalizationInfo&                normInfo)
 {
 	if (isInCanonicalForm(marked, order))
 	{	// in case the FA is in the canonical form
@@ -299,11 +308,15 @@ bool Normalization::normalizeInternal(
 
 	for (auto& i : order)
 	{	// push tree automata into a new tuple in the right order
-		this->normalizeRoot(normalized, i, marked);
+		normInfo.addNewRoot(newRoots.size());
+		assert(normInfo.rootNormalizationInfo_.size() == newRoots.size()+1);
+
+		this->normalizeRoot(normalized, i, marked, normInfo);
 
 		if (!marked[i])
 		{	// if a root was merged, do not put it in the new tuple!
 			merged = true;
+			normInfo.removeLastRoot();
 
 			continue;
 		}
@@ -313,6 +326,7 @@ bool Normalization::normalizeInternal(
 		index[i] = offset++;
 	}
 
+	assert(newRoots.size() == normInfo.rootNormalizationInfo_.size());
 	// update representation
 	this->fae.swapRoots(newRoots);
 
@@ -335,6 +349,7 @@ bool Normalization::normalizeInternal(
 bool Normalization::normalize(
 		FAE&                              fae,
 		const SymState*                   state,
+		NormalizationInfo&                normalizationInfo,
 		const std::set<size_t>&           forbidden,
 		bool                              extended)
 {
@@ -345,12 +360,24 @@ bool Normalization::normalize(
 
 	norm.scan(marked, order, forbidden, extended);
 
-	bool result = norm.normalizeInternal(marked, order);
+	bool result = norm.normalizeInternal(marked, order, normalizationInfo);
 
 	FA_DEBUG_AT(3, "after normalization: " << std::endl << fae);
 
 	return result;
 }
+
+
+bool Normalization::normalize(
+		FAE&                              fae,
+		const SymState*                   state,
+		const std::set<size_t>&           forbidden,
+		bool                              extended)
+{
+	NormalizationInfo temp;
+	return Normalization::normalize(fae, state, temp, forbidden, extended);
+}
+
 
 bool Normalization::normalizeWithoutMerging(
 		FAE&                              fae,
@@ -368,8 +395,9 @@ bool Normalization::normalizeWithoutMerging(
 	// normalize without merging (we say that all components are referred more
 	// than once), i.e. only reorder
 	std::fill(marked.begin(), marked.end(), true);
-	
-	bool result = norm.normalizeInternal(marked, order);
+
+	NormalizationInfo normInfo;
+	bool result = norm.normalizeInternal(marked, order, normInfo);
 
 	FA_DEBUG_AT(3, "after normalization: " << std::endl << fae);
 

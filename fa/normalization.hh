@@ -28,11 +28,78 @@
 #include "forestautext.hh"
 #include "abstractbox.hh"
 #include "streams.hh"
-#include "symstate.hh"
 #include "utils.hh"
+
+class SymState;
 
 class Normalization
 {
+public:
+	struct NormalizationInfo {
+	private:
+		struct RootNormalizationInfo {
+			std::unordered_set<size_t> joinStates_;
+			std::unordered_set<size_t> rootsMapping_;
+
+			RootNormalizationInfo() : joinStates_(), rootsMapping_()
+			{}
+		};
+	public:
+		std::unordered_map<size_t, struct RootNormalizationInfo> rootNormalizationInfo_;
+		size_t lastAddedRoot_;
+
+		NormalizationInfo() :
+				rootNormalizationInfo_(),
+				lastAddedRoot_(0)
+		{}
+
+		void addNewRoot(const size_t root)
+		{
+			rootNormalizationInfo_[root] = RootNormalizationInfo();
+			lastAddedRoot_ = root;
+		}
+
+		void addMergedRoot(const size_t root, const size_t mergedRoot)
+		{
+			assert(rootNormalizationInfo_.count(root));
+
+			rootNormalizationInfo_.at(root).rootsMapping_.insert(mergedRoot);
+		}
+
+		void addMergedRootToLastRoot(const size_t mergedRoot)
+		{
+			assert(rootNormalizationInfo_.count(lastAddedRoot_));
+
+			rootNormalizationInfo_.at(lastAddedRoot_).rootsMapping_.insert(mergedRoot);
+		}
+
+		void addJoinState(const size_t root, const size_t state)
+		{
+			assert(rootNormalizationInfo_.count(root));
+
+			rootNormalizationInfo_.at(root).joinStates_.insert(state);
+		}
+
+		void addJoinStateToLastRoot(const size_t state)
+		{
+			assert(rootNormalizationInfo_.count(lastAddedRoot_));
+
+			rootNormalizationInfo_.at(lastAddedRoot_).joinStates_.insert(state);
+		}
+
+		void removeLastRoot()
+		{
+			assert(rootNormalizationInfo_.count(lastAddedRoot_));
+
+			rootNormalizationInfo_.erase(lastAddedRoot_);
+		}
+
+		void clear()
+		{
+			rootNormalizationInfo_.clear();
+		}
+	};
+
 private:  // data members
 
 	FAE& fae;
@@ -71,7 +138,8 @@ protected:
 	void normalizeRoot(
 		std::vector<bool>&                normalized,
 		const size_t                      root,
-		const std::vector<bool>&          marked);
+		const std::vector<bool>&          marked,
+		NormalizationInfo&                normalizationInfo);
 
 
 	bool selfReachable(
@@ -95,7 +163,8 @@ protected:
 	 */
 	bool normalizeInternal(
 		const std::vector<bool>&          marked,
-		const std::vector<size_t>&        order);
+		const std::vector<size_t>&        order,
+		NormalizationInfo&                normalizationInfo);
 
 public:
 
@@ -105,6 +174,13 @@ public:
 		const std::set<size_t>&           forbidden = std::set<size_t>(),
 		const bool                        extended = false);
 
+
+	static bool normalize(
+		FAE&                              fae,
+		const SymState*                   state,
+		NormalizationInfo&                normalizationInfo,
+		const std::set<size_t>&           forbidden = std::set<size_t>(),
+		bool                              extended = false);
 
 	static bool normalize(
 		FAE&                              fae,
