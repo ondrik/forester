@@ -37,66 +37,74 @@ class Normalization
 public:
 	struct NormalizationInfo {
 	private:
+		using RootStatePair = std::pair<size_t, size_t>;
 		struct RootNormalizationInfo {
-			std::unordered_set<size_t> joinStates_;
+			std::set<RootStatePair> joinStates_;
 			std::unordered_set<size_t> rootsMapping_;
 
 			RootNormalizationInfo() : joinStates_(), rootsMapping_()
 			{}
 		};
 	public:
-		std::unordered_map<size_t, struct RootNormalizationInfo> rootNormalizationInfo_;
+		std::unordered_map<size_t, struct RootNormalizationInfo> rootsNormalizationInfo_;
 		size_t lastAddedRoot_;
 
 		NormalizationInfo() :
-				rootNormalizationInfo_(),
+				rootsNormalizationInfo_(),
 				lastAddedRoot_(0)
 		{}
 
 		void addNewRoot(const size_t root)
 		{
-			rootNormalizationInfo_[root] = RootNormalizationInfo();
+			rootsNormalizationInfo_[root] = RootNormalizationInfo();
 			lastAddedRoot_ = root;
 		}
 
 		void addMergedRoot(const size_t root, const size_t mergedRoot)
 		{
-			assert(rootNormalizationInfo_.count(root));
+			assert(rootsNormalizationInfo_.count(root));
 
-			rootNormalizationInfo_.at(root).rootsMapping_.insert(mergedRoot);
+			rootsNormalizationInfo_.at(root).rootsMapping_.insert(mergedRoot);
 		}
 
 		void addMergedRootToLastRoot(const size_t mergedRoot)
 		{
-			assert(rootNormalizationInfo_.count(lastAddedRoot_));
+			assert(rootsNormalizationInfo_.count(lastAddedRoot_));
 
-			rootNormalizationInfo_.at(lastAddedRoot_).rootsMapping_.insert(mergedRoot);
+			rootsNormalizationInfo_.at(lastAddedRoot_).rootsMapping_.insert(mergedRoot);
 		}
 
-		void addJoinState(const size_t root, const size_t state)
+		void addJoinState(const size_t root, const size_t mergedRoot, const size_t state)
 		{
-			assert(rootNormalizationInfo_.count(root));
+			assert(rootsNormalizationInfo_.count(root));
 
-			rootNormalizationInfo_.at(root).joinStates_.insert(state);
+			rootsNormalizationInfo_.at(root).joinStates_.insert(
+					RootStatePair(mergedRoot, state));
 		}
 
-		void addJoinStateToLastRoot(const size_t state)
+		void addJoinStateToLastRoot(const size_t root, const size_t state)
 		{
-			assert(rootNormalizationInfo_.count(lastAddedRoot_));
+			assert(rootsNormalizationInfo_.count(lastAddedRoot_));
 
-			rootNormalizationInfo_.at(lastAddedRoot_).joinStates_.insert(state);
+			rootsNormalizationInfo_.at(lastAddedRoot_).joinStates_.insert(
+					RootStatePair(root, state));
 		}
 
 		void removeLastRoot()
 		{
-			assert(rootNormalizationInfo_.count(lastAddedRoot_));
+			assert(rootsNormalizationInfo_.count(lastAddedRoot_));
 
-			rootNormalizationInfo_.erase(lastAddedRoot_);
+			rootsNormalizationInfo_.erase(lastAddedRoot_);
 		}
 
 		void clear()
 		{
-			rootNormalizationInfo_.clear();
+			rootsNormalizationInfo_.clear();
+		}
+
+		size_t getSize() const
+		{
+			return rootsNormalizationInfo_.size();
 		}
 	};
 

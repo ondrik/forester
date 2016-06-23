@@ -192,7 +192,7 @@ void Normalization::normalizeRoot(
 		normalizationInfo.addMergedRootToLastRoot(cutpoint.root);
 		for (const auto& state : refStates)
 		{
-			normalizationInfo.addJoinStateToLastRoot(state);
+			normalizationInfo.addJoinStateToLastRoot(cutpoint.root, state);
 		}
 
 		this->fae.setRoot(root, std::shared_ptr<TreeAut>(ta));
@@ -309,7 +309,8 @@ bool Normalization::normalizeInternal(
 	for (auto& i : order)
 	{	// push tree automata into a new tuple in the right order
 		normInfo.addNewRoot(newRoots.size());
-		assert(normInfo.rootNormalizationInfo_.size() == newRoots.size()+1);
+		assert(normInfo.rootsNormalizationInfo_.size() == newRoots.size()+1);
+		normInfo.addMergedRootToLastRoot(i); // we need to move TA to its origin position later
 
 		this->normalizeRoot(normalized, i, marked, normInfo);
 
@@ -326,7 +327,7 @@ bool Normalization::normalizeInternal(
 		index[i] = offset++;
 	}
 
-	assert(newRoots.size() == normInfo.rootNormalizationInfo_.size());
+	assert(newRoots.size() == normInfo.rootsNormalizationInfo_.size());
 	// update representation
 	this->fae.swapRoots(newRoots);
 
