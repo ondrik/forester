@@ -73,19 +73,26 @@ namespace
 		std::set<size_t> forbidden = getUnusedRoots(roots, fae->getRootCount());
 
 		fae->updateConnectionGraph();
-		auto forbiddenNorm = Normalization::computeForbiddenSet(*fae);
-		Normalization::normalize(*fae, &bwdSucc, forbiddenNorm, true);
+		std::cerr << "Root " << root << " Unused root "; for (auto s  : roots) std::cerr << s << ", "; std::cerr << '\n';
 
 		try
 		{
-			auto res = Folding::fold(*fae, boxMan, forbidden);
-			assert(forbidden.size() >= fae->getRootCount() || res.size() != 0 ||
-				   (roots.size() == 1 && *(roots.begin()) == root));
+			if (roots.size() > 0)
+			{
+				auto forbiddenNorm = Normalization::computeForbiddenSet(*fae);
+				//Normalization::normalize(*fae, &bwdSucc, forbiddenNorm, true);
+				auto res = Folding::fold(*fae, boxMan, forbidden);
+				assert(forbidden.size() >= fae->getRootCount() || res.size() != 0 ||
+					   (roots.size() == 1 && *(roots.begin()) == root));
+				Normalization::normalize(*fae, &bwdSucc, forbiddenNorm, true);
+			}
+			/*
 			while (res.size())
 			{
 				Normalization::normalize(*fae, &bwdSucc, forbiddenNorm, true);
 				res = Folding::fold(*fae, boxMan, forbidden);
 			}
+			*/
 		} catch (std::runtime_error& e)
 		{
 			throw e;
