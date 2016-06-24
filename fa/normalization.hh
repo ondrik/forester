@@ -40,38 +40,60 @@ public:
 		using RootStatePair = std::pair<size_t, size_t>;
 		struct RootNormalizationInfo {
 			std::set<RootStatePair> joinStates_;
-			std::unordered_set<size_t> rootsMapping_;
+			std::unordered_set<size_t> rootsMerging_;
 
-			RootNormalizationInfo() : joinStates_(), rootsMapping_()
+			RootNormalizationInfo() :
+					joinStates_(),
+					rootsMerging_()
 			{}
 		};
 	public:
 		std::unordered_map<size_t, struct RootNormalizationInfo> rootsNormalizationInfo_;
+		std::unordered_map<size_t, size_t> rootMapping_;
 		size_t lastAddedRoot_;
+		size_t backupLast_;
 
 		NormalizationInfo() :
 				rootsNormalizationInfo_(),
-				lastAddedRoot_(0)
+				rootMapping_(),
+				lastAddedRoot_(0),
+				backupLast_(0)
 		{}
 
 		void addNewRoot(const size_t root)
 		{
 			rootsNormalizationInfo_[root] = RootNormalizationInfo();
+			backupLast_ = lastAddedRoot_;
 			lastAddedRoot_ = root;
+		}
+
+		void addRootIfNotExists(const size_t root)
+		{
+			if (rootsNormalizationInfo_.count(root) == 0)
+			{
+				addNewRoot(root);
+			}
+		}
+
+		void addMapping(const size_t from, const size_t to)
+		{
+			assert(!rootMapping_.count(from));
+
+			rootMapping_[from] = to;
 		}
 
 		void addMergedRoot(const size_t root, const size_t mergedRoot)
 		{
 			assert(rootsNormalizationInfo_.count(root));
 
-			rootsNormalizationInfo_.at(root).rootsMapping_.insert(mergedRoot);
+			rootsNormalizationInfo_.at(root).rootsMerging_.insert(mergedRoot);
 		}
 
 		void addMergedRootToLastRoot(const size_t mergedRoot)
 		{
 			assert(rootsNormalizationInfo_.count(lastAddedRoot_));
 
-			rootsNormalizationInfo_.at(lastAddedRoot_).rootsMapping_.insert(mergedRoot);
+			rootsNormalizationInfo_.at(lastAddedRoot_).rootsMerging_.insert(mergedRoot);
 		}
 
 		void addJoinState(const size_t root, const size_t mergedRoot, const size_t state)
@@ -90,11 +112,80 @@ public:
 					RootStatePair(root, state));
 		}
 
+		void mergeRoots(const size_t root, const size_t mergedRoot)
+		{
+			assert(rootsNormalizationInfo_.count(root));
+			if (rootsNormalizationInfo_.count(mergedRoot) == 0)
+			{
+				return;
+			}
+
+			rootsNormalizationInfo_.at(root).rootsMerging_.insert(
+					rootsNormalizationInfo_.at(mergedRoot).rootsMerging_.begin(),
+					rootsNormalizationInfo_.at(mergedRoot).rootsMerging_.end()
+			);
+			assert(rootsNormalizationInfo_.at(root).rootsMerging_.size() >=
+				   rootsNormalizationInfo_.at(mergedRoot).rootsMerging_.size());
+
+			rootsNormalizationInfo_.at(root).joinStates_.insert(
+					rootsNormalizationInfo_.at(mergedRoot).joinStates_.begin(),
+					rootsNormalizationInfo_.at(mergedRoot).joinStates_.end()
+			);
+			assert(rootsNormalizationInfo_.at(root).joinStates_.size() >=
+					rootsNormalizationInfo_.at(mergedRoot).joinStates_.size());
+		}
+
 		void removeLastRoot()
 		{
 			assert(rootsNormalizationInfo_.count(lastAddedRoot_));
 
 			rootsNormalizationInfo_.erase(lastAddedRoot_);
+			lastAddedRoot_ = backupLast_;
+		}
+
+		std::unordered_set<size_t> collectMergedRoots(const size_t root, const size_t merged)
+		{
+			assert(root != merged);
+			if (rootsNormalizationInfo_.count(merged) == 0)
+			{
+				return std::unordered_set<size_t>();
+			}
+
+			std::unordered_set<size_t> mergedSet;
+			for (const size_t nextMerged : rootsNormalizationInfo_.at(merged).rootsMerging_)
+			{
+				const auto tmp = collectMergedRoots(merged, nextMerged);
+				mergedSet.insert(tmp.begin(), tmp.end());
+			}
+
+			for (const size_t m : mergedSet)
+			{
+				mergeRoots(root, m);
+			}
+
+			return mergedSet;
+		}
+
+		void finalize()
+		{
+			std::unordered_set<size_t> tobeRemoved;
+			for (const auto& rootInfo : rootsNormalizationInfo_)
+			{
+				if (rootInfo.second.rootsMerging_.size() == 0 &&
+						rootInfo.second.joinStates_.size() == 0)
+				{
+					tobeRemoved.insert(rootInfo.first);
+					continue;
+				}
+			}
+
+			for (const size_t state : tobeRemoved)
+			{
+				if (rootsNormalizationInfo_.count(state))
+				{
+					remove(state);
+				}
+			}
 		}
 
 		void clear()
@@ -105,6 +196,31 @@ public:
 		size_t getSize() const
 		{
 			return rootsNormalizationInfo_.size();
+		}
+
+		void remove(const size_t root)
+		{
+			assert(rootsNormalizationInfo_.count(root) != 0);
+			rootsNormalizationInfo_.erase(root);
+		}
+
+		friend std::ostream& operator<<(std::ostream& os, const NormalizationInfo& info)
+		{
+			for (const auto& rootInfo : info.rootsNormalizationInfo_)
+			{
+				os << "Root " << rootInfo.first << " contains: [";
+				for (const auto& merged : rootInfo.second.rootsMerging_)
+					os << merged << ", ";
+				os << "], with join states: [";
+				for (const auto& joinStatePair : rootInfo.second.joinStates_)
+					os << joinStatePair.first << ":" << joinStatePair.second << ", ";
+				os << "]\n";
+				os << "Mapping is ["; for (const auto& p : info.rootMapping_)
+					os << p.first << " -> " << p.second << ", ";
+				os << "]\n";
+			}
+
+			return os;
 		}
 	};
 

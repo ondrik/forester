@@ -156,11 +156,11 @@ void Normalization::normalizeRoot(
 	const std::vector<bool>&          marked,
 	NormalizationInfo&                normalizationInfo)
 {
+	normalizationInfo.addRootIfNotExists(root);
 	if (normalized[root])
 		return;
 
 	normalized[root] = true;
-	normalizationInfo.addMergedRootToLastRoot(root);
 
 	// we need a copy here!
 	ConnectionGraph::CutpointSignature signature =
@@ -188,11 +188,14 @@ void Normalization::normalizeRoot(
 			this->fae.getRoot(cutpoint.root),
 			refStates
 		);
+		normalizationInfo.mergeRoots(root, cutpoint.root);
+		normalizationInfo.remove(cutpoint.root);
 
-		normalizationInfo.addMergedRootToLastRoot(cutpoint.root);
+		normalizationInfo.addMergedRoot(root, cutpoint.root);
+		assert(refStates.size() > 0);
 		for (const auto& state : refStates)
 		{
-			normalizationInfo.addJoinStateToLastRoot(cutpoint.root, state);
+			normalizationInfo.addJoinState(root, cutpoint.root, state);
 		}
 
 		this->fae.setRoot(root, std::shared_ptr<TreeAut>(ta));
@@ -308,9 +311,7 @@ bool Normalization::normalizeInternal(
 
 	for (auto& i : order)
 	{	// push tree automata into a new tuple in the right order
-		normInfo.addNewRoot(newRoots.size());
-		assert(normInfo.rootsNormalizationInfo_.size() == newRoots.size()+1);
-		normInfo.addMergedRootToLastRoot(i); // we need to move TA to its origin position later
+		normInfo.addRootIfNotExists(newRoots.size());
 
 		this->normalizeRoot(normalized, i, marked, normInfo);
 
@@ -321,15 +322,21 @@ bool Normalization::normalizeInternal(
 
 			continue;
 		}
-
+		normInfo.addMapping(i, newRoots.size());
 		newRoots.push_back(this->fae.getRoot(i));
 
 		index[i] = offset++;
 	}
+	assert(order.size() >= newRoots.size());
 
-	assert(newRoots.size() == normInfo.rootsNormalizationInfo_.size());
+	normInfo.finalize();
+
 	// update representation
 	this->fae.swapRoots(newRoots);
+
+	assert(normInfo.rootsNormalizationInfo_.size() == 0 ||
+		   normInfo.rootsNormalizationInfo_.size() <= newRoots.size());
+	assert(normInfo.rootMapping_.size() == newRoots.size());
 
 	for (size_t i = 0; i < this->fae.getRootCount(); ++i)
 	{
