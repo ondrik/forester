@@ -499,18 +499,9 @@ dis3_start:
 			if (foldedRoots != nullptr)
 			{
 				assert(foldedRoots->count(root));
-				if (foldedRoots->count(cutpoint.root) == 0)
-				{
-					(*foldedRoots)[cutpoint.root] =
-							std::vector<std::pair<size_t, const Box *>>();
-
-				}
 
 				(*foldedRoots)[root].push_back(std::pair<size_t, const Box*>(
 						fae_.getRoot(root)->getFinalState(), boxPtr));
-
-				(*foldedRoots)[cutpoint.root].push_back(std::pair<size_t, const Box*>(
-						fae_.getRoot(cutpoint.root)->getFinalState(), boxPtr));
 			}
 
 			goto dis3_start;
@@ -1100,7 +1091,8 @@ std::unordered_map<size_t, std::vector<std::pair<size_t, const Box *>>>
 std::unordered_map<size_t, std::vector<std::pair<size_t, const Box *>>> Folding::fold(
         FAE&                         fae,
         BoxMan&                      boxMan,
-        const std::set<size_t>&      forbidden)
+        const std::set<size_t>&      forbidden,
+        const bool                   craftOrder)
 {
 	std::unordered_map<size_t, std::vector<std::pair<size_t, const Box *>>> foldedRoots;
 
@@ -1124,8 +1116,11 @@ std::unordered_map<size_t, std::vector<std::pair<size_t, const Box *>>> Folding:
 			foldedRoots[i] = std::vector<std::pair<size_t, const Box *>>();
 		}
 
-		folding.discover1(i, forbidden, true, &foldedRoots.at(i));
-		folding.discover2(i, forbidden, true, &foldedRoots.at(i));
+		if (!craftOrder)
+		{
+			folding.discover1(i, forbidden, true, &foldedRoots.at(i));
+			folding.discover2(i, forbidden, true, &foldedRoots.at(i));
+		}
 		folding.discover3(i, forbidden, true, &foldedRoots);
 
 		if (foldedRoots.at(i).size() == 0)

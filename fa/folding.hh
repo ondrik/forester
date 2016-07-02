@@ -434,7 +434,8 @@ public:
     static std::unordered_map<size_t, std::vector<std::pair<size_t, const Box *>>> fold(
         FAE&                         fae,
         BoxMan&                      boxMan,
-        const std::set<size_t>&      forbidden);
+        const std::set<size_t>&      forbidden,
+        const bool                   craftOrder=false);
 
 public:
 
