@@ -33,6 +33,7 @@
 #include "link_tree.hh"
 #include "recycler.hh"
 #include "types.hh"
+#include "normalization.hh"
 
 /**
  * @file symstate.hh
@@ -56,6 +57,7 @@ public:   // data types
 	using BoxesAtRoot = std::unordered_map<size_t, Boxes>;
 	using BoxesAtIteration = std::unordered_map<size_t, BoxesAtRoot>;
 	using FAEAtIteration = std::unordered_map<size_t, std::shared_ptr<FAE>>;
+	using NormInfoAtIteration = std::unordered_map<size_t, Normalization::NormalizationInfo>;
 
 	struct AbstractionInfo {
 			size_t abstrIteration_;
@@ -67,12 +69,21 @@ public:   // data types
 			BoxesAtRoot  learn2Boxes_;
 			BoxesAtRoot  learn1Boxes_;
 
+			std::shared_ptr<const FAE> finalFae_;
+
+			Normalization::NormalizationInfo normalizationInfo_;
+
+			NormInfoAtIteration normInfoAtIteration_;
+
 			AbstractionInfo() :
 					abstrIteration_(0),
 					iterationToFoldedRoots_(),
 					faeAtIteration_(),
 					learn2Boxes_(),
-					learn1Boxes_()
+					learn1Boxes_(),
+					finalFae_(nullptr),
+					normalizationInfo_(),
+					normInfoAtIteration_()
 			{}
 
 			void clear()
@@ -82,6 +93,9 @@ public:   // data types
 				iterationToFoldedRoots_.clear();
 				learn2Boxes_.clear();
 				learn1Boxes_.clear();
+				finalFae_ = nullptr;
+				normalizationInfo_.clear();
+				normInfoAtIteration_.clear();
 			}
 	};
 
@@ -100,6 +114,11 @@ private:  // data members
 
 	AbstractionInfo abstractionInfo_;
 
+	Normalization::NormalizationInfo normalizationInfo_;
+
+	/// The roots of TA where unfolding was done
+	std::set<size_t> roots_;
+
 private:  // methods
 
 	SymState(const SymState&);
@@ -117,7 +136,9 @@ public:   // methods
 		fae_{},
 		regs_(nullptr),
 		learntPredicates_(),
-		abstractionInfo_()
+		abstractionInfo_(),
+		normalizationInfo_(),
+		roots_()
 	{ }
 
 	/**
@@ -192,6 +213,12 @@ public:   // methods
 		fae_ = fae;
 	}
 
+
+	void ClearPredicates()
+	{
+		this->learntPredicates_.clear();
+	}
+
 	void SetPredicates(const std::vector<std::shared_ptr<const TreeAut>>& preds)
 	{
 		this->learntPredicates_.clear();
@@ -201,9 +228,52 @@ public:   // methods
 				preds.end());
 	}
 
+	void AddPredicate(const std::vector<std::shared_ptr<const TreeAut>>& preds)
+	{
+		this->learntPredicates_.insert(
+				this->learntPredicates_.end(),
+				preds.begin(),
+				preds.end());
+	}
+
 	const std::vector<std::shared_ptr<const TreeAut>>& GetPredicates() const
 	{
 		return this->learntPredicates_;
+	}
+
+	void clearNormalizationInfo()
+	{
+		normalizationInfo_.clear();
+	}
+
+	void ClearRoots()
+	{
+		roots_.clear();
+	}
+
+	void AddRoots(const std::set<size_t>& roots)
+	{
+		roots_.insert(roots.begin(), roots.end());
+	}
+
+	void AddRoot(size_t root)
+	{
+		roots_.insert(root);
+	}
+
+	const std::set<size_t> & GetUsedRoots() const
+	{
+		return roots_;
+	}
+
+	Normalization::NormalizationInfo& getNormalizationInfo()
+	{
+		return normalizationInfo_;
+	}
+
+	const Normalization::NormalizationInfo& getNormalizationInfo() const
+	{
+		return normalizationInfo_;
 	}
 
 	/**
@@ -364,6 +434,12 @@ public:   // methods
 	 */
 	void Intersect(
 		const SymState&      fwd);
+
+
+	void removeNullsTA();
+
+
+	void clearFAE();
 
 
 	/**

@@ -180,7 +180,7 @@ std::shared_ptr<FAE> SymState::newNormalizedFAE()
 	Normalization::normalize(
 			*normFae,
 			this,
-			Normalization::computeForbiddenSet(*normFae, true, true));
+			Normalization::computeForbiddenSet(*normFae, false, false));
 
 	return normFae;
 }
@@ -198,6 +198,22 @@ SymState::Trace SymState::getTrace() const
 	}
 
 	return trace;
+}
+
+
+void SymState::removeNullsTA()
+{
+	std::shared_ptr<FAE> fae = std::shared_ptr<FAE>(new FAE(*fae_));
+
+	fae->removeNulls();
+	this->SetFAE(fae);
+}
+
+void SymState::clearFAE()
+{
+	std::shared_ptr<FAE> fae = std::shared_ptr<FAE>(new FAE(*fae_));
+	fae->clear();
+	this->SetFAE(fae);
 }
 
 
