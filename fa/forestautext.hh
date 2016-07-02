@@ -254,7 +254,9 @@ public:
 			if (!ta)
 				continue;
 
-			ta = std::shared_ptr<TreeAut>(&ta->minimized(*this->allocTA()));
+			TreeAut* newTa = this->allocTA();
+			ta->minimized(*newTa);
+			ta = std::shared_ptr<TreeAut>(newTa);
 		}
 	}
 
@@ -401,6 +403,30 @@ public:
 		return true;
 	}
 
+
+	template <class F>
+	TreeAut& modifyTransitions(
+		TreeAut&                  dst,
+		const TreeAut&            src,
+		F                         modifyFunctor)
+	{
+        dst.addFinalStates(src.getFinalStates());
+        for (const Transition& tr : src)
+        {
+            std::vector<size_t> lhs;
+            for (size_t state : tr.GetChildren())
+            {
+                lhs.push_back(modifyFunctor(dst, state));
+            }
+
+            assert(lhs.size() == tr.GetChildrenSize());
+            dst.addTransition(lhs, TreeAut::GetSymbol(tr), tr.GetParent());
+        }
+
+        return dst;
+	}
+
+
 	void relabelReferencesAndRoots(
 		const std::vector<size_t>&    index
 	);
@@ -446,6 +472,9 @@ public:
 
 
 	void removeEmptyRoots();
+
+
+	void removeNulls();
 
 
 	void removeReferences(const size_t root);

@@ -37,10 +37,15 @@ void FAE::removeReferences(const size_t root)
 
         for (const auto trans : *this->getRoot(i))
         {
-            if (FAE::isRef(trans.GetSymbol())
-                && this->getRef(trans.GetParent()) == root)
+            // if (FAE::isRef(trans.GetSymbol())
+            //    && this->getRef(trans.GetParent()) == root)
+			size_t ref = static_cast<size_t>(-1);
+			if (FAE::getRef(trans.GetSymbol(), ref))
             {
-                continue;
+				if (ref == root)
+				{
+					continue;
+				}
             }
 
             pTa->addTransition(trans);
@@ -261,6 +266,28 @@ std::unordered_set<size_t> FAE::getEmptyRoots() const
 
 	return removed;
 }
+
+
+void FAE::removeNulls()
+{
+	size_t removed = 0;
+	for (size_t i = 0; i < this->getRootCount(); ++i)
+	{
+		if (this->getRoot(i) == nullptr)
+		{
+			this->removeReferences(i);
+			++removed;
+		}
+		else
+		{
+			this->setRoot(i-removed, this->getRoot(i));
+		}
+	}
+
+	this->resizeRoots(this->getRootCount()-removed);
+	this->connectionGraph.reset(this->getRootCount());
+}
+
 
 // TODO: I really need refactore
 // TODO: Error: You have to relable all states that
