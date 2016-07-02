@@ -29,11 +29,15 @@
 #include "abstractbox.hh"
 #include "streams.hh"
 #include "utils.hh"
+#include "bu_intersection.hh"
 
 class SymState;
 
 class Normalization
 {
+private:
+	using TreeAutVec = std::vector<std::shared_ptr<const TreeAut>>;
+
 public:
 	struct NormalizationInfo {
 	private:
@@ -191,6 +195,21 @@ public:
 		void clear()
 		{
 			rootsNormalizationInfo_.clear();
+			rootMapping_.clear();
+		}
+
+		bool empty() const
+		{
+			return rootsNormalizationInfo_.size() == 0 &&
+				   rootMapping_.size() == 0;
+		}
+
+		void createIdentityMapping(const size_t roots)
+		{
+			for (size_t i=0; i < roots; ++i)
+			{
+				rootMapping_[i] = i;
+			}
 		}
 
 		size_t getSize() const
@@ -215,10 +234,11 @@ public:
 				for (const auto& joinStatePair : rootInfo.second.joinStates_)
 					os << joinStatePair.first << ":" << joinStatePair.second << ", ";
 				os << "]\n";
-				os << "Mapping is ["; for (const auto& p : info.rootMapping_)
-					os << p.first << " -> " << p.second << ", ";
-				os << "]\n";
 			}
+
+			os << "Mapping is ["; for (const auto& p : info.rootMapping_)
+					os << p.first << " -> " << p.second << ", ";
+			os << "]\n";
 
 			return os;
 		}
@@ -317,6 +337,11 @@ public:
 		const SymState*                   state,
 		const std::set<size_t>&           forbidden = std::set<size_t>(),
 		bool                              extended = false);
+
+    static TreeAutVec revertNormalization(
+        const BUIntersection::BUProductResult& buProductResult,
+		FAE& newFAE,
+        const Normalization::NormalizationInfo& info);
 
 	/**
 	 * @brief  Computes the indices of components which are not to be merged

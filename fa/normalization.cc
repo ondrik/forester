@@ -29,6 +29,7 @@
 #include "regdef.hh"
 #include "symstate.hh"
 #include "virtualmachine.hh"
+#include "bu_intersection.hh"
 
 namespace {
 	
@@ -299,6 +300,7 @@ bool Normalization::normalizeInternal(
 	{	// in case the FA is in the canonical form
 		this->fae.resizeRoots(order.size());
 		this->fae.connectionGraph.data.resize(order.size());
+		normInfo.createIdentityMapping(this->fae.getRootCount());
 		return false;
 	}
 
@@ -354,6 +356,7 @@ bool Normalization::normalizeInternal(
 	return merged;
 }
 
+
 bool Normalization::normalize(
 		FAE&                              fae,
 		const SymState*                   state,
@@ -370,6 +373,7 @@ bool Normalization::normalize(
 
 	bool result = norm.normalizeInternal(marked, order, normalizationInfo);
 
+	assert(!normalizationInfo.empty());
 	FA_DEBUG_AT(3, "after normalization: " << std::endl << fae);
 
 	return result;
@@ -443,3 +447,114 @@ std::set<size_t> Normalization::computeForbiddenSet(const FAE& fae, const bool i
 
 	return forbidden;
 }
+
+
+Normalization::TreeAutVec Normalization::revertNormalization(
+        const BUIntersection::BUProductResult& buProductResult,
+		FAE& newFAE,
+        const Normalization::NormalizationInfo& info)
+{
+	assert(!info.empty());
+
+	const auto& tas = buProductResult.tas_;
+	assert(info.rootMapping_.size() == tas.size());
+	TreeAutVec res = TreeAutVec(tas.size());
+
+	std::unordered_map<size_t, size_t> stateToRef;
+
+	std::vector<size_t> reverseMap(info.rootMapping_.size());
+
+	for (const auto& mappingPair : info.rootMapping_)
+	{
+		reverseMap[mappingPair.second] = mappingPair.first;
+	}
+
+	for (const auto& mappingPair : info.rootMapping_)
+	{
+		// First of all we move TA to its position before normalization
+		if (mappingPair.first >= res.size())
+		{
+			res.resize(mappingPair.first + 1);
+		}
+
+		assert(tas.size() > mappingPair.second);
+		// make deep copy of TA
+		auto tmp = std::shared_ptr<TreeAut>(new TreeAut());
+		newFAE.relabelReferences(*tmp,
+								 *tas.at(mappingPair.second), reverseMap);
+				// std::shared_ptr<TreeAut>(new TreeAut(*tas.at(mappingPair.second)));
+		res[mappingPair.first] = tmp;
+
+		if (info.rootsNormalizationInfo_.count(mappingPair.first) == 0)
+		{
+			continue;
+		}
+
+		// Copy automaton corresponding where other TAs were merged to
+		// the positions where these TAs were before normalization.
+		assert(info.rootsNormalizationInfo_.count(mappingPair.first));
+		const auto& rootInfo = *(info.rootsNormalizationInfo_.find(mappingPair.first));
+		assert(mappingPair.second < tas.size());
+		for (const auto& mergedRoot : rootInfo.second.rootsMerging_)
+		{
+			if (mergedRoot >= res.size())
+			{
+				res.resize(mergedRoot + 1);
+			}
+
+			// make deep copy of TA
+			auto ta = std::shared_ptr<TreeAut>(new TreeAut(*res.at(mappingPair.first)));
+			ta->eraseFinalStates();
+
+			for (const auto& joinStatePair : rootInfo.second.joinStates_)
+			{ // find all join states for the given mergedRoot
+				if (joinStatePair.first != mergedRoot)
+				{
+					continue;
+				}
+
+				for (const auto& productMapPair : buProductResult.productMap_)
+				{ // for each join state find a related product state in new automaton
+					if (productMapPair.first.first == joinStatePair.second)
+					{ // it is join state so set the related product states final in ta.
+						if (ta->getUsedStates().count(productMapPair.second) == 0)
+						{
+							continue;
+						}
+						assert(ta->getUsedStates().count(productMapPair.second));
+						ta->addFinalState(productMapPair.second);
+
+						assert(stateToRef.count(productMapPair.second) == 0);
+						stateToRef[productMapPair.second] = joinStatePair.first;
+					}
+				}
+			}
+
+			if (rootInfo.first == mergedRoot)
+			{ // finally if ta is not moved anywhere copy the original final states
+				ta->addFinalStates(tas.at(rootInfo.first)->getFinalStates());
+			}
+			assert(ta->getFinalStates().size() > 0);
+
+			res[mergedRoot] = ta;
+		}
+		// + 1 is for identity, when i-th TA is moved to the i-th position
+		assert(tas.size() + rootInfo.second.rootsMerging_.size() <= res.size() + 1);
+    }
+
+	auto f = [&stateToRef, &newFAE] (TreeAut& dst, const size_t state) {
+        return (stateToRef.count(state)) ?
+               newFAE.addData(dst, Data::createRef(stateToRef.at(state), 0)) :
+               state;
+	};
+
+	for (size_t i=0; i < res.size(); ++i)
+	{
+		std::shared_ptr<TreeAut> newTa(new TreeAut());
+		newFAE.modifyTransitions(*newTa, *res.at(i), f);
+		res[i] = newTa;
+	}
+
+    return res;
+}
+
