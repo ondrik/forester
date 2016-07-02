@@ -85,7 +85,7 @@ public:   // methods
 	 *
 	 * @returns  Pointer to a new TreeAut
 	 */
-	TreeAut* allocTA()
+	TreeAut* allocTA() const
 	{
 		return TreeAut::allocateTAWithSameTransitions(this->ta);
 	}
