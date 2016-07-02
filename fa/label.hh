@@ -182,7 +182,8 @@ public:   // methods
 		auto i = this->node.m->find(offset);
 		if (this->node.m->find(offset) == this->node.m->end())
 		{
-			throw std::runtime_error("Cannot find a given selector");
+			assert(false);
+			//throw std::runtime_error("Cannot find a given selector");
 		}
 
 		//assert(i != this->node.m->end());
