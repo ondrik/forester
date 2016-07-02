@@ -57,14 +57,14 @@ inline const cl_loc* getLoc(const SymState& state)
 			const size_t usedRoot,
 			const size_t numberBefore,
 			const size_t numberAfter,
-			std::set<size_t>& usedRoots)
+			SymState&    state)
 	{
-		if (usedRoots.size()) // something was unfolded
+		if (state.GetUsedRoots().size()) // something was unfolded
 		{
-			usedRoots.insert(usedRoot);
+			state.AddRoot(usedRoot);
 			for (size_t i = numberBefore-1; i < numberAfter; ++i)
 			{
-				usedRoots.insert(i);
+				state.AddRoot(i);
 			}
 		}
 	}
@@ -106,7 +106,7 @@ void FI_cond::finalize(
 // FI_acc_sel
 void FI_acc_sel::execute(ExecutionManager& execMan, SymState& state)
 {
-	roots_.clear();
+	state.ClearRoots();
 	const Data& data = state.GetReg(dst_);
 
 	if (!data.isRef())
@@ -133,12 +133,12 @@ void FI_acc_sel::execute(ExecutionManager& execMan, SymState& state)
 		throw ProgramError(e.what(), &state, getLoc(state));
 	}
 
-	roots_ = splitting.copyUnfoldedRoots();
+	state.AddRoots(splitting.copyUnfoldedRoots());
 	addUsedRoots(
 			data.d_ref.root,
 			state.GetFAE()->getRootCount(),
 			res.at(0)->getRootCount(),
-			roots_);
+			state);
 
 	/*
 	std::vector<FAE *> tmp;
@@ -201,7 +201,7 @@ void FI_acc_sel::execute(ExecutionManager& execMan, SymState& state)
 // FI_acc_set
 void FI_acc_set::execute(ExecutionManager& execMan, SymState& state)
 {
-	roots_.clear();
+	state.ClearRoots();
 	auto data = state.GetReg(dst_);
 
 	if (!data.isRef())
@@ -228,12 +228,12 @@ void FI_acc_set::execute(ExecutionManager& execMan, SymState& state)
 		throw ProgramError(e.what(), &state, getLoc(state));
 	}
 
-	roots_ = splitting.copyUnfoldedRoots();
+	state.AddRoots(splitting.copyUnfoldedRoots());
 	addUsedRoots(
 			data.d_ref.root,
 			state.GetFAE()->getRootCount(),
 			res.at(0)->getRootCount(),
-			roots_);
+			state);
 
 	for (auto fae : res)
 	{
@@ -246,7 +246,7 @@ void FI_acc_set::execute(ExecutionManager& execMan, SymState& state)
 // FI_acc_all
 void FI_acc_all::execute(ExecutionManager& execMan, SymState& state)
 {
-	roots_.clear();
+	state.ClearRoots();
 	auto data = state.GetReg(dst_);
 
 	if (!data.isRef())
@@ -273,12 +273,12 @@ void FI_acc_all::execute(ExecutionManager& execMan, SymState& state)
 		throw ProgramError(e.what(), &state, getLoc(state));
 	}
 
-	roots_ = splitting.copyUnfoldedRoots();
+	state.AddRoots(splitting.copyUnfoldedRoots());
 	addUsedRoots(
 			data.d_ref.root,
 			state.GetFAE()->getRootCount(),
 			res.at(0)->getRootCount(),
-			roots_);
+			state);
 
 	for (auto fae : res)
 	{
@@ -716,6 +716,13 @@ void FI_check::execute(ExecutionManager& execMan, SymState& state)
 
 	std::shared_ptr<FAE> faeGarbageLess = std::shared_ptr<FAE>(
 			new FAE(*(tmpState->GetFAE())));
+
+	state.clearNormalizationInfo();
+	Normalization::normalize(*faeGarbageLess,
+							 &state,
+							 state.getNormalizationInfo(),
+							 Normalization::computeForbiddenSet(*faeGarbageLess));
+	assert(!state.getNormalizationInfo().empty());
 
 	GarbageChecker::checkAndRemoveGarbage(
 			const_cast<FAE&>(*(faeGarbageLess)), &state, false, garbageRoots_);
