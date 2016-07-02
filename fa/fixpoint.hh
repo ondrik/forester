@@ -180,7 +180,6 @@ public:   // methods
 	{
 		if (oldPredicates.size() == 0)
 		{
-			std::cerr << "No predicates\n";
 			return true;
 		}
 
@@ -192,20 +191,13 @@ public:   // methods
 			{
 				if ((newPredicate == nullptr && oldPredicate != nullptr) || TreeAut::subseteq(*newPredicate, *oldPredicate))
 				{
-					if (newPredicate != nullptr)
-						std::cerr << "Compared " << *newPredicate << " " << *oldPredicate << '\n';
 					isCovered = true;
 					break;
 				}
 			}
 
-			if (!isCovered)
-			{
-				std::cerr << "New predicate " << *newPredicate << '\n';
-			}
 			oneNew |= !isCovered;
 		}
-		std::cerr << "New\n";
 
 		return oneNew;
 	}
@@ -220,7 +212,7 @@ public:   // methods
 	 */
 	void addPredicate(std::vector<std::shared_ptr<const TreeAut>>& predicate)
 	{
-		//assert(arePredicatesNew(predicates_, predicate));
+		//assert(arePredicatesNew(tas_, predicate));
 		predicates_.insert(predicates_.end(), predicate.begin(), predicate.end());
 	}
 
