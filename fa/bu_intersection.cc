@@ -6,12 +6,12 @@ BUIntersection::BUProductResult BUIntersection::bottomUpIntersection(
 {
     if (fwdFAE.getRootCount() != bwdFAE.getRootCount())
     {
-        FA_DEBUG_AT(0, "input fwd " << fwdFAE);
-        FA_DEBUG_AT(0, "input bwd " << bwdFAE);
+        FA_DEBUG_AT(1, "input fwd " << fwdFAE);
+        FA_DEBUG_AT(1, "input bwd " << bwdFAE);
     }
     assert(fwdFAE.getRootCount() == bwdFAE.getRootCount());
-    FA_DEBUG_AT(0, "empty input fwd " << fwdFAE);
-    FA_DEBUG_AT(0, "empty input bwd " << bwdFAE);
+    FA_DEBUG_AT(1, "empty input fwd " << fwdFAE);
+    FA_DEBUG_AT(1, "empty input bwd " << bwdFAE);
 
     VATA::AutBase::ProductTranslMap productMap;
 
@@ -51,7 +51,7 @@ BUIntersection::BUProductResult BUIntersection::bottomUpIntersection(
 
         FA_DEBUG_AT(1, "result before " << isectTA);
         FA_DEBUG_AT(1, "result after " << *finalIsectTA);
-        FA_DEBUG_AT(0, "result named" << *renamedfinalTA);
+        FA_DEBUG_AT(1, "result named" << *renamedfinalTA);
 
         res.push_back(renamedfinalTA);
     }
@@ -59,3 +59,4 @@ BUIntersection::BUProductResult BUIntersection::bottomUpIntersection(
     assert(fwdFAE.getRootCount() == res.size());
     return BUProductResult(res, productMap);
 }
+
