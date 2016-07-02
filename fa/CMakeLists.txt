@@ -28,6 +28,7 @@ if(FA_DEBUG)
     message (STATUS "Debugging support enabled...")
 else()
     add_definitions("-O3")
+	add_definitions("-DNDEBUG")
 endif()
 
 # Add some more useful compiler flags
@@ -42,6 +43,7 @@ add_library(forester STATIC
 	backward_run.cc
 	box.cc
 	boxman.cc
+	bu_intersection.cc
 	call.cc
 	cl_fa.cc
 	comparison.cc
