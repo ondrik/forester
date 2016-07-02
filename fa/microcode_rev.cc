@@ -23,11 +23,11 @@
  */
 
 // Forester headers
+#include "bu_intersection.hh"
 #include "executionmanager.hh"
 #include "folding.hh"
 #include "microcode.hh"
 #include "virtualmachine.hh"
-#include "normalization.hh"
 
 namespace
 {
@@ -63,6 +63,7 @@ namespace
 
 	SymState* revertUnfolding(ExecutionManager &execMan,
 		const SymState                         &bwdSucc,
+		const SymState                         &fwdSucc,
 		BoxMan                                 &boxMan,
 		const std::set<size_t>                 &roots,
 		const size_t                            root)
@@ -71,35 +72,40 @@ namespace
 		std::shared_ptr<FAE> fae = std::shared_ptr<FAE>(new FAE(*(tmpState->GetFAE())));
 
 		std::set<size_t> forbidden = getUnusedRoots(roots, fae->getRootCount());
+		for (size_t i = fwdSucc.GetFAE()->getRootCount(); i < bwdSucc.GetFAE()->getRootCount(); ++i)
+		{ // this roots were __probably__ created by unfolding
+			forbidden.erase(i);
+		}
+		forbidden.erase(root);
 
 		fae->updateConnectionGraph();
-		std::cerr << "Root " << root << " Unused root "; for (auto s  : roots) std::cerr << s << ", "; std::cerr << '\n';
 
 		try
 		{
 			if (roots.size() > 0)
 			{
-				auto forbiddenNorm = Normalization::computeForbiddenSet(*fae);
 				//Normalization::normalize(*fae, &bwdSucc, forbiddenNorm, true);
-				auto res = Folding::fold(*fae, boxMan, forbidden);
-				assert(forbidden.size() >= fae->getRootCount() || res.size() != 0 ||
-					   (roots.size() == 1 && *(roots.begin()) == root));
-				Normalization::normalize(*fae, &bwdSucc, forbiddenNorm, true);
+				auto res = Folding::fold(*fae, boxMan, forbidden,
+							fwdSucc.GetFAE()->getRootCount() < bwdSucc.GetFAE()->getRootCount());
+				assert(forbidden.size() >= fae->getRootCount() || res.size() != 0); // ||
+					   //(roots.size() == 1 && *(roots.begin()) == root));
 			}
-			/*
-			while (res.size())
-			{
-				Normalization::normalize(*fae, &bwdSucc, forbiddenNorm, true);
-				res = Folding::fold(*fae, boxMan, forbidden);
-			}
-			*/
 		} catch (std::runtime_error& e)
 		{
 			throw e;
 		}
 
-		tmpState->SetFAE(fae);
-		return tmpState;
+        if (fwdSucc.GetFAE()->getRootCount() + 1 == fae->getRootCount())
+        {
+            auto forbiddenNorm = Normalization::computeForbiddenSet(*fae);
+            Normalization::normalize(*fae, &bwdSucc, forbiddenNorm, true);
+        }
+
+    tmpState->SetFAE(fae);
+
+	assert(fwdSucc.GetFAE()->getRootCount() == tmpState->GetFAE()->getRootCount());
+
+	return tmpState;
 	}
 }
 
@@ -126,7 +132,9 @@ SymState* FI_acc_sel::reverseAndIsect(
 //	FA_DEBUG_AT(1,"Executing !!VERY!! suspicious reverse operation FI_acc_sel");
 //	return tmpState;
 
-	SymState* tmpState = revertUnfolding(execMan, bwdSucc, boxMan_, roots_, fwdPred.GetReg(dst_).d_ref.root);
+	SymState* tmpState = revertUnfolding(execMan, bwdSucc, fwdPred,
+							boxMan_, fwdPred.GetUsedRoots(),
+							fwdPred.GetReg(dst_).d_ref.root);
 
 	FA_DEBUG_AT(1,"Skipping reverse operation FI_acc_set");
 	return tmpState;
@@ -139,7 +147,9 @@ SymState* FI_acc_set::reverseAndIsect(
 {
 	(void)fwdPred;
 
-	SymState* tmpState = revertUnfolding(execMan, bwdSucc, boxMan_, roots_, fwdPred.GetReg(dst_).d_ref.root);
+	SymState* tmpState = revertUnfolding(execMan, bwdSucc, fwdPred, boxMan_,
+                            fwdPred.GetUsedRoots(),
+                            fwdPred.GetReg(dst_).d_ref.root);
 
 	FA_DEBUG_AT(1,"Skipping reverse operation FI_acc_set");
 	return tmpState;
@@ -152,7 +162,9 @@ SymState* FI_acc_all::reverseAndIsect(
 {
 	(void)fwdPred;
 
-	SymState* tmpState = revertUnfolding(execMan, bwdSucc, boxMan_, roots_, fwdPred.GetReg(dst_).d_ref.root);
+	SymState* tmpState = revertUnfolding(execMan, bwdSucc, fwdPred,
+										 boxMan_, fwdPred.GetUsedRoots(),
+										 fwdPred.GetReg(dst_).d_ref.root);
 
 	FA_DEBUG_AT(1,"Skipping reverse operation FI_acc_all");
 	return tmpState;
@@ -363,15 +375,45 @@ SymState* FI_check::reverseAndIsect(
 	// the backward configuration
 	VirtualMachine fwdVM(*(fwdPred.GetFAE()));
 
+	assert(!fwdPred.getNormalizationInfo().empty());
+	std::unordered_map<size_t, size_t> reverseMapping;
+	for (const auto& mappingPair : fwdPred.getNormalizationInfo().rootMapping_)
+	{
+		assert(reverseMapping.count(mappingPair.second) == 0);
+		reverseMapping[mappingPair.second] = mappingPair.first;
+	}
+	assert(reverseMapping.size() == fwdPred.getNormalizationInfo().rootMapping_.size());
+
 	for (const auto& rootIndex : garbageRoots_)
 	{ // add all removed garbage roots back to FA
-		vm.nodeCopy(rootIndex, fwdVM, rootIndex);
+		vm.nodeCopy(rootIndex, fwdVM, reverseMapping.at(rootIndex));
 	}
 	assert(fae->getAllocRootCount() == tmpState->GetFAE()->getAllocRootCount() + garbageRoots_.size());
 
 	tmpState->SetFAE(fae);
+	BUIntersection::BUProductResult buProduct =
+			BUIntersection::bottomUpIntersection(
+					*(execMan.copyStateWithNewRegs(fwdPred, fwdPred.GetInstr())->newNormalizedFAE()),
+					*tmpState->newNormalizedFAE());
+	assert(buProduct.tas_.size() == fwdPred.getNormalizationInfo().rootMapping_.size());
+	for (auto& ta : buProduct.tas_)
+	{
+		assert(!ta->getFinalStates().empty());
+	}
+	auto newRoots = Normalization::revertNormalization(
+			buProduct, *fae, fwdPred.getNormalizationInfo());
+	assert(newRoots.size() >= buProduct.tas_.size());
+	fae->resizeRoots(newRoots.size());
+	for (size_t i = 0; i < newRoots.size(); ++i)
+	{
+		fae->setRoot(i, std::shared_ptr<TreeAut>(new TreeAut(*newRoots.at(i))));
+	}
+	fae->connectionGraph.reset(newRoots.size());
+	fae->updateConnectionGraph();
 
-	// TODO do we need renew a references? When it was garbage there were not probably any references.
+	tmpState->SetFAE(fae);
+
+	// TODO do we need renew references? When it was garbage there were not probably any references.
 
 	FA_DEBUG_AT(1, "Executing !!VERY!! suspicious reverse operation FI_check");
 	return tmpState;
