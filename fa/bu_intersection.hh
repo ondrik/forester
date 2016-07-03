@@ -33,5 +33,9 @@ public:
     static BUProductResult bottomUpIntersection(
             const FAE&            fwdFAE,
             const FAE&            bwdFAE);
+
+    static bool isResultNonEmpty(
+            const BUProductResult& result
+    );
 };
 #endif
