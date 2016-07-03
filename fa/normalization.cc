@@ -468,6 +468,7 @@ Normalization::TreeAutVec Normalization::revertNormalization(
 	{
 		reverseMap[mappingPair.second] = mappingPair.first;
 	}
+	assert(reverseMap.size() == info.rootMapping_.size());
 
 	for (const auto& mappingPair : info.rootMapping_)
 	{
@@ -482,10 +483,9 @@ Normalization::TreeAutVec Normalization::revertNormalization(
 		auto tmp = std::shared_ptr<TreeAut>(new TreeAut());
 		newFAE.relabelReferences(*tmp,
 								 *tas.at(mappingPair.second), reverseMap);
-				// std::shared_ptr<TreeAut>(new TreeAut(*tas.at(mappingPair.second)));
 		res[mappingPair.first] = tmp;
 
-		if (info.rootsNormalizationInfo_.count(mappingPair.first) == 0)
+		if (!info.containsMergedRoot(mappingPair.first))
 		{
 			continue;
 		}

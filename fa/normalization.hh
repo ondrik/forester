@@ -147,6 +147,11 @@ public:
 			lastAddedRoot_ = backupLast_;
 		}
 
+		bool containsMergedRoot(const size_t root) const
+		{
+			return rootsNormalizationInfo_.count(root) > 0;
+		}
+
 		std::unordered_set<size_t> collectMergedRoots(const size_t root, const size_t merged)
 		{
 			assert(root != merged);
