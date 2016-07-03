@@ -27,6 +27,7 @@
 #include "executionmanager.hh"
 #include "folding.hh"
 #include "microcode.hh"
+#include "regdef.hh"
 #include "virtualmachine.hh"
 
 namespace
@@ -375,14 +376,20 @@ SymState* FI_check::reverseAndIsect(
 	// the backward configuration
 	VirtualMachine fwdVM(*(fwdPred.GetFAE()));
 
-	assert(!fwdPred.getNormalizationInfo().empty());
+	assert(fwdPred.GetFAE()->getRootCount() <= FIXED_REG_COUNT ||
+				   !fwdPred.getNormalizationInfo().empty());
+	assert(fwdPred.getNormalizationInfo().rootMapping_.size() <=
+				   fwdPred.GetFAE()->getRootCount()); // <= or ==
+
 	std::unordered_map<size_t, size_t> reverseMapping;
 	for (const auto& mappingPair : fwdPred.getNormalizationInfo().rootMapping_)
 	{
 		assert(reverseMapping.count(mappingPair.second) == 0);
 		reverseMapping[mappingPair.second] = mappingPair.first;
 	}
+
 	assert(reverseMapping.size() == fwdPred.getNormalizationInfo().rootMapping_.size());
+	assert(reverseMapping.size() <= fwdPred.GetFAE()->getRootCount());
 
 	for (const auto& rootIndex : garbageRoots_)
 	{ // add all removed garbage roots back to FA
@@ -396,13 +403,13 @@ SymState* FI_check::reverseAndIsect(
 					*(execMan.copyStateWithNewRegs(fwdPred, fwdPred.GetInstr())->newNormalizedFAE()),
 					*tmpState->newNormalizedFAE());
 	assert(buProduct.tas_.size() == fwdPred.getNormalizationInfo().rootMapping_.size());
-	for (auto& ta : buProduct.tas_)
-	{
-		assert(!ta->getFinalStates().empty());
-	}
+	assert(BUIntersection::isResultNonEmpty(buProduct));
+
 	auto newRoots = Normalization::revertNormalization(
 			buProduct, *fae, fwdPred.getNormalizationInfo());
 	assert(newRoots.size() >= buProduct.tas_.size());
+	assert(fae->getRootCount() <= newRoots.size());
+
 	fae->resizeRoots(newRoots.size());
 	for (size_t i = 0; i < newRoots.size(); ++i)
 	{
@@ -412,8 +419,6 @@ SymState* FI_check::reverseAndIsect(
 	fae->updateConnectionGraph();
 
 	tmpState->SetFAE(fae);
-
-	// TODO do we need renew references? When it was garbage there were not probably any references.
 
 	FA_DEBUG_AT(1, "Executing !!VERY!! suspicious reverse operation FI_check");
 	return tmpState;
