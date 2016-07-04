@@ -718,14 +718,24 @@ void FI_check::execute(ExecutionManager& execMan, SymState& state)
 			new FAE(*(tmpState->GetFAE())));
 
 	state.clearNormalizationInfo();
-	Normalization::normalize(*faeGarbageLess,
-							 &state,
-							 state.getNormalizationInfo(),
-							 Normalization::computeForbiddenSet(*faeGarbageLess));
+	if (state.GetFAE()->getRootCount() > FIXED_REG_COUNT)
+	{
+		Normalization::normalize(*faeGarbageLess,
+								 &state,
+								 state.getNormalizationInfo(),
+								 Normalization::computeForbiddenSet(*faeGarbageLess));
+	}
+	else
+	{
+		state.getNormalizationInfo().createIdentityMapping(
+				state.GetFAE()->getRootCount());
+	}
+
 	assert(!state.getNormalizationInfo().empty());
 
 	GarbageChecker::checkAndRemoveGarbage(
 			const_cast<FAE&>(*(faeGarbageLess)), &state, false, garbageRoots_);
+	assert(faeGarbageLess->getRootCount() <= state.GetFAE()->getRootCount());
 	
 	tmpState->SetFAE(faeGarbageLess);
 
