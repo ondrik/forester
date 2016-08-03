@@ -295,16 +295,22 @@ bool Box::operator<=(const Box& rhs) const
 bool Box::simplifiedLessThan(const Box& rhs) const
 {
 	if (static_cast<bool>(input_) != static_cast<bool>(rhs.input_))
+	{
 		return false;
+	}
 
 	if (input_)
 	{
 		if (inputIndex_ != rhs.inputIndex_)
+		{
 			return false;
+		}
 	}
 
 	if (!Box::lessOrEqual(*output_, *rhs.output_))
+	{
 		return false;
+	}
 
 	if (!input_)
 		return true;
@@ -354,6 +360,13 @@ std::ostream& operator<<(std::ostream& os, const Box& box)
 		return ss.str();
 	};
     */
+
+	os << "With selectors ";
+	for (const auto p : box.selectors_)
+	{
+		os << p.first << ":" << p.second << ", ";
+	}
+	os << "\n And hash value " << hash_value(box.getSignature()) << '\n';
 
 	os << "===" << std::endl << "output (";
 
