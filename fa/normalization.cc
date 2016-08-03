@@ -394,6 +394,7 @@ bool Normalization::normalize(
 bool Normalization::normalizeWithoutMerging(
 		FAE&                              fae,
 		const SymState*                   state,
+		NormalizationInfo&                normInfo,
 		const std::set<size_t>&           forbidden,
 		bool                              extended)
 {
@@ -408,7 +409,6 @@ bool Normalization::normalizeWithoutMerging(
 	// than once), i.e. only reorder
 	std::fill(marked.begin(), marked.end(), true);
 
-	NormalizationInfo normInfo;
 	bool result = norm.normalizeInternal(marked, order, normInfo);
 
 	FA_DEBUG_AT(3, "after normalization: " << std::endl << fae);

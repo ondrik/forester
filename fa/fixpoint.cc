@@ -36,7 +36,6 @@
 // anonymous namespace
 namespace
 {
-
 using TreeAutVec = std::vector<std::shared_ptr<const TreeAut>>;
 
 struct ExactTMatchF
@@ -51,7 +50,8 @@ struct ExactTMatchF
 
 std::vector<size_t> findSelectors(
 		const FAE&                    fae,
-		const size_t                  root)
+		const size_t                  root,
+		const Box*                    box)
 {
 	std::vector<size_t> index;
 	for (auto it = fae.getRoot(root)->accBegin(); it != fae.getRoot(root)->accEnd(); ++it)
@@ -59,7 +59,7 @@ std::vector<size_t> findSelectors(
 		const auto t = *it;
 		for (const AbstractBox *aBox : TreeAut::GetSymbol(t)->getNode())
 		{
-			if (aBox->isBox())
+			if (aBox->isBox() && aBox == box)
 			{
 				index.push_back(aBox->getOrder());
 			}
@@ -213,10 +213,12 @@ struct FuseNonFixedF
  */
 void reorder(
 	const SymState*   state,
-	FAE&              fae)
+	FAE&              fae,
+	Normalization::NormalizationInfo& normInfo)
 {
+	// TODO: maybe will need to revert this
 	fae.unreachableFree();
-	Normalization::normalizeWithoutMerging(fae, state);
+	Normalization::normalizeWithoutMerging(fae, state, normInfo);
 
 	FA_DEBUG_AT(3, "after reordering: " << std::endl << fae);
 }
@@ -320,7 +322,6 @@ std::pair<bool, std::shared_ptr<FAE>> revertFolding(
     }
     std::sort(keys.begin(), keys.end());
 
-	size_t diff = 0;
     for (const auto& key : keys)
     {
         assert(foldedRoots.count(key));
@@ -345,20 +346,18 @@ std::pair<bool, std::shared_ptr<FAE>> revertFolding(
 
             std::vector<FAE *> unfolded;
 
-			size_t sizeBefore = fae->getRootCount();
             Splitting splitting(*fae);
             splitting.isolateSet(
                     unfolded,
-                    rootToBoxes.first+diff,
+                    rootToBoxes.first,
                     0,
-                    findSelectors(*fae, rootToBoxes.first+diff));
+                    findSelectors(*fae, rootToBoxes.first, boxes.second));
 
 
 			// assert(unfolded.size() == 1);
-			assert(unfolded.size() <= 2);
+			assert(unfolded.size() <= 1);
 			fae = std::shared_ptr<FAE>(unfolded.at(unfolded.size()-1));
-			diff = fae->getRootCount() - sizeBefore;
-			break;
+			// break;
         }
 		// break;
     }
@@ -475,7 +474,6 @@ SymState* FixpointBase::reverseAndIsect(
 	tmpState->ClearPredicates();
 	const SymState::AbstractionInfo& ainfo = fwdPred.GetAbstractionInfo();
 
-	*ainfo.finalFae_;
 	assert(ainfo.finalFae_ != nullptr);
 	revertAbstraction(tmpState, std::shared_ptr<FAE>(new FAE(*ainfo.finalFae_)));
 	assert(!tmpState->GetFAE()->Empty());
@@ -532,7 +530,12 @@ SymState* FixpointBase::reverseAndIsect(
 			revertFolding(ainfo.iterationToFoldedRoots_.at(0), *tmpState->GetFAE(), fwdPred).second
     );
 
-	revertAbstraction(tmpState, std::shared_ptr<FAE>(new FAE(*fwdPred.GetFAE())));
+	revertAbstraction(tmpState, std::shared_ptr<FAE>(new FAE(*fwdPred.GetFAE())), &ainfo.reorderNormInfo_);
+	assert(!tmpState->GetFAE()->Empty());
+	assert(!ainfo.reorderNormInfo_.empty()
+		   || ainfo.faeAfterReorder_->getRootCount() != tmpState->GetFAE()->getRootCount());
+
+	revertAbstraction(tmpState, ainfo.faeAfterReorder_);
 
 	FA_DEBUG_AT(1, "Executing !!VERY!! suspicious reverse operation FixpointBase");
 	return tmpState;
@@ -543,11 +546,12 @@ TreeAutVec FI_abs::learnPredicates(
 		SymState *fwdState,
 		SymState *bwdState)
 {
-	FA_DEBUG_AT(1, "BWD " << *bwdState);
 	bool areSame = fwdState->GetFAE()->getRootCount() == bwdState->GetFAE()->getRootCount();
 	std::shared_ptr<const FAE> normFAEBwd = areSame ? bwdState->GetFAE() : bwdState->newNormalizedFAE();
 	areSame = fwdState->GetFAE()->getRootCount() == normFAEBwd->getRootCount();
 	std::shared_ptr<const FAE> normFAEFwd = areSame ? fwdState->GetFAE() : fwdState->newNormalizedFAE();
+	FA_DEBUG_AT(1, "FWD Learn predicates " << *fwdState);
+	FA_DEBUG_AT(1, "BWD Learn predicates " << *bwdState);
 
 	if (normFAEBwd->getRootCount() < FIXED_REG_COUNT ||
 			(normFAEBwd->getRootCount() == FIXED_REG_COUNT &&
@@ -738,8 +742,11 @@ void FI_abs::execute(ExecutionManager& execMan, SymState& state)
 	std::set<size_t> forbidden;
 #if FA_ALLOW_FOLDING
 
+	// TODO faeBeforeReorder; after is remembered in state
+	ainfo.faeAfterReorder_ = std::shared_ptr<FAE>(new FAE(*fae));
+
 	// reorder components into the canonical form (no merging!)
-	reorder(&state, *fae);
+	reorder(&state, *fae, ainfo.reorderNormInfo_);
 	state.SetFAE(std::shared_ptr<FAE>(new FAE(*fae)));
 
 	if (!boxMan_.boxDatabase().empty())
@@ -837,7 +844,7 @@ void FI_abs::execute(ExecutionManager& execMan, SymState& state)
 	{
 		FA_DEBUG_AT_MSG(1, &this->insn()->loc, "extending fixpoint\n" << *fae << "\n");
 		storeFaeToAccs(*fae);
-		//storeFaeToAccs(*fae, true);
+		// storeFaeToAccs(*fae, true);
 
 		FA_DEBUG_AT(1, "Continue with " << *fae);
 		SymState* tmpState = execMan.createChildState(state, next_);
@@ -858,7 +865,8 @@ void FI_fix::execute(ExecutionManager& execMan, SymState& state)
 
 	std::set<size_t> forbidden;
 #if FA_ALLOW_FOLDING
-	reorder(&state, *fae);
+	Normalization::NormalizationInfo tmp;
+	reorder(&state, *fae, tmp);
 
 	if (!boxMan_.boxDatabase().size())
 	{

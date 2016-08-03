@@ -856,14 +856,12 @@ public:
  */
 class FI_check : public VoidInstruction
 {
-private:
-	std::unordered_set<size_t> garbageRoots_; // list of roots removed from FA as a garbage
 
 public:
 
 	FI_check(const CodeStorage::Insn* insn)
-		: VoidInstruction(insn, fi_type_e::fiCheck),
-		  garbageRoots_() {}
+		: VoidInstruction(insn, fi_type_e::fiCheck)
+	{}
 
 	virtual void execute(ExecutionManager& execMan, SymState& state);
 
@@ -874,10 +872,6 @@ public:
 
 	virtual std::ostream& toStream(std::ostream& os) const {
 		return os << "check ";
-	}
-
-	bool wasGarbageFound() {
-		return garbageRoots_.size() != 0;
 	}
 };
 

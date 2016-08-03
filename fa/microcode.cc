@@ -193,6 +193,8 @@ void FI_acc_sel::execute(ExecutionManager& execMan, SymState& state)
 	for (auto fae : res)
 	{
 		SymState* tmpState = execMan.createChildState(state, next_);
+		assert(state.GetUsedRoots().size() > 0 ||
+			   fae->getRootCount() == state.GetFAE()->getRootCount());
 		tmpState->SetFAE(std::shared_ptr<FAE>(fae));
 		execMan.enqueue(tmpState);
 	}
@@ -238,7 +240,8 @@ void FI_acc_set::execute(ExecutionManager& execMan, SymState& state)
 	for (auto fae : res)
 	{
 		SymState* tmpState = execMan.createChildState(state, next_);
-		tmpState->SetFAE(std::shared_ptr<FAE>(fae));
+		fae->updateConnectionGraph();
+		assert(state.GetUsedRoots().size() > 0 || fae->getRootCount() == state.GetFAE()->getRootCount());
 		execMan.enqueue(tmpState);
 	}
 }
@@ -283,6 +286,7 @@ void FI_acc_all::execute(ExecutionManager& execMan, SymState& state)
 	for (auto fae : res)
 	{
 		SymState* tmpState = execMan.createChildState(state, next_);
+		assert(state.GetUsedRoots().size() > 0 || fae->getRootCount() == state.GetFAE()->getRootCount());
 		tmpState->SetFAE(std::shared_ptr<FAE>(fae));
 		execMan.enqueue(tmpState);
 	}
@@ -710,13 +714,14 @@ void FI_imul::execute(ExecutionManager& execMan, SymState& state)
 // FI_check
 void FI_check::execute(ExecutionManager& execMan, SymState& state)
 {
-	garbageRoots_.clear();
+	state.clearGarbageRoots();
 	state.GetFAE()->updateConnectionGraph();
 	SymState* tmpState = execMan.createChildState(state, next_);
 
 	std::shared_ptr<FAE> faeGarbageLess = std::shared_ptr<FAE>(
 			new FAE(*(tmpState->GetFAE())));
 
+	/*
 	state.clearNormalizationInfo();
 	if (state.GetFAE()->getRootCount() > FIXED_REG_COUNT)
 	{
@@ -732,11 +737,21 @@ void FI_check::execute(ExecutionManager& execMan, SymState& state)
 	}
 
 	assert(!state.getNormalizationInfo().empty());
+	*/
 
 	GarbageChecker::checkAndRemoveGarbage(
-			const_cast<FAE&>(*(faeGarbageLess)), &state, false, garbageRoots_);
-	assert(faeGarbageLess->getRootCount() <= state.GetFAE()->getRootCount());
-	
+			const_cast<FAE&>(*(faeGarbageLess)), &state, false, state.accessGarbageRoots());
+	if (state.getGarbageRoots().size() > 0)
+	{
+		faeGarbageLess->removeNulls();
+	}
+	faeGarbageLess->updateConnectionGraph();
+	assert((state.getGarbageRoots().size() > 0 &&
+			faeGarbageLess->getRootCount() < state.GetFAE()->getRootCount()) ||
+		   (state.getGarbageRoots().size() == 0 &&
+			faeGarbageLess->getRootCount() == state.GetFAE()->getRootCount()));
+	assert(state.getGarbageRoots().size() > 0 || FAE::subseteq(*faeGarbageLess, *state.GetFAE()));
+
 	tmpState->SetFAE(faeGarbageLess);
 
 	execMan.enqueue(tmpState);

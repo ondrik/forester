@@ -67,6 +67,16 @@ bool FAE::subseteq(const FAE& lhs, const FAE& rhs)
 
 	for (size_t i = 0; i < lhs.getRootCount(); ++i)
 	{
+		if ((lhs.getRoot(i) != nullptr && rhs.getRoot(i) == nullptr) ||
+					(lhs.getRoot(i) == nullptr && rhs.getRoot(i) != nullptr))
+		{
+			return false;
+		}
+		else if (lhs.getRoot(i) == nullptr && rhs.getRoot(i) == nullptr)
+		{
+			return true;
+		}
+
 		if (!TreeAut::subseteq(*lhs.getRoot(i), *rhs.getRoot(i)))
 		{
 			return false;

@@ -87,6 +87,23 @@ public:   // methods
 		return true;
 	}
 };
+
+template<class C, class T>
+void printMapping(const C& mapping, const T& translator)
+{
+	std::cerr << "Mapping ";
+	for (const auto transPair : translator)
+	{
+		std::cerr << FA::writeState(transPair.first) << " -> {";
+		assert(transPair.second < mapping.size());
+		for (const auto s : mapping.at(transPair.second))
+		{
+			std::cerr << FA::writeState(s) << ", ";
+		}
+		std::cerr << "}; ";
+	}
+	std::cerr << "\n";
+}
 }
 
 void Abstraction::predicateAbstraction(
@@ -110,10 +127,10 @@ void Abstraction::predicateAbstraction(
 	// TODO: use boost::dynamic_bitset
 	std::vector<std::vector<bool>> rel;
 
-	VATA::AutBase::ProductTranslMap translMap;
+	std::vector<std::set<size_t>> matchWith(numStates, std::set<size_t>());
 	for (const auto& predicate : predicates)
 	{
-		FA_DEBUG_AT(1,"Predicate: " << *predicate);
+		VATA::AutBase::ProductTranslMap translMap;
         FA_DEBUG_AT(1,"ISECT1: " << abstrTa);
         FA_DEBUG_AT(1,"ISECT2: " << predicate /* *(predicate->getRoot(root)) */);
 
@@ -124,13 +141,12 @@ void Abstraction::predicateAbstraction(
                     /* *(predicate->getRoot(root)) */ *predicate, &translMap);
             FA_DEBUG_AT(1, "RES: " << res);
         }
-	}
 
-    std::vector<std::set<size_t>> matchWith(numStates, std::set<size_t>());
-    for (const auto& matchPair : translMap)
-    {
-        matchWith[abstrTaStateIndex[matchPair.first.first]].insert(matchPair.first.second);
-    }
+        for (const auto& matchPair : translMap)
+        {
+            matchWith[abstrTaStateIndex[matchPair.first.first]].insert(matchPair.first.second);
+        }
+	}
 
     std::ostringstream oss;
     for (size_t i = 0; i < matchWith.size(); ++i)
@@ -174,7 +190,8 @@ void Abstraction::predicateAbstraction(
             }
 
             if (abstrTa.isFinalState(j.first)
-                || abstrTa.isFinalState(k.first))
+                && !abstrTa.isFinalState(k.first)
+				&& matchWith.at(j.second).size() == 0)
             {
                 // rel[j.second][k.second] = false;
                 // continue;

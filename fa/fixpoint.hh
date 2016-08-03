@@ -183,7 +183,6 @@ public:   // methods
 			return true;
 		}
 
-		bool oneNew = false;
 		for (const auto& newPredicate : newPredicates)
 		{
 			bool isCovered = false;
@@ -196,10 +195,13 @@ public:   // methods
 				}
 			}
 
-			oneNew |= !isCovered;
+			if (!isCovered)
+			{
+				return true;
+			}
 		}
 
-		return oneNew;
+		return false;
 	}
 
 	/**
@@ -212,8 +214,36 @@ public:   // methods
 	 */
 	void addPredicate(std::vector<std::shared_ptr<const TreeAut>>& predicate)
 	{
-		//assert(arePredicatesNew(tas_, predicate));
-		predicates_.insert(predicates_.end(), predicate.begin(), predicate.end());
+		if (!arePredicatesNew(predicates_, predicate))
+		{
+			assert(false);
+		}
+		assert(arePredicatesNew(predicates_, predicate));
+
+
+		size_t maxState = (this->predicates_.size() > 0) ?
+						  this->predicates_.back()->getHighestStateNumber() :
+						  1;
+		assert(this->predicates_.size() == 0 || maxState > 1);
+
+		for (const auto& pred : predicate)
+		{
+			assert(maxState >= 1);
+			assert(this->predicates_.size() == 0 || maxState > 1);
+			auto tmp = std::shared_ptr<TreeAut>(new TreeAut());
+			assert(tmp != nullptr);
+
+			FAE::uniqueFromState(
+						*tmp,
+				        *pred,
+				        maxState+1);
+			this->predicates_.insert(
+				this->predicates_.end(),
+				tmp);
+
+			maxState = this->predicates_.back()->getHighestStateNumber();
+		}
+		// predicates_.insert(predicates_.end(), predicate.begin(), predicate.end());
 	}
 
 	/**

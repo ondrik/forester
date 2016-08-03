@@ -71,7 +71,9 @@ public:   // data types
 
 			std::shared_ptr<const FAE> finalFae_;
 
-			Normalization::NormalizationInfo normalizationInfo_;
+			std::shared_ptr<FAE> faeAfterReorder_;
+
+			Normalization::NormalizationInfo reorderNormInfo_;
 
 			NormInfoAtIteration normInfoAtIteration_;
 
@@ -82,7 +84,8 @@ public:   // data types
 					learn2Boxes_(),
 					learn1Boxes_(),
 					finalFae_(nullptr),
-					normalizationInfo_(),
+					faeAfterReorder_(nullptr),
+					reorderNormInfo_(),
 					normInfoAtIteration_()
 			{}
 
@@ -94,7 +97,8 @@ public:   // data types
 				learn2Boxes_.clear();
 				learn1Boxes_.clear();
 				finalFae_ = nullptr;
-				normalizationInfo_.clear();
+				faeAfterReorder_ = nullptr;
+				reorderNormInfo_.clear();
 				normInfoAtIteration_.clear();
 			}
 	};
@@ -119,6 +123,10 @@ private:  // data members
 	/// The roots of TA where unfolding was done
 	std::set<size_t> roots_;
 
+	std::unordered_set<size_t> garbageRoots_; // list of roots removed from FA as a garbage
+
+	size_t id_;
+
 private:  // methods
 
 	SymState(const SymState&);
@@ -138,8 +146,13 @@ public:   // methods
 		learntPredicates_(),
 		abstractionInfo_(),
 		normalizationInfo_(),
-		roots_()
-	{ }
+		roots_(),
+		garbageRoots_(),
+		id_()
+	{
+		static size_t id = 0;
+		id_ = id++;
+	}
 
 	/**
 	 * @brief  Destructor
@@ -274,6 +287,21 @@ public:   // methods
 	const Normalization::NormalizationInfo& getNormalizationInfo() const
 	{
 		return normalizationInfo_;
+	}
+
+	const std::unordered_set<size_t>& getGarbageRoots() const
+	{
+		return garbageRoots_;
+	};
+
+	void clearGarbageRoots()
+	{
+		garbageRoots_.clear();
+	}
+
+	std::unordered_set<size_t>& accessGarbageRoots()
+	{
+		return garbageRoots_;
 	}
 
 	/**

@@ -340,6 +340,7 @@ public:
 	static bool normalizeWithoutMerging(
 		FAE&                              fae,
 		const SymState*                   state,
+		NormalizationInfo&                normInfo,
 		const std::set<size_t>&           forbidden = std::set<size_t>(),
 		bool                              extended = false);
 

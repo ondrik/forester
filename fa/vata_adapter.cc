@@ -465,6 +465,38 @@ VATAAdapter VATAAdapter::intersectionBU(
     return VATAAdapter(VATA::ExplicitTreeAut::IntersectionBU(lhs.vataAut_, rhs.vataAut_, pTranslMap));
 }
 
+size_t VATAAdapter::getHighestStateNumber() const
+{
+    size_t max = 0;
+
+    auto isMaximal = [](const size_t max, const size_t state) -> bool {
+        if (!FA::isData(state))
+        {
+            return state > max;
+        }
+
+        return false;
+    };
+
+    for (const auto& trans : *this)
+    {
+        if (isMaximal(max, trans.GetParent()))
+        {
+            max = trans.GetParent();
+        }
+
+        for (const size_t ch : trans.GetChildren())
+        {
+            if (isMaximal(max, ch))
+            {
+                max = ch;
+            }
+        }
+    }
+
+    return max;
+}
+
 namespace
 {
 	std::string stateToString(const size_t state)

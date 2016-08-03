@@ -704,6 +704,7 @@ public:   // methods
 
 			for (auto instr : assembly_.code_)
 			{
+				/*
 				if (conf_.printSVTrace && instr->getType() == fi_type_e::fiCheck)
 				{
 					if ((static_cast<FI_check *>(instr))->wasGarbageFound())
@@ -712,6 +713,7 @@ public:   // methods
 						printTraceInternal(trace);
 					}
 				}
+				*/
 
 				// print out all fixpoints
 				if (instr->getType() != fi_type_e::fiFix)

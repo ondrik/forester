@@ -91,6 +91,8 @@ bool BackwardRun::isSpuriousCE(
 
 		bwdTrace.push_back(resultState);
 		bwdState = resultState;
+		// std::cerr << "Back step FWD " << fwdState << " " << *fwdState << "\n BWD " << *bwdState->GetFAE() << "====\n";
+		assert(fwdState->GetFAE()->getAllocRootCount() == bwdState->GetFAE()->getAllocRootCount());
 
 //		std::string filename = MemPlotter::plotHeap(*resultState);
 	}

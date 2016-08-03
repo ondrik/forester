@@ -255,6 +255,7 @@ public:
 		++statesExecuted_;
 
 		state.GetInstr()->execute(*this, state);
+		// std::cerr << "State " << &state << " " << state << '\n';
 	}
 
 	void pathFinished(SymState* state)

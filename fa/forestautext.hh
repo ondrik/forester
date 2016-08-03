@@ -79,6 +79,39 @@ public:
 
 public:
 
+	static TreeAut& uniqueFromState(
+		TreeAut&          dst,
+		const TreeAut&    src,
+		const size_t      state,
+		bool              addFinalStates = true)
+	{
+		Index<size_t> stateIndex;
+
+		TreeAut::rename(
+			dst,
+			src,
+			RenameNonleafF(stateIndex, state), addFinalStates
+		);
+
+		return dst;
+	}
+
+	TreeAut& uniqueWithoutIncrement(
+		TreeAut&          dst,
+		const TreeAut&    src,
+		bool              addFinalStates = true) const
+	{
+		Index<size_t> stateIndex;
+
+		TreeAut::rename(
+			dst,
+			src,
+			RenameNonleafF(stateIndex, this->nextState()), addFinalStates
+		);
+
+		return dst;
+	}
+
 	TreeAut& unique(
 		TreeAut&          dst,
 		const TreeAut&    src,

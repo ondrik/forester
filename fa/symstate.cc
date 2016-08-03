@@ -258,6 +258,7 @@ std::ostream& operator<<(std::ostream& os, const SymState& state)
 	if (state.GetFAE() != nullptr)
 		os << *state.GetFAE();
 
+	os << "id: " << state.id_ << '\n';
 	return os << "instruction (" << state.GetInstr() << "): "
 		<< *state.GetInstr();
 }

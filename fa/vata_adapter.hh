@@ -628,6 +628,8 @@ public: // public methods
 			VATAAdapter&                                 dst,
 			const std::unordered_map<size_t, size_t>&    rel) const;
 
+	size_t getHighestStateNumber() const;
+
 	static std::ostream& printTrans(std::ostream& os, const Transition& trans, const bool isFinal);
     friend std::ostream& operator<<(std::ostream& os, const VATAAdapter& ta);
 };

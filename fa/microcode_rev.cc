@@ -87,7 +87,7 @@ namespace
 			{
 				//Normalization::normalize(*fae, &bwdSucc, forbiddenNorm, true);
 				auto res = Folding::fold(*fae, boxMan, forbidden,
-							fwdSucc.GetFAE()->getRootCount() < bwdSucc.GetFAE()->getRootCount());
+								fwdSucc.GetFAE()->getRootCount() < bwdSucc.GetFAE()->getRootCount());
 				assert(forbidden.size() >= fae->getRootCount() || res.size() != 0); // ||
 					   //(roots.size() == 1 && *(roots.begin()) == root));
 			}
@@ -98,15 +98,14 @@ namespace
 
         if (fwdSucc.GetFAE()->getRootCount() + 1 == fae->getRootCount())
         {
-            auto forbiddenNorm = Normalization::computeForbiddenSet(*fae);
-            Normalization::normalize(*fae, &bwdSucc, forbiddenNorm, true);
+            // Normalization::NormalizationInfo normInfo;
+            // auto forbiddenNorm = Normalization::computeForbiddenSet(*fae);
+            // Normalization::normalize(*fae, &bwdSucc, normInfo, forbiddenNorm, true);
         }
 
-    tmpState->SetFAE(fae);
+		tmpState->SetFAE(fae);
 
-	assert(fwdSucc.GetFAE()->getRootCount() == tmpState->GetFAE()->getRootCount());
-
-	return tmpState;
+		return tmpState;
 	}
 }
 
@@ -376,6 +375,7 @@ SymState* FI_check::reverseAndIsect(
 	// the backward configuration
 	VirtualMachine fwdVM(*(fwdPred.GetFAE()));
 
+	/*
 	assert(fwdPred.GetFAE()->getRootCount() <= FIXED_REG_COUNT ||
 				   !fwdPred.getNormalizationInfo().empty());
 	assert(fwdPred.getNormalizationInfo().rootMapping_.size() <=
@@ -390,14 +390,19 @@ SymState* FI_check::reverseAndIsect(
 
 	assert(reverseMapping.size() == fwdPred.getNormalizationInfo().rootMapping_.size());
 	assert(reverseMapping.size() <= fwdPred.GetFAE()->getRootCount());
+	 */
 
-	for (const auto& rootIndex : garbageRoots_)
+	for (const auto& rootIndex : fwdPred.getGarbageRoots())
 	{ // add all removed garbage roots back to FA
-		vm.nodeCopy(rootIndex, fwdVM, reverseMapping.at(rootIndex));
+		assert(fae->getRootCount() <= rootIndex || fae->getRoot(rootIndex) != nullptr);
+		vm.nodeCopy(rootIndex, fwdVM, rootIndex /*reverseMapping.at(rootIndex)*/);
 	}
-	assert(fae->getAllocRootCount() == tmpState->GetFAE()->getAllocRootCount() + garbageRoots_.size());
+	assert(fae->getAllocRootCount() == tmpState->GetFAE()->getAllocRootCount()
+									  + fwdPred.getGarbageRoots().size());
 
 	tmpState->SetFAE(fae);
+
+	/*
 	BUIntersection::BUProductResult buProduct =
 			BUIntersection::bottomUpIntersection(
 					*(execMan.copyStateWithNewRegs(fwdPred, fwdPred.GetInstr())->newNormalizedFAE()),
@@ -408,7 +413,7 @@ SymState* FI_check::reverseAndIsect(
 	auto newRoots = Normalization::revertNormalization(
 			buProduct, *fae, fwdPred.getNormalizationInfo());
 	assert(newRoots.size() >= buProduct.tas_.size());
-	assert(fae->getRootCount() <= newRoots.size());
+	assert(fae->getAllocRootCount() <= newRoots.size());
 
 	fae->resizeRoots(newRoots.size());
 	for (size_t i = 0; i < newRoots.size(); ++i)
@@ -419,6 +424,7 @@ SymState* FI_check::reverseAndIsect(
 	fae->updateConnectionGraph();
 
 	tmpState->SetFAE(fae);
+	 */
 
 	FA_DEBUG_AT(1, "Executing !!VERY!! suspicious reverse operation FI_check");
 	return tmpState;
