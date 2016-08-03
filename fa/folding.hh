@@ -320,7 +320,7 @@ protected:
 	 */
 	const Box* getBox(const Box& box, bool conditional)
 	{
-		return (conditional)? boxMan_.lookupBox(box) : boxMan_.getBox(box);
+		return (conditional) ? boxMan_.lookupBox(box) : boxMan_.getBox(box);
 	}
 
 
