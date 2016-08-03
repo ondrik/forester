@@ -4,9 +4,9 @@ BUIntersection::BUProductResult BUIntersection::bottomUpIntersection(
         const FAE&            fwdFAE,
         const FAE&            bwdFAE)
 {
+    FA_DEBUG_AT(1, "Input fwd " << fwdFAE);
+    FA_DEBUG_AT(1, "Input bwd " << bwdFAE);
     assert(fwdFAE.getRootCount() == bwdFAE.getRootCount());
-    FA_DEBUG_AT(1, "empty input fwd " << fwdFAE);
-    FA_DEBUG_AT(1, "empty input bwd " << bwdFAE);
 
     VATA::AutBase::ProductTranslMap productMap;
 
