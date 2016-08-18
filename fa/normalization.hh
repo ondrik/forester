@@ -359,8 +359,10 @@ public:
 	 *
 	 * @returns  The set with indices of components not to be merged or folded
 	 */
-	static std::set<size_t> computeForbiddenSet(const FAE& fae, const bool ignoreNearby = false,
-	const bool ignoreVars = false);
+	static std::set<size_t> computeForbiddenSet(
+			const FAE& fae,
+			const bool ignoreNearby = false,
+			const bool ignoreVars = false);
 
 public:   // methods
 
