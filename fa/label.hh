@@ -50,13 +50,12 @@ public:   // data types
 	 */
 	struct NodeItem
 	{
-		const AbstractBox* aBox;
+		const AbstractBox *aBox;
 		size_t index;
 		size_t offset;
 
-		NodeItem(const AbstractBox* aBox, const size_t index, const size_t offset)
-			: aBox(aBox), index(index), offset(offset)
-		{ }
+		NodeItem(const AbstractBox *aBox, const size_t index, const size_t offset)
+				: aBox(aBox), index(index), offset(offset) {}
 	};
 
 private:  // data members
@@ -69,40 +68,39 @@ public:   // data members
 	{
 		struct
 		{
-			const Data* data;
+			const Data *data;
 			size_t id;
 		} data;
 
 		struct
 		{
-			const std::vector<const AbstractBox*>* v;
-			std::unordered_map<size_t, NodeItem>* m;
-			const std::vector<SelData>* sels;
-			void* tag;
+			const std::vector<const AbstractBox *> *v;
+			std::unordered_map<size_t, NodeItem> *m;
+			const std::vector<SelData> *sels;
+			void *tag;
 		} node;
 
-		const DataArray* vData;
+		const DataArray *vData;
 	};
 
 public:   // methods
 
 	NodeLabel() :
-		type_(node_type::n_unknown)
-	{ }
+			type_(node_type::n_unknown) {}
 
 	NodeLabel(
-		const Data*                                 data,
-		size_t                                      id) :
-		type_(node_type::n_data)
+			const Data *data,
+			size_t id) :
+			type_(node_type::n_data)
 	{
 		this->data.data = data;
 		this->data.id = id;
 	}
 
 	NodeLabel(
-		const std::vector<const AbstractBox*>*      v,
-		const std::vector<SelData>*                 sels) :
-		type_(node_type::n_node)
+			const std::vector<const AbstractBox *> *v,
+			const std::vector<SelData> *sels) :
+			type_(node_type::n_node)
 	{
 		this->node.v = v;
 		this->node.m = new std::unordered_map<size_t, NodeItem>();
@@ -110,10 +108,9 @@ public:   // methods
 	}
 
 	NodeLabel(
-		const DataArray*                            vData) :
-		type_(node_type::n_vData),
-		vData(vData)
-	{ }
+			const DataArray *vData) :
+			type_(node_type::n_vData),
+			vData(vData) {}
 
 	~NodeLabel()
 	{
@@ -121,7 +118,7 @@ public:   // methods
 			delete this->node.m;
 	}
 
-	void addMapItem(size_t key, const AbstractBox* aBox, const size_t index,
+	void addMapItem(size_t key, const AbstractBox *aBox, const size_t index,
 					const size_t offset)
 	{
 		if (this->node.m->find(key) != this->node.m->end())
@@ -140,7 +137,7 @@ public:   // methods
 		return node_type::n_data == type_;
 	}
 
-	bool isData(const Data*& data) const
+	bool isData(const Data *&data) const
 	{
 		if (node_type::n_data != type_)
 			return false;
@@ -148,7 +145,7 @@ public:   // methods
 		return true;
 	}
 
-	const Data& getData() const
+	const Data &getData() const
 	{
 		assert(node_type::n_data == type_);
 		return *this->data.data;
@@ -160,11 +157,38 @@ public:   // methods
 		return this->data.id;
 	}
 
-	const std::vector<SelData>* getSels() const
+	const std::vector<SelData> *getSels() const
 	{
 		assert(node_type::n_node == type_);
 
 		return this->node.sels;
+	}
+
+	const SelData& getSelAtPos(const size_t pos) const
+	{
+		assert(node_type::n_node == type_);
+		assert(this->node.sels->size() > pos);
+
+		return this->node.sels->at(pos);
+	}
+
+	const AbstractBox* getABox(const size_t pos) const
+	{
+		assert(node_type::n_node == type_);
+		assert(this->node.v->size() > pos);
+
+		return this->node.v->at(pos);
+	}
+
+	const std::string getSelName(const size_t pos) const
+	{
+		assert(node_type::n_node == type_);
+		if (this->getSels()->size() <= pos)
+		{
+			return std::string();
+		}
+
+		return this->getSelAtPos(pos).name;
 	}
 
 	const AbstractBox* boxLookup(size_t offset, const AbstractBox* def) const

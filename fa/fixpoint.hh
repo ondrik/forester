@@ -25,10 +25,35 @@
 #include <memory>
 
 // Forester headers
+#include "abstraction.hh"
 #include "boxman.hh"
 #include "fixpointinstruction.hh"
 #include "forestautext.hh"
 #include "ufae.hh"
+
+struct SmartTMatchF
+{
+	bool operator()(
+		const TreeAut::Transition&  t1,
+		const TreeAut::Transition&  t2)
+	{
+        label_type l1 = TreeAut::GetSymbol(t1);
+        label_type l2 = TreeAut::GetSymbol(t2);
+		if (l1->isNode() && l2->isNode())
+		{
+			if (!FA_ALLOW_STACK_FRAME_ABSTRACTION)
+			{
+				if ((static_cast<const TypeBox *>(l1->nodeLookup(-1).aBox))->getName().find("__@") == 0)
+				{
+					return l1 == l2;
+				}
+			}
+			return l1->getTag() == l2->getTag();
+		}
+
+		return l1 == l2;
+	}
+};
 
 /**
  * @brief  The base class for fixpoint instructions
@@ -140,6 +165,8 @@ private:  // data members
 	/// The set of FA used for the predicate abstraction
 	std::vector<std::shared_ptr<const TreeAut>> predicates_;
 
+	bool firstRun_;
+
 private:  // methods
 
 	/**
@@ -171,7 +198,8 @@ public:   // methods
 		TreeAut&                       ta,
 		BoxMan&                        boxMan) :
 		FixpointBase(insn, fixpoint, ta, boxMan),
-		predicates_()
+		predicates_(),
+		firstRun_(true)
 	{ }
 
 	bool arePredicatesNew(
@@ -214,10 +242,10 @@ public:   // methods
 	 */
 	void addPredicate(std::vector<std::shared_ptr<const TreeAut>>& predicate)
 	{
-		if (!arePredicatesNew(predicates_, predicate))
-		{
-			assert(false);
-		}
+		// if (!arePredicatesNew(predicates_, predicate))
+		// {
+		// 	assert(false);
+		// }
 		assert(arePredicatesNew(predicates_, predicate));
 
 
@@ -237,12 +265,32 @@ public:   // methods
 						*tmp,
 				        *pred,
 				        maxState+1);
-			this->predicates_.insert(
-				this->predicates_.end(),
-				tmp);
+			// if (this->predicates_.size() == 0)
+			{
+
+				// auto reduced = std::shared_ptr<TreeAut>(new TreeAut());
+				// tmp->minimized(*reduced);
+				this->predicates_.insert(
+					this->predicates_.end(),
+					// reduced);
+					tmp);
+			}
+			// else
+			{
+			 	auto abstracted = Abstraction::heightAbstractionTA(*tmp, FA_ABS_HEIGHT, SmartTMatchF());
+			 	this->predicates_.insert(this->predicates_.end(), abstracted);
+				// std::cerr << "Added Predicate Orig " << *tmp << '\n';
+				// std::cerr << "Added Predicate Abstracted " << *abstracted << '\n';
+			 	// auto first = std::shared_ptr<TreeAut>(new TreeAut(*this->predicates_.front()));
+			 	// VATAAdapter::disjointUnion(*first, *tmp);
+			 	// auto abstracted1 = Abstraction::heightAbstractionTA(*first, FA_ABS_HEIGHT, SmartTMatchF());
+			 	// this->predicates_[0] = abstracted1;
+			}
 
 			maxState = this->predicates_.back()->getHighestStateNumber();
 		}
+		// predicates_.insert(predicates_.end(), predicate.back());
+
 		// predicates_.insert(predicates_.end(), predicate.begin(), predicate.end());
 	}
 

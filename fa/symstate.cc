@@ -164,7 +164,9 @@ void SymState::recycle(Recycler<SymState>& recycler)
 }
 
 
-std::shared_ptr<FAE> SymState::newNormalizedFAE()
+std::shared_ptr<FAE> SymState::newNormalizedFAE(
+		const bool emptyForbidden,
+		const bool ignoreVars)
 {
 	std::shared_ptr<FAE> normFae = std::shared_ptr<FAE>(new FAE(*fae_));
 	normFae->minimizeRoots(); // TODO PAB maybe remove
@@ -180,7 +182,10 @@ std::shared_ptr<FAE> SymState::newNormalizedFAE()
 	Normalization::normalize(
 			*normFae,
 			this,
-			Normalization::computeForbiddenSet(*normFae, false, false));
+			emptyForbidden ? std::set<size_t>() :
+			    Normalization::computeForbiddenSet(*normFae, false, false),
+			false,
+			ignoreVars);
 
 	return normFae;
 }

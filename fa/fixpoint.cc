@@ -69,30 +69,6 @@ std::vector<size_t> findSelectors(
 	return index;
 }
 
-struct SmartTMatchF
-{
-	bool operator()(
-		const TreeAut::Transition&  t1,
-		const TreeAut::Transition&  t2)
-	{
-        label_type l1 = TreeAut::GetSymbol(t1);
-        label_type l2 = TreeAut::GetSymbol(t2);
-		if (l1->isNode() && l2->isNode())
-		{
-			if (!FA_ALLOW_STACK_FRAME_ABSTRACTION)
-			{
-				if ((static_cast<const TypeBox *>(l1->nodeLookup(-1).aBox))->getName().find("__@") == 0)
-				{
-					return l1 == l2;
-				}
-			}
-			return l1->getTag() == l2->getTag();
-		}
-
-		return l1 == l2;
-	}
-};
-
 class SmarterTMatchF
 {
 private:  // data members
@@ -278,7 +254,7 @@ TreeAutVec getEmptyTrees(
         }
         else if (bwdFAE.getRoot(i) == nullptr && fwdFAE.getRoot(i) != nullptr)
         {
-            res.push_back(fwdFAE.getRoot(i));
+            // res.push_back(fwdFAE.getRoot(i));
             continue;
         }
         else if (bwdFAE.getRoot(i) != nullptr && fwdFAE.getRoot(i) == nullptr)
@@ -401,6 +377,11 @@ void revertAbstraction(
 
 	for (const auto& ta : buProductResult.tas_)
 	{
+		if (ta == nullptr)
+		{
+			continue;
+		}
+
 		TreeAut tmp(*ta);
 		if (tmp.areTransitionsEmpty())
 		{
@@ -423,12 +404,15 @@ void revertAbstraction(
 
 	for (size_t i = 0; i < newRoots.size(); ++i)
 	{
-		newFae->setRoot(i, std::shared_ptr<TreeAut>(new TreeAut(*newRoots.at(i))));
+		newFae->setRoot(i,
+                        newRoots.at(i) != nullptr ?
+                        std::shared_ptr<TreeAut>(new TreeAut(*newRoots.at(i))) :
+                        nullptr);
 	}
 
 	for (const auto& ta : newFae->getRoots())
 	{
-		if (ta->areTransitionsEmpty())
+		if (ta != nullptr && ta->areTransitionsEmpty())
 		{
 			tmpState->AddPredicate(FI_abs::learnPredicates(&fwd, &bwdBackup));
 			tmpState->clearFAE();
@@ -440,6 +424,7 @@ void revertAbstraction(
 	newFae->connectionGraph.reset(newRoots.size());
 	newFae->updateConnectionGraph();
 
+
 	tmpState->SetFAE(newFae);
 }
 
@@ -448,6 +433,113 @@ void noFold(SymState::AbstractionInfo& ainfo)
 	ainfo.iterationToFoldedRoots_[ainfo.abstrIteration_] =
 			SymState::BoxesAtRoot();
 	++ainfo.abstrIteration_;
+}
+
+std::vector<size_t> createChildren(
+		const size_t cl,
+		const size_t cr,
+		const size_t cc)
+{
+	std::vector<size_t> res;
+	res.push_back(cl);
+	res.push_back(cr);
+	res.push_back(cc);
+
+	return res;
+}
+
+void addInitialPredicates(
+		FAE&                                  fae,
+		std::vector<std::shared_ptr<const TreeAut>>& predicates)
+{
+	auto initPred = fae.allocTA();
+	assert(initPred->areTransitionsEmpty());
+	assert(initPred->getFinalStates().size() == 0);
+
+	label_type treeNodeLabel = nullptr;
+    for (size_t i = 0; i < fae.getRootCount(); ++i)
+	{
+		for (const auto trans : *(fae.getRoot(i)))
+		{
+			if (VATAAdapter::GetSymbol(trans)->isNode() &&
+					reinterpret_cast<const TypeBox *>(
+							VATAAdapter::GetSymbol(trans)->getABox(0))->getName().find("TreeNode") !=
+							std::string::npos)
+			{
+				treeNodeLabel = VATAAdapter::GetSymbol(trans);
+				break;
+			}
+		}
+		if (treeNodeLabel != nullptr)
+		{
+			break;
+		}
+	}
+	assert(treeNodeLabel != nullptr);
+
+	const size_t r0 = fae.addData(*initPred, Data::createInt(0));
+	const size_t r1 = fae.addData(*initPred, Data::createInt(1));
+	const size_t q0 = fae.freshState();
+	const size_t q1 = fae.freshState();
+	const size_t q2 = fae.freshState();
+	const size_t q3 = fae.freshState();
+	const size_t q4 = fae.freshState();
+
+	initPred->addFinalState(q0);
+
+	// Adding q0
+	// initPred->addTransition(createChildren(q1,q3,r1), treeNodeLabel, q0);
+    // initPred->addTransition(createChildren(q2,q3,r1), treeNodeLabel, q0);
+    // initPred->addTransition(createChildren(q1,q4,r1), treeNodeLabel, q0);
+    // initPred->addTransition(createChildren(q2,q4,r1), treeNodeLabel, q0);
+	// initPred->addTransition(createChildren(r0,r0,r1), treeNodeLabel, q0);
+
+	// // Adding q1
+    // initPred->addTransition(createChildren(q2,q3,r1), treeNodeLabel, q1);
+    // initPred->addTransition(createChildren(q2,r0,r1), treeNodeLabel, q1);
+    // initPred->addTransition(createChildren(q1,q3,r1), treeNodeLabel, q1);
+	// initPred->addTransition(createChildren(r0,r0,r1), treeNodeLabel, q1);
+
+    // // Adding q2
+    // initPred->addTransition(createChildren(q2,q3,r0), treeNodeLabel, q2);
+    // initPred->addTransition(createChildren(q1,r0,r0), treeNodeLabel, q2);
+    // initPred->addTransition(createChildren(r0,r0,r0), treeNodeLabel, q2);
+
+	// // Adding q3
+    // initPred->addTransition(createChildren(q1,q3,r1), treeNodeLabel, q3);
+    // initPred->addTransition(createChildren(q1,r0,r1), treeNodeLabel, q3);
+    // initPred->addTransition(createChildren(r0,q4,r1), treeNodeLabel, q3);
+	// initPred->addTransition(createChildren(r0,r0,r1), treeNodeLabel, q3);
+
+	// // Adding q4
+    // initPred->addTransition(createChildren(q1,q4,r0), treeNodeLabel, q4);
+	// initPred->addTransition(createChildren(r0,q4,r0), treeNodeLabel, q4);
+    // initPred->addTransition(createChildren(r0,q3,r0), treeNodeLabel, q4);
+    // initPred->addTransition(createChildren(r0,r0,r0), treeNodeLabel, q4);
+
+
+	// Adding q0
+	initPred->addTransition(createChildren(q0,q2,r0), treeNodeLabel, q0);
+    initPred->addTransition(createChildren(q2,q0,r0), treeNodeLabel, q0);
+	initPred->addTransition(createChildren(q0,q0,r0), treeNodeLabel, q0);
+    // initPred->addTransition(createChildren(q1,q1,r0), treeNodeLabel, q0); // added
+    initPred->addTransition(createChildren(q2,q1,r1), treeNodeLabel, q0);
+	initPred->addTransition(createChildren(q1,q2,r1), treeNodeLabel, q0);
+
+	// Adding q1
+    initPred->addTransition(createChildren(q1,q2,r0), treeNodeLabel, q1);
+    initPred->addTransition(createChildren(q2,q1,r0), treeNodeLabel, q1);
+	initPred->addTransition(createChildren(q1,q1,r0), treeNodeLabel, q1); // commented
+    initPred->addTransition(createChildren(q2,q2,r1), treeNodeLabel, q1);
+
+    // Adding q2
+    initPred->addTransition(createChildren(q2,q2,r0), treeNodeLabel, q2);
+    initPred->addTransition(createChildren(q2,q2,r1), treeNodeLabel, q2);
+	initPred->addTransition(createChildren(r0,r0,r1), treeNodeLabel, q2);
+	initPred->addTransition(createChildren(r0,r0,r0), treeNodeLabel, q2);
+
+	std::shared_ptr<const TreeAut> res = std::shared_ptr<TreeAut>(initPred);
+	predicates.push_back(res);
 }
 } // namespace
 
@@ -530,12 +622,17 @@ SymState* FixpointBase::reverseAndIsect(
 			revertFolding(ainfo.iterationToFoldedRoots_.at(0), *tmpState->GetFAE(), fwdPred).second
     );
 
+	assert(!tmpState->GetFAE()->Empty());
 	revertAbstraction(tmpState, std::shared_ptr<FAE>(new FAE(*fwdPred.GetFAE())), &ainfo.reorderNormInfo_);
+	std::shared_ptr<FAE> faeMin = std::shared_ptr<FAE>(new FAE(*tmpState->GetFAE()));
 	assert(!tmpState->GetFAE()->Empty());
 	assert(!ainfo.reorderNormInfo_.empty()
-		   || ainfo.faeAfterReorder_->getRootCount() != tmpState->GetFAE()->getRootCount());
+		   || ainfo.faeBeforeReorder_->getRootCount() != tmpState->GetFAE()->getRootCount());
 
-	revertAbstraction(tmpState, ainfo.faeAfterReorder_);
+	revertAbstraction(tmpState, ainfo.faeBeforeReorder_);
+
+	faeMin->minimizeRoots();
+	tmpState->SetFAE(faeMin);
 
 	FA_DEBUG_AT(1, "Executing !!VERY!! suspicious reverse operation FixpointBase");
 	return tmpState;
@@ -576,6 +673,16 @@ TreeAutVec FI_abs::learnPredicates(
 		predicates.insert(predicates.end(),
 				normFAEBwd->getRoots().begin(), normFAEBwd->getRoots().end());
 	}
+
+    // auto normalized = bwdState->newNormalizedFAE(true, true);
+	// for (size_t i = 1; i < normalized->getRootCount(); ++i)
+	// {
+    //     if (normalized->getRoot(i) == nullptr)
+    //     {
+    //         continue;
+    //     }
+	// 	predicates.push_back(normalized->getRoot(i));
+	// }
 
 	assert(!predicates.empty());
 
@@ -690,7 +797,7 @@ void FI_abs::abstract(
 
 	if (FA_FUSION_ENABLED)
 	{
-		//strongFusion(fae);
+		// strongFusion(fae);
 		weakFusion(fae);
 	}
 	FA_DEBUG_AT(1, "After fusion " << fae << '\n');
@@ -739,11 +846,17 @@ void FI_abs::execute(ExecutionManager& execMan, SymState& state)
 
 	fae->updateConnectionGraph();
 
+	if (firstRun_ && fae->getRootCount() > 2)
+	{
+		// addInitialPredicates(*fae, this->predicates_);
+		firstRun_ = false;
+	}
+
 	std::set<size_t> forbidden;
 #if FA_ALLOW_FOLDING
 
 	// TODO faeBeforeReorder; after is remembered in state
-	ainfo.faeAfterReorder_ = std::shared_ptr<FAE>(new FAE(*fae));
+	ainfo.faeBeforeReorder_ = std::shared_ptr<FAE>(new FAE(*fae));
 
 	// reorder components into the canonical form (no merging!)
 	reorder(&state, *fae, ainfo.reorderNormInfo_);
@@ -848,6 +961,7 @@ void FI_abs::execute(ExecutionManager& execMan, SymState& state)
 
 		FA_DEBUG_AT(1, "Continue with " << *fae);
 		SymState* tmpState = execMan.createChildState(state, next_);
+		fae->minimizeRoots();
 		tmpState->SetFAE(fae);
 		execMan.enqueue(tmpState);
 		ainfo.finalFae_ = tmpState->GetFAE();

@@ -155,7 +155,8 @@ void Normalization::normalizeRoot(
 	std::vector<bool>&                normalized,
 	const size_t                      root,
 	const std::vector<bool>&          marked,
-	NormalizationInfo&                normalizationInfo)
+	NormalizationInfo&                normalizationInfo,
+	bool                              ignoreVars)
 {
 	normalizationInfo.addRootIfNotExists(root);
 	if (normalized[root])
@@ -169,9 +170,9 @@ void Normalization::normalizeRoot(
 
 	for (auto& cutpoint : signature)
 	{
-		this->normalizeRoot(normalized, cutpoint.root, marked, normalizationInfo);
+		this->normalizeRoot(normalized, cutpoint.root, marked, normalizationInfo, ignoreVars);
 
-		if (marked[cutpoint.root])
+		if (marked[cutpoint.root] && !(ignoreVars && cutpoint.root > 1))
 			continue;
 
 		if (root == cutpoint.root)
@@ -294,7 +295,8 @@ namespace {
 bool Normalization::normalizeInternal(
 	const std::vector<bool>&          marked,
 	const std::vector<size_t>&        order,
-	NormalizationInfo&                normInfo)
+	NormalizationInfo&                normInfo,
+	bool                              ignoreVars)
 {
 	if (isInCanonicalForm(marked, order))
 	{	// in case the FA is in the canonical form
@@ -315,7 +317,7 @@ bool Normalization::normalizeInternal(
 	{	// push tree automata into a new tuple in the right order
 		normInfo.addRootIfNotExists(newRoots.size());
 
-		this->normalizeRoot(normalized, i, marked, normInfo);
+		this->normalizeRoot(normalized, i, marked, normInfo, ignoreVars);
 
 		if (!marked[i])
 		{	// if a root was merged, do not put it in the new tuple!
@@ -342,6 +344,8 @@ bool Normalization::normalizeInternal(
 
 	for (size_t i = 0; i < this->fae.getRootCount(); ++i)
 	{
+		if (this->fae.getRoot(i) == nullptr)
+			continue;
 		assert(this->fae.getRoot(i) != nullptr);
 		this->fae.setRoot(i, std::shared_ptr<TreeAut>(
 			this->fae.relabelReferences(this->fae.getRoot(i).get(), index)
@@ -362,7 +366,8 @@ bool Normalization::normalize(
 		const SymState*                   state,
 		NormalizationInfo&                normalizationInfo,
 		const std::set<size_t>&           forbidden,
-		bool                              extended)
+		bool                              extended,
+		bool                              ignoreVars)
 {
 	Normalization norm(fae, state);
 
@@ -371,7 +376,7 @@ bool Normalization::normalize(
 
 	norm.scan(marked, order, forbidden, extended);
 
-	bool result = norm.normalizeInternal(marked, order, normalizationInfo);
+	bool result = norm.normalizeInternal(marked, order, normalizationInfo, ignoreVars);
 
 	assert(!normalizationInfo.empty());
 	FA_DEBUG_AT(3, "after normalization: " << std::endl << fae);
@@ -384,10 +389,11 @@ bool Normalization::normalize(
 		FAE&                              fae,
 		const SymState*                   state,
 		const std::set<size_t>&           forbidden,
-		bool                              extended)
+		bool                              extended,
+		bool                              ignoreVars)
 {
 	NormalizationInfo temp;
-	return Normalization::normalize(fae, state, temp, forbidden, extended);
+	return Normalization::normalize(fae, state, temp, forbidden, extended, ignoreVars);
 }
 
 
@@ -484,6 +490,7 @@ Normalization::TreeAutVec Normalization::revertNormalization(
 		newFAE.relabelReferences(*tmp,
 								 *tas.at(mappingPair.second), reverseMap);
 		res[mappingPair.first] = tmp;
+		assert(res[mappingPair.first] != nullptr);
 
 		if (!info.containsMergedRoot(mappingPair.first))
 		{
@@ -537,6 +544,7 @@ Normalization::TreeAutVec Normalization::revertNormalization(
 			assert(ta->getFinalStates().size() > 0);
 
 			res[mergedRoot] = ta;
+			assert(res[mergedRoot] != nullptr);
 		}
 		// + 1 is for identity, when i-th TA is moved to the i-th position
 		assert(tas.size() + rootInfo.second.rootsMerging_.size() <= res.size() + 1);
@@ -550,9 +558,15 @@ Normalization::TreeAutVec Normalization::revertNormalization(
 
 	for (size_t i=0; i < res.size(); ++i)
 	{
-		std::shared_ptr<TreeAut> newTa(new TreeAut());
-		newFAE.modifyTransitions(*newTa, *res.at(i), f);
-		res[i] = newTa;
+		// assert(res.at(i) != nullptr);
+		if (res.at(i) != nullptr)
+		{
+			std::shared_ptr<TreeAut> newTa(new TreeAut());
+			assert(newTa != nullptr);
+			newFAE.modifyTransitions(*newTa, *res.at(i), f);
+			res[i] = newTa;
+
+		}
 	}
 
     return res;

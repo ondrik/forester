@@ -655,6 +655,8 @@ public:
 		FA::clear();
 		this->stateOffset = 1;
 	}
+
+    void removeNulls1();
 };
 
 #endif

@@ -299,6 +299,55 @@ void FAE::removeNulls()
 }
 
 
+void FAE::removeNulls1()
+{
+	std::unordered_set<size_t> emptyRoots;
+	for (size_t i = 0; i < this->getRootCount(); ++i)
+	{
+		if (this->getRoot(i) == nullptr)
+		{
+			emptyRoots.insert(i);
+		}
+	}
+    std::vector<size_t> indexRemovingEmpty(this->getRootCount(), 0);
+
+    size_t removed = 0;
+    for (size_t i = 0; i < this->getRootCount(); ++i)
+    {
+        if (emptyRoots.count(i))
+        {
+             // move it on its own place, will be replaced later
+            //indexRemovingEmpty.at(i - removed) = i;
+            ++removed;
+            this->removeReferences(i);
+        }
+        else if (removed > 0)
+        {
+            this->setRoot(i-removed, this->getRoot(i));
+            indexRemovingEmpty.at(i) = i-removed;
+        }
+        else
+        {
+            indexRemovingEmpty.at(i) = i;
+        }
+    }
+
+    this->resizeRoots(this->getRootCount() - removed);
+
+    this->unreachableFree();
+    this->minimizeRoots();
+
+	std::ostringstream os;
+	utils::printCont(os, indexRemovingEmpty);
+	FA_DEBUG_AT(1,"Index: " << os.str());
+	FA_DEBUG_AT(1,"FAE: " << *this);
+
+    this->relabelReferences(indexRemovingEmpty, true);
+    this->relabelVariables(indexRemovingEmpty);
+
+    this->connectionGraph.reset(this->getRootCount());
+}
+
 // TODO: I really need refactore
 // TODO: Error: You have to relable all states that
 // were changed because of new data value

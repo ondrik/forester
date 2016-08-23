@@ -357,7 +357,7 @@ protected:
 	}
 
 
-	void addNewPredicates()
+	void addNewPredicates(FI_abs *failPoint = nullptr)
 	{
 		FA_DEBUG_AT(1, "Running the analysis with the folowing predicates:");
 		for (AbstractInstruction *instr : this->GetAssembly().code_)
@@ -472,7 +472,8 @@ protected:
                 printRefinementInfo(failPoint);
 
                 assertAbstractionInstruction(failPoint->GetInstr());
-                addNewPredicates();
+				FI_abs *absInstr = dynamic_cast<FI_abs *>(failPoint->GetInstr());
+                addNewPredicates(absInstr);
 
                 clearFixpoints();
 
@@ -488,13 +489,12 @@ protected:
 		return shouldRefineAndContinue;
 	}
 
-
-	/**
-	 * @brief  The main execution loop
-	 *
-	 * This method is the main execution loop for the symbolic execution. It
-	 * assumes that the microcode is already compiled, etc.
-	 */
+		/**
+         * @brief  The main execution loop
+         *
+         * This method is the main execution loop for the symbolic execution. It
+         * assumes that the microcode is already compiled, etc.
+         */
 	bool mainLoop()
 	{
 		FA_DEBUG_AT(2, "creating empty heap ...");

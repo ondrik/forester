@@ -254,6 +254,7 @@ public:
 
 		++statesExecuted_;
 
+		// std::cerr << "State " << *(state.GetInstr()) << '\n';
 		state.GetInstr()->execute(*this, state);
 		// std::cerr << "State " << &state << " " << state << '\n';
 	}

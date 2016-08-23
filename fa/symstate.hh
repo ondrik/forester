@@ -71,7 +71,7 @@ public:   // data types
 
 			std::shared_ptr<const FAE> finalFae_;
 
-			std::shared_ptr<FAE> faeAfterReorder_;
+			std::shared_ptr<FAE> faeBeforeReorder_;
 
 			Normalization::NormalizationInfo reorderNormInfo_;
 
@@ -84,7 +84,7 @@ public:   // data types
 					learn2Boxes_(),
 					learn1Boxes_(),
 					finalFae_(nullptr),
-					faeAfterReorder_(nullptr),
+					faeBeforeReorder_(nullptr),
 					reorderNormInfo_(),
 					normInfoAtIteration_()
 			{}
@@ -97,7 +97,7 @@ public:   // data types
 				learn2Boxes_.clear();
 				learn1Boxes_.clear();
 				finalFae_ = nullptr;
-				faeAfterReorder_ = nullptr;
+				faeBeforeReorder_ = nullptr;
 				reorderNormInfo_.clear();
 				normInfoAtIteration_.clear();
 			}
@@ -402,7 +402,9 @@ public:   // methods
 	void recycle(Recycler<SymState>& recycler);
 
 
-	std::shared_ptr<FAE> newNormalizedFAE();
+	std::shared_ptr<FAE> newNormalizedFAE(
+            const bool emptyForbidden = false,
+			const bool ignoreVars = false);
 
 
 	/**

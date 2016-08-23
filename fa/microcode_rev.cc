@@ -96,11 +96,11 @@ namespace
 			throw e;
 		}
 
-        if (fwdSucc.GetFAE()->getRootCount() + 1 == fae->getRootCount())
+        if (roots.size() > 0 && fwdSucc.GetFAE()->getRootCount() + 1 == fae->getRootCount())
         {
-            // Normalization::NormalizationInfo normInfo;
-            // auto forbiddenNorm = Normalization::computeForbiddenSet(*fae);
-            // Normalization::normalize(*fae, &bwdSucc, normInfo, forbiddenNorm, true);
+            Normalization::NormalizationInfo normInfo;
+            auto forbiddenNorm = Normalization::computeForbiddenSet(*fae);
+            Normalization::normalize(*fae, &bwdSucc, normInfo, forbiddenNorm, true);
         }
 
 		tmpState->SetFAE(fae);
@@ -252,11 +252,17 @@ SymState* FI_node_free::reverseAndIsect(
 		}
 	}
 
-	if (nullptr != fae->getRoot(root))
+	if (root < fae->getRootCount() && nullptr != fae->getRoot(root))
 	{	// in case some unexpected TA is in the position
 
 		// move the TA away
 		fae->freePosition(data.d_ref.root, rootsReferencedByVar);
+	}
+
+	if (root >= fae->getRootCount())
+	{
+		fae->resizeRoots(root+1);
+		fae->connectionGraph.reset(root+1);
 	}
 
 	// load the number of the root that was deleted in the forward configuration

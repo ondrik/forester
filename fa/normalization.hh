@@ -288,7 +288,8 @@ protected:
 		std::vector<bool>&                normalized,
 		const size_t                      root,
 		const std::vector<bool>&          marked,
-		NormalizationInfo&                normalizationInfo);
+		NormalizationInfo&                normalizationInfo,
+		bool                              ignoreVars = false);
 
 
 	bool selfReachable(
@@ -313,7 +314,8 @@ protected:
 	bool normalizeInternal(
 		const std::vector<bool>&          marked,
 		const std::vector<size_t>&        order,
-		NormalizationInfo&                normalizationInfo);
+		NormalizationInfo&                normalizationInfo,
+		bool                              ignoreVars = false);
 
 public:
 
@@ -329,13 +331,15 @@ public:
 		const SymState*                   state,
 		NormalizationInfo&                normalizationInfo,
 		const std::set<size_t>&           forbidden = std::set<size_t>(),
-		bool                              extended = false);
+		bool                              extended = false,
+		bool                              ignoreVars = false);
 
 	static bool normalize(
 		FAE&                              fae,
 		const SymState*                   state,
 		const std::set<size_t>&           forbidden = std::set<size_t>(),
-		bool                              extended = false);
+		bool                              extended = false,
+        bool                              ignoreVars = false);
 
 	static bool normalizeWithoutMerging(
 		FAE&                              fae,

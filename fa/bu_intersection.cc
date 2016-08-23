@@ -9,6 +9,7 @@ BUIntersection::BUProductResult BUIntersection::bottomUpIntersection(
     assert(fwdFAE.getRootCount() == bwdFAE.getRootCount());
 
     VATA::AutBase::ProductTranslMap productMap;
+    std::unordered_map<size_t, std::pair<size_t, size_t>> productMapRev;
 
     TreeAutVec res;
     for (size_t i = 0; i < fwdFAE.getRootCount(); ++i)
@@ -19,8 +20,14 @@ BUIntersection::BUProductResult BUIntersection::bottomUpIntersection(
             continue;
         }
 
+        std::shared_ptr<TreeAut> tmp = std::shared_ptr<TreeAut>(new TreeAut());
+        bwdFAE.getRoot(i)->minimized(*tmp);
         TreeAut isectTA = TreeAut::intersectionBU(
-                *(fwdFAE.getRoot(i)),*(bwdFAE.getRoot(i)), &productMap);
+                *(fwdFAE.getRoot(i)), *tmp, &productMap);
+        for (const auto i : productMap)
+        {
+            productMapRev.insert(std::pair<size_t, std::pair<size_t, size_t>>(i.second, std::pair<size_t, size_t>(i.first)));
+        }
 
         std::shared_ptr<TreeAut> finalIsectTA = std::shared_ptr<TreeAut>(new TreeAut());
         isectTA.uselessAndUnreachableFree(*finalIsectTA);
@@ -30,14 +37,25 @@ BUIntersection::BUProductResult BUIntersection::bottomUpIntersection(
         // Now we need to rename states to distinguish again between data and
         // normal state. This was lost because VATA ignores semantics of states
         // numbering
-        auto renamingFunction = [&productMap](const size_t productState) -> size_t {
-            auto productMapItem = std::find_if(
-                    productMap.begin(), productMap.end(), [&productState](
-                            std::pair<std::pair<size_t, size_t>, size_t> p) {
-                return p.second == productState;
-            });
+        auto renamingFunction = [&productMapRev](const size_t productState) -> size_t {
+            // auto productMapItem = std::find_if(
+            //         productMap.begin(), productMap.end(), [&productState](
+            //                 std::pair<std::pair<size_t, size_t>, size_t> p) {
+            //     return p.second == productState;
+            // });
+            // const std::pair<std::pair<size_t, size_t>, size_t> *productMapItem;
+            // for (const std::pair<std::pair<size_t, size_t>, size_t>& pi : productMap)
+            // {
+            //     if (pi.second == productState)
+            //     {
+            //         productMapItem = &pi;
+            //         break;
+            //     }
+            // }
 
-            const std::pair<size_t, size_t>& prodPair = productMapItem->first;
+            // const std::pair<size_t, size_t>& prodPair = productMapItem->first;
+            assert(productMapRev.count(productState));
+            const std::pair<size_t, size_t>& prodPair = productMapRev.at(productState);
 
             // When a state is data one, it is same in the lhs and the rhs
             assert((FA::isData(prodPair.first) && FA::isData(prodPair.second)) ||

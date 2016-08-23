@@ -82,6 +82,40 @@ public:   // methods
 		ta.uselessAndUnreachableFree(*fae_.getRoot(root));
 	}
 
+	template <class F>
+	static std::shared_ptr<TreeAut> heightAbstractionTA(
+		TreeAut&              inTA,
+		size_t                height,
+		F                     f)
+	{
+		FA_DEBUG_AT(1,"Height abstraction of height " << height);
+		// Preconditions
+
+		const TreeAut& rootTA = inTA;
+		std::unordered_map<size_t, size_t> rel;
+
+		// compute the abstraction (i.e. which states are to be merged)
+		ConnectionGraph::StateToCutpointSignatureMap stateMap;
+		ConnectionGraph::computeSignatures(stateMap, rootTA);
+
+		auto cutpointCmp = [&stateMap](
+			const size_t state1,
+			const size_t state2) -> bool {
+			return stateMap[state1] % stateMap[state2];
+		};
+
+		rootTA.heightAbstraction(rel, height, f, cutpointCmp);
+
+
+		std::shared_ptr<TreeAut> ta = std::shared_ptr<TreeAut>(new TreeAut());
+		rootTA.collapsed(*ta, rel);
+
+		std::shared_ptr<TreeAut> result = std::shared_ptr<TreeAut>(new TreeAut());
+		ta->uselessAndUnreachableFree(*result);
+
+		return result;
+	}
+
     bool areFinalStatesPreserved(const TreeAut& old, const TreeAut& reduced)
     {
         bool res = true;

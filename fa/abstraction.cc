@@ -132,7 +132,7 @@ void Abstraction::predicateAbstraction(
 	{
 		VATA::AutBase::ProductTranslMap translMap;
         FA_DEBUG_AT(1,"ISECT1: " << abstrTa);
-        FA_DEBUG_AT(1,"ISECT2: " << predicate /* *(predicate->getRoot(root)) */);
+        FA_DEBUG_AT(1,"ISECT2: " << *predicate /* *(predicate->getRoot(root)) */);
 
         if (predicate != nullptr)
         {
